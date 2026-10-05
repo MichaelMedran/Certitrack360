@@ -22,7 +22,7 @@ ORDENES = [valor for valor, _ in ORDEN_CHOICES]
 Resultado = namedtuple("Resultado", "queryset activos orden")
 
 
-def _entero(valor):
+def entero(valor):
     try:
         return int(valor)
     except (TypeError, ValueError):
@@ -37,17 +37,17 @@ def aplicar(qs, params, hoy=None):
     hoy = hoy or timezone.localdate()
     activos = {}
 
-    cliente = _entero(params.get("cliente"))
+    cliente = entero(params.get("cliente"))
     if cliente is not None:
         qs = qs.filter(contrato__cliente_id=cliente)
         activos["cliente"] = cliente
 
-    contrato = _entero(params.get("contrato"))
+    contrato = entero(params.get("contrato"))
     if contrato is not None:
         qs = qs.filter(contrato_id=contrato)
         activos["contrato"] = contrato
 
-    responsable = _entero(params.get("responsable"))
+    responsable = entero(params.get("responsable"))
     if responsable is not None:
         qs = qs.filter(Q(junior_asignado_id=responsable) | Q(senior_revisor_id=responsable))
         activos["responsable"] = responsable
