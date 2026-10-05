@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Tablero Kanban</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Índice de pantallas</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span class="activo">Tablero</span><span>Calendario</span><span>Entregables</span><span>Asistente</span>
+  <span class="der">Avisos (2) · Sofía Sánchez · Senior · Salir</span>
+</div>
+
+<h1>Tablero</h1>
+<p class="nota">Arrastre una tarjeta a la columna siguiente. El sistema solo acepta los movimientos permitidos para su rol.</p>
+
+<!-- Filtros plegables -->
+<div class="caja nuevo">
+  <details open>
+    <summary>Filtros <span class="chip">2 activos</span> <span class="marca">1</span></summary>
+    <div class="fila" style="margin-top:8px">
+      <label>Cliente <span class="campo">Todos ▾</span></label>
+      <label>Contrato <span class="campo">Todos ▾</span></label>
+      <label>Responsable <span class="campo">Todos ▾</span></label>
+    </div>
+    <div class="fila">
+      <label>Urgencia <span class="campo">Crítico ▾</span></label>
+      <label>Tipo de observación abierta <span class="campo">Formato ▾</span></label>
+      <label>Estado <span class="campo">Todos ▾</span></label>
+      <label>Ordenar por <span class="campo">Plazo (más próximo primero) ▾</span></label>
+    </div>
+    <div class="fila"><span class="boton principal">Aplicar</span><span class="boton">Limpiar</span></div>
+  </details>
+  <div class="fila">
+    <span class="nota">Activos:</span>
+    <span class="chip">Urgencia: Crítico ✕</span>
+    <span class="chip">Observación abierta: Formato ✕</span>
+    <span class="marca">2</span>
+  </div>
+</div>
+
+<!-- Ejemplo del mensaje de error de Poka-Yoke -->
+<div class="aviso nuevo">
+  No se puede enviar a verificación: faltan los adjuntos requeridos («Borrador»). Súbalos en el detalle del entregable. <span class="marca">3</span>
+</div>
+
+<div class="tablero">
+  <div class="columna">
+    <h3>A realizar (1)</h3>
+    <div class="ficha">
+      <span class="tag suave">Normal</span><br>
+      <b>Acta de conformidad 08</b><br>
+      Telecom Pacífico Demo · DEMO-2026-003<br>
+      Plazo: 21/10/2026<br>
+      Responsable: Javier J.
+    </div>
+  </div>
+  <div class="columna">
+    <h3>En proceso (2)</h3>
+    <div class="ficha vencida">
+      <span class="tag">Vencido</span><br>
+      <b>Informe técnico 03</b><br>
+      Banco Andino Ficticio · DEMO-2026-001<br>
+      Plazo: 29/09/2026<br>
+      Responsable: Julia J.<br>
+      <span class="chip">1 observación abierta: Formato</span> <span class="chip">Adjuntos: 2</span>
+    </div>
+    <div class="ficha">
+      <span class="tag">Crítico</span><br>
+      <b>Matriz de riesgos 06</b><br>
+      Financiera Costa Sur · DEMO-2026-002<br>
+      Plazo: 06/10/2026<br>
+      Responsable: Jimena J.<br>
+      <span class="chip">Adjuntos: 0</span>
+    </div>
+  </div>
+  <div class="columna">
+    <h3>Verificación senior (1)</h3>
+    <div class="ficha">
+      <span class="tag">Próximo</span><br>
+      <b>Informe de avance 14</b><br>
+      Redes Altiplano · DEMO-2026-004<br>
+      Plazo: 09/10/2026<br>
+      Responsable: Julia J.<br>
+      <span class="chip">Adjuntos: 3</span>
+    </div>
+  </div>
+  <div class="columna">
+    <h3>Listo para entrega (0)</h3>
+    <p class="nota">Sin tarjetas con estos filtros.</p>
+  </div>
+  <div class="columna">
+    <h3>Hecho (0)</h3>
+    <p class="nota">Sin tarjetas con estos filtros.</p>
+  </div>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Filtros plegables:</b> cliente, contrato, responsable, urgencia, tipo de observación abierta y estado, más el orden (plazo por defecto; también urgencia o cliente). Cerrados por defecto; el resumen indica cuántos hay activos para no cargar la pantalla.</li>
+  <li><b>Siempre dentro de lo permitido:</b> los filtros se aplican sobre lo que el rol ya puede ver. Un junior que filtre por un cliente que no tiene asignado no ve nada. Los filtros viajan en la dirección (se puede compartir la vista) y la lista se actualiza sin recargar la página.</li>
+  <li><b>Urgencia con texto:</b> cada tarjeta lleva una etiqueta (Vencido, Crítico, Próximo, Normal) y los vencidos además un trazo grueso a la izquierda; el color nunca es la única señal. Los umbrales (crítico ≤ 2 días, próximo ≤ 5) salen de la misma configuración que las alertas.</li>
+  <li><b>Tipo de observación:</b> el filtro considera solo observaciones <i>no resueltas</i>. La tarjeta muestra el contador; el texto de cada observación está en el detalle.</li>
+  <li><b>Poka-Yoke de adjuntos:</b> si la plantilla exige adjuntos y faltan, la tarjeta vuelve a su columna y aparece el mensaje con los tipos que faltan.</li>
+  <li>Devolver desde «Verificación senior» abre la ventana de observación obligatoria (sin cambios).</li>
+</ol>
+
+</div>
+</body>
+</html>

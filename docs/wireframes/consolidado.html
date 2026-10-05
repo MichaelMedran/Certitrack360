@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Consolidado del gerente</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Índice de pantallas</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span><span>Asistente</span>
+  <span class="activo nuevo-inline">Consolidado</span><span>Administración</span>
+  <span class="der">Avisos (0) · Gabriel · Gerente · Salir</span>
+</div>
+
+<h1>Consolidado <span class="marca">1</span></h1>
+<p class="nota">Vista de solo lectura de todos los proyectos. Cada fila enlaza al detalle del entregable.</p>
+
+<div class="caja">
+  <details>
+    <summary>Filtros <span class="chip">0 activos</span> <span class="marca">2</span></summary>
+    <div class="fila" style="margin-top:8px">
+      <label>Cliente <span class="campo">Todos ▾</span></label>
+      <label>Contrato <span class="campo">Todos ▾</span></label>
+      <label>Estado <span class="campo">Todos ▾</span></label>
+      <label>Plazo desde <span class="campo">dd/mm/aaaa</span></label>
+      <label>hasta <span class="campo">dd/mm/aaaa</span></label>
+      <span class="boton principal">Aplicar</span><span class="boton">Limpiar</span>
+    </div>
+  </details>
+</div>
+
+<h2>Entregables por estado</h2>
+<div class="contadores">
+  <div class="contador"><b>7</b>A realizar</div>
+  <div class="contador"><b>7</b>En proceso</div>
+  <div class="contador"><b>5</b>Verificación senior</div>
+  <div class="contador"><b>4</b>Listo para entrega</div>
+  <div class="contador"><b>7</b>Hecho</div>
+</div>
+
+<h2>Vencidos (3)</h2>
+<table>
+  <tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Estado</th><th>Junior</th><th>Senior</th></tr>
+  <tr><td><u>Informe técnico 03</u></td><td>Banco Andino Ficticio</td><td>DEMO-2026-001</td><td>29/09/2026</td><td>En proceso</td><td>Julia J.</td><td>Sofía S.</td></tr>
+  <tr><td><u>Acta de conformidad 07</u></td><td>Redes Altiplano</td><td>DEMO-2026-004</td><td>02/10/2026</td><td>A realizar</td><td>Javier J.</td><td>Sergio S.</td></tr>
+</table>
+
+<h2>Próximos a vencer — en los próximos 7 días (4) <span class="marca">3</span></h2>
+<table>
+  <tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Estado</th><th>Junior</th><th>Senior</th></tr>
+  <tr><td><u>Matriz de riesgos 06</u></td><td>Financiera Costa Sur</td><td>DEMO-2026-002</td><td>06/10/2026</td><td>En proceso</td><td>Jimena J.</td><td>Sergio S.</td></tr>
+  <tr><td><u>Informe de avance 14</u></td><td>Redes Altiplano</td><td>DEMO-2026-004</td><td>09/10/2026</td><td>Verificación senior</td><td>Julia J.</td><td>Sergio S.</td></tr>
+</table>
+
+<h2>Resumen por cliente</h2>
+<table>
+  <tr><th>Cliente</th><th class="num">Total</th><th class="num">Activos</th><th class="num">Vencidos</th><th class="num">A realizar</th><th class="num">En proceso</th><th class="num">Verif.</th><th class="num">Listo</th><th class="num">Hecho</th></tr>
+  <tr><td>Banco Andino Ficticio</td><td class="num">10</td><td class="num">7</td><td class="num">1</td><td class="num">2</td><td class="num">3</td><td class="num">1</td><td class="num">1</td><td class="num">3</td></tr>
+  <tr><td>Financiera Costa Sur</td><td class="num">5</td><td class="num">4</td><td class="num">0</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+</table>
+
+<h2>Resumen por contrato</h2>
+<table>
+  <tr><th>Contrato</th><th>Cliente</th><th class="num">Total</th><th class="num">Activos</th><th class="num">Vencidos</th><th class="num">A realizar</th><th class="num">En proceso</th><th class="num">Verif.</th><th class="num">Listo</th><th class="num">Hecho</th></tr>
+  <tr><td>DEMO-2026-001</td><td>Banco Andino Ficticio</td><td class="num">3</td><td class="num">2</td><td class="num">1</td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">1</td></tr>
+  <tr><td>DEMO-2026-002</td><td>Financiera Costa Sur</td><td class="num">3</td><td class="num">3</td><td class="num">0</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+</table>
+
+<h2>Entregables activos por persona <span class="marca">4</span></h2>
+<div class="fila" style="align-items:flex-start">
+  <div style="flex:1;min-width:280px">
+    <h3>Juniors</h3>
+    <div class="fila"><span style="width:110px">Julia J.</span><div class="barra-g" style="flex:1"><i style="width:80%"></i></div><b>8</b></div>
+    <div class="fila"><span style="width:110px">Javier J.</span><div class="barra-g" style="flex:1"><i style="width:60%"></i></div><b>6</b></div>
+    <div class="fila"><span style="width:110px">Jimena J.</span><div class="barra-g" style="flex:1"><i style="width:40%"></i></div><b>4</b></div>
+  </div>
+  <div style="flex:1;min-width:280px">
+    <h3>Seniors</h3>
+    <div class="fila"><span style="width:110px">Sofía S.</span><div class="barra-g" style="flex:1"><i style="width:70%"></i></div><b>12</b></div>
+    <div class="fila"><span style="width:110px">Sergio S.</span><div class="barra-g" style="flex:1"><i style="width:55%"></i></div><b>10</b></div>
+  </div>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Acceso:</b> solo gerente y admin. Cualquier otro rol recibe «sin acceso»; quien no ha iniciado sesión es enviado a ingresar. Se verifica en el servidor.</li>
+  <li><b>Filtros plegables:</b> cliente, contrato, estado y rango de fechas del plazo. Se aplican a toda la pantalla (contadores, tablas y carga por persona).</li>
+  <li><b>Ventana de «próximos a vencer»:</b> 7 días por defecto; se cambia en la configuración del servidor.</li>
+  <li><b>Carga por persona:</b> cuenta entregables activos (todo lo que no está en «Hecho») por junior y por senior. Es el único gráfico: barras simples.</li>
+  <li>Solo lectura. La exportación y los reportes avanzados quedan para la fase 3.</li>
+</ol>
+
+</div>
+</body>
+</html>

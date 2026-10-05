@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CertiTrack 360 · Wireframes (H0.5)</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales.</div>
+<div class="pantalla">
+
+<h1>CertiTrack 360 — Wireframes de las pantallas (hito H0.5)</h1>
+<p>Siete pantallas en HTML estático. Se abren con doble clic, sin servidor. Sirven para revisar la estructura, el flujo y la carga visual
+   <b>antes</b> de construir la interfaz de las funciones nuevas de la adenda 1.</p>
+
+<div class="aviso"><b>Pendiente de aprobación del equipo.</b> Hasta que se aprueben, no se construyen las pantallas nuevas
+   (adjuntos en el detalle, filtros del tablero y de la lista, y el Consolidado del gerente). La lógica de fondo ya está lista y probada.</div>
+
+<h2>Cómo leerlos</h2>
+<div class="caja">
+  <p>Borde sólido = pantalla o elemento que ya existe en el prototipo.</p>
+  <div class="caja nuevo" style="margin-top:14px"><p>Borde punteado con la etiqueta NUEVO = lo que agrega la adenda 1.</p></div>
+  <p>Los círculos numerados <span class="marca">1</span> remiten a las anotaciones al pie de cada pantalla (reglas, permisos y comportamiento).</p>
+</div>
+
+<h2>Pantallas</h2>
+<table>
+  <tr><th>Pantalla</th><th>Quién la ve</th><th>Qué cambia con la adenda 1</th></tr>
+  <tr><td><a href="inicio.html">Inicio según rol</a></td><td>Todos</td><td>Enlace al Consolidado para gerente y admin.</td></tr>
+  <tr><td><a href="tablero.html">Tablero Kanban (con filtros)</a></td><td>Todos, cada rol con lo suyo</td><td>Filtros plegables, orden y etiqueta de urgencia en texto.</td></tr>
+  <tr><td><a href="entregable.html">Detalle del entregable</a></td><td>Quien tenga acceso al entregable</td><td>Sección de adjuntos con versiones; el historial incluye subidas y eliminaciones.</td></tr>
+  <tr><td><a href="calendario.html">Calendario</a></td><td>Todos, cada rol con lo suyo</td><td>Sin cambios.</td></tr>
+  <tr><td><a href="consolidado.html">Consolidado del gerente</a></td><td>Solo gerente y admin (los demás reciben «sin acceso»)</td><td>Pantalla nueva, de solo lectura.</td></tr>
+  <tr><td><a href="notificaciones.html">Notificaciones</a></td><td>Cada usuario, las suyas</td><td>Nuevo aviso al senior cuando un entregable llega a verificación. Sin mensajería entre personas.</td></tr>
+  <tr><td><a href="asistente.html">Asistente (fase 2)</a></td><td>Todos</td><td>Sin cambios.</td></tr>
+</table>
+
+<h2>Flujo principal</h2>
+<div class="caja">
+  <div class="fila">
+    <span class="boton">Ingresar</span> → <span class="boton principal">Inicio</span> →
+    <span class="boton">Tablero</span> ⇄ <span class="boton">Detalle del entregable</span>
+  </div>
+  <div class="fila">
+    <span class="boton">Inicio (gerente / admin)</span> → <span class="boton nuevo-inline">Consolidado</span> → <span class="boton">Detalle del entregable</span>
+  </div>
+  <div class="fila">
+    <span class="boton">Calendario</span> → <span class="boton">Detalle</span> &nbsp;·&nbsp;
+    <span class="boton">Notificaciones</span> → <span class="boton">Detalle</span> &nbsp;·&nbsp;
+    <span class="boton">Asistente</span> → <span class="boton">Detalle (si el usuario tiene acceso)</span>
+  </div>
+  <p class="nota">Toda pantalla enlaza al detalle del entregable; desde el detalle se sube, se descarga y se cambia de estado.</p>
+</div>
+
+<h2>Decisiones que necesitan al equipo</h2>
+<div class="pregunta"><b>1. Archivos.</b> Valores por defecto: máximo 10 MB; formatos pdf, docx, xlsx, pptx, png, jpg, txt. ¿Se mantienen?</div>
+<div class="pregunta"><b>2. Quién crea entregables.</b> Hoy: senior (solo de sus contratos), gerente y admin. ¿Deben crearlos también Comercial o Delivery?</div>
+<div class="pregunta"><b>3. Adjuntos exigidos por plantilla.</b> Propuesta para la demo: Informe técnico mensual → Borrador; Acta de conformidad → Evidencia; Matriz de riesgos → ninguno.</div>
+<div class="pregunta"><b>4. Filtro «Estado» en el tablero.</b> Las columnas ya son los estados. Propuesta: mantener el filtro (oculta columnas) o dejarlo solo en la lista.</div>
+
+<h2>Registro de aprobación</h2>
+<table>
+  <tr><th>Pantalla</th><th style="width:120px">¿Aprobada?</th><th>Observaciones del equipo</th></tr>
+  <tr><td>Inicio según rol</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Tablero Kanban (con filtros)</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Detalle del entregable</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Calendario</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Consolidado del gerente</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Notificaciones</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Asistente (fase 2)</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+</table>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Detalle del entregable</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Índice de pantallas</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span class="activo">Entregables</span><span>Asistente</span>
+  <span class="der">Avisos (0) · Gabriel · Gerente · Salir</span>
+</div>
+<p class="nota">Vista de ejemplo: gerente, que ve todas las acciones. Cada rol ve solo las que le corresponden (ver anotaciones).</p>
+
+<h1>Informe técnico 03</h1>
+<div class="contadores">
+  <div class="contador">Cliente / contrato<br><b style="font-size:14px">Banco Andino Ficticio<br>DEMO-2026-001</b></div>
+  <div class="contador">Plazo<br><b style="font-size:14px">06/10/2026</b></div>
+  <div class="contador">Estado<br><b style="font-size:14px">En proceso</b></div>
+  <div class="contador">Urgencia<br><b style="font-size:14px">Crítico</b></div>
+  <div class="contador">Responsables<br><b style="font-size:14px">Junior: Julia J.<br>Senior: Sofía S.</b></div>
+</div>
+
+<!-- Cambio de estado -->
+<div class="caja">
+  <h3>Mover entregable</h3>
+  <div class="fila"><span class="boton principal">Pasar a «Verificación senior»</span></div>
+  <div class="aviso nuevo">Faltan adjuntos requeridos para pasar a verificación: «Borrador». <span class="marca">1</span></div>
+</div>
+
+<h2>Datos del entregable (Informe técnico mensual)</h2>
+<table>
+  <tr><th style="width:30%">Periodo reportado</th><td>Septiembre 2026</td></tr>
+  <tr><th>Responsable del cliente</th><td>Responsable ficticio</td></tr>
+</table>
+
+<!-- ADJUNTOS -->
+<h2>Adjuntos</h2>
+<div class="caja nuevo">
+  <div class="fila">
+    <b>Requeridos por la plantilla:</b>
+    <span class="tag">Borrador — falta</span>
+    <span class="tag suave">Evidencia — cumplido</span>
+    <span class="marca">2</span>
+  </div>
+  <table>
+    <tr><th>Tipo</th><th>Archivo</th><th>Versión</th><th>Subido por</th><th>Fecha</th><th>Comentario</th><th>Acciones</th></tr>
+    <tr>
+      <td>Evidencia</td><td>acta_reunion.png</td><td>v1</td><td>Julia J.</td><td>02/10/2026 10:15</td><td>Acta firmada por el cliente</td>
+      <td><span class="boton">Descargar</span> <span class="boton">Eliminar</span><span class="marca">3</span></td>
+    </tr>
+    <tr>
+      <td>TDR</td><td>tdr_banco_andino.pdf</td><td>v2</td><td>Sofía S.</td><td>30/09/2026 16:40</td><td>Versión corregida del TDR</td>
+      <td><span class="boton">Descargar</span> <span class="boton">Eliminar</span></td>
+    </tr>
+  </table>
+  <details>
+    <summary>Ver versiones anteriores (1) <span class="marca">4</span></summary>
+    <table>
+      <tr><td>TDR</td><td>tdr_banco_andino.pdf</td><td>v1</td><td>Sofía S.</td><td>28/09/2026 09:05</td><td>—</td><td><span class="boton">Descargar</span></td></tr>
+    </table>
+  </details>
+
+  <h3 style="margin-top:12px">Subir un adjunto <span class="marca">5</span></h3>
+  <div class="fila">
+    <label>Tipo <span class="campo">Borrador ▾</span></label>
+    <label>Archivo <span class="campo">Elegir archivo…</span></label>
+    <label>Comentario (opcional) <span class="campo ancho">&nbsp;</span></label>
+    <span class="boton principal">Subir</span>
+  </div>
+  <p class="nota">Formatos: pdf, docx, xlsx, pptx, png, jpg, txt · máximo 10 MB. Si ya existe un adjunto de ese tipo se crea una versión nueva; nada se sobrescribe.</p>
+</div>
+
+<!-- OBSERVACIONES -->
+<h2>Observaciones</h2>
+<div class="caja">
+  <span class="tag">Formato</span> <span class="tag suave">Abierta</span> <span class="nota">Sofía S. · 03/10/2026 11:00</span>
+  <p>Ajustar los títulos al estilo de la plantilla.</p>
+</div>
+<div class="caja">
+  <span class="tag">Dato faltante</span> <span class="tag suave">Resuelta</span> <span class="nota">Sofía S. · 29/09/2026 15:20</span>
+  <p>Falta el periodo reportado en la carátula.</p>
+  <p><b>Solución:</b> Verificar la carátula contra la plantilla antes de enviar a revisión.</p>
+</div>
+<div class="caja gris">
+  <h3>Registrar observación <span class="nota">(solo senior, gerente y admin)</span></h3>
+  <div class="fila"><label>Tipo de error <span class="campo">Formato ▾</span></label><label>Descripción <span class="campo ancho">&nbsp;</span></label><span class="boton">Registrar</span></div>
+</div>
+
+<!-- HISTORIAL -->
+<h2>Historial</h2>
+<div class="caja nuevo">
+  <table>
+    <tr><th>Fecha</th><th>Usuario</th><th>Evento</th></tr>
+    <tr><td>03/10/2026 11:00</td><td>Sofía S.</td><td>Estado: Verificación senior → En proceso (devuelto con observación)</td></tr>
+    <tr><td>02/10/2026 10:15</td><td>Julia J.</td><td>Subió adjunto: Evidencia v1 (acta_reunion.png)</td></tr>
+    <tr><td>01/10/2026 08:30</td><td>Julia J.</td><td>Estado: A realizar → En proceso</td></tr>
+    <tr><td>30/09/2026 17:00</td><td>Gabriel</td><td>Eliminó adjunto: Otro v1 (notas.txt)</td></tr>
+  </table>
+  <span class="marca">6</span>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Poka-Yoke:</b> sin los adjuntos que exige la plantilla no se puede pasar a «Verificación senior». El mensaje dice exactamente cuáles faltan (el mismo mensaje aparece en el tablero).</li>
+  <li><b>Lista de requeridos:</b> resume qué exige la plantilla y qué ya está cumplido. Si la plantilla no exige adjuntos, esta línea no aparece.</li>
+  <li><b>Quién puede qué:</b> descargar, cualquiera con acceso al entregable. Subir: el junior asignado (solo en «A realizar» y «En proceso»), el senior responsable, el gerente y el admin. <b>Eliminar:</b> solo gerente y admin; para los demás el botón no aparece.</li>
+  <li><b>Versiones:</b> se muestra la más reciente de cada tipo; las anteriores quedan plegadas y siguen descargables.</li>
+  <li><b>Subida:</b> el formulario solo aparece a quien puede subir en ese estado. Extensión no permitida o tamaño excedido muestran un mensaje claro y no guardan nada. Los archivos viven en el servidor local y nunca tienen una dirección pública: cada descarga verifica el acceso al entregable.</li>
+  <li><b>Historial:</b> junta los cambios de estado con cada subida y eliminación de adjuntos (quién, cuándo y qué archivo/versión).</li>
+  <li>Registrar observaciones y mover de estado funcionan como hasta ahora.</li>
+</ol>
+
+</div>
+</body>
+</html>
