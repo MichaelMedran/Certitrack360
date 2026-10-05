@@ -1,13 +1,11 @@
-"""Pruebas del consolidado (SDD RF-16, casos 1 y 11 de la sección 17.2).
-
-Las pruebas de acceso por HTTP (403 para junior y senior, redirección sin sesión) se agregan junto con la vista,
-cuando el equipo apruebe el wireframe de la pantalla.
-"""
+"""Pruebas del consolidado (SDD RF-16, casos 1 y 11 de la sección 17.2): servicio de datos y pantalla."""
 import datetime
+import re
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.test import override_settings
+from django.urls import reverse
 
 from apps.consolidado.servicios import datos_consolidado
 from apps.cuentas.models import Usuario
@@ -138,3 +136,100 @@ class FiltrosDelConsolidadoTests(FiltrosBase):
         d = self.consolidado(cliente=self.cliente.pk, estado="EN_PROCESO")
         self.assertEqual(d["total"], 3)  # a, b y h
         self.assertEqual(sorted(e.titulo for e in d["vencidos"]), ["a-vencido", "h-vencido"])
+
+
+class PantallaTests(FiltrosBase):
+    """La pantalla /consolidado/: acceso por rol y que muestre las mismas cifras que el servicio."""
+
+    def ver(self, usuario, params=None):
+        self.client.force_login(usuario)
+        return self.client.get(reverse("consolidado"), params or {})
+
+    def test_la_ruta_es_la_del_sdd(self):
+        self.assertEqual(reverse("consolidado"), "/consolidado/")
+
+    def test_sin_sesion_va_al_ingreso(self):
+        r = self.client.get(reverse("consolidado"))
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(r["Location"].startswith(reverse("login")))
+
+    def test_junior_y_senior_reciben_403_y_gerente_y_admin_la_ven(self):
+        esperado = {"j1": 403, "j2": 403, "s1": 403, "s2": 403, "ger": 200, "adm": 200}
+        for nombre, codigo in esperado.items():
+            with self.subTest(usuario=nombre):
+                self.assertEqual(self.ver(getattr(self, {"ger": "gerente", "adm": "admin"}.get(nombre, nombre))).status_code, codigo)
+
+    def test_es_de_solo_lectura(self):
+        self.client.force_login(self.gerente)
+        self.assertEqual(self.client.post(reverse("consolidado")).status_code, 200)  # un POST no cambia nada ni falla
+        self.assertEqual(Entregable.objects.count(), 9)
+
+    def test_los_contadores_por_estado_se_muestran_en_el_orden_del_tablero(self):
+        html = self.ver(self.gerente).content.decode()
+        contadores = re.findall(r'<div class="contador"><b>(\d+)</b>([^<]+)</div>', html)
+        self.assertEqual(contadores, [("2", "A realizar"), ("4", "En proceso"), ("1", "Verificación senior"),
+                                      ("1", "Listo para entrega"), ("1", "Hecho")])
+        self.assertContains(self.ver(self.gerente), "9 entregables en total · 8 activos")
+
+    def test_vencidos_y_proximos_enlazan_al_detalle(self):
+        r = self.ver(self.gerente)
+        self.assertContains(r, "Vencidos (2)")
+        self.assertContains(r, "Próximos a vencer — en los próximos 7 días (4)")
+        for e in (self.a, self.h, self.b, self.c):
+            self.assertContains(r, reverse("entregable_detalle", args=[e.pk]))
+        self.assertNotContains(r, reverse("entregable_detalle", args=[self.g.pk]))  # el hecho no es vencido ni próximo
+
+    def test_resumenes_por_cliente_y_por_contrato(self):
+        html = self.ver(self.gerente).content.decode()
+        self.assertRegex(html, r"<tr><td>Cliente Demo</td><td class=\"num\">7</td><td class=\"num\">6</td><td class=\"num\">2</td>"
+                               r"\s*<td class=\"num\">2</td><td class=\"num\">3</td><td class=\"num\">0</td><td class=\"num\">1</td><td class=\"num\">1</td></tr>")
+        self.assertRegex(html, r"<tr><td>C3</td><td>Segundo Cliente</td><td class=\"num\">2</td>")
+        # una columna por estado, con su etiqueta, en cada resumen
+        self.assertEqual(html.count('<th class="num">Verificación senior</th>'), 2)
+
+    def test_carga_por_persona_con_barras_proporcionales(self):
+        html = self.ver(self.gerente).content.decode()
+        self.assertRegex(html, r'<span class="nombre">s1</span>\s*<div class="barra-carga" aria-hidden="true"><i style="width:100%"></i></div><b>5</b>')
+        self.assertRegex(html, r'<span class="nombre">s2</span>\s*<div class="barra-carga" aria-hidden="true"><i style="width:60%"></i></div><b>3</b>')
+
+    def test_las_barras_no_dividen_por_cero(self):
+        Entregable.objects.all().delete()
+        r = self.ver(self.gerente)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'style="width:0%"')
+
+    def test_los_filtros_se_aplican_y_el_panel_queda_abierto(self):
+        r = self.ver(self.gerente, {"cliente": self.cliente2.pk})
+        self.assertContains(r, "2 entregables en total")
+        self.assertContains(r, '<details class="filtros" open>')
+        self.assertContains(r, f'<option value="{self.cliente2.pk}" selected>Segundo Cliente</option>')
+        self.assertContains(r, "1 activo<")
+        self.assertEqual([f["nombre"] for f in r.context["por_cliente"]], ["Segundo Cliente"])
+
+    def test_sin_filtros_el_panel_esta_cerrado_y_dice_cero_activos(self):
+        r = self.ver(self.gerente)
+        self.assertContains(r, '<details class="filtros">')
+        self.assertContains(r, "0 activos")
+
+    def test_los_valores_invalidos_se_ignoran_sin_error(self):
+        r = self.ver(self.gerente, {"cliente": "x", "estado": "ZZZ", "desde": "ayer"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "9 entregables en total")
+
+    def test_un_filtro_sin_resultados_lo_dice_en_cada_tabla(self):
+        r = self.ver(self.gerente, {"desde": "2020-01-01", "hasta": "2020-01-02"})
+        self.assertContains(r, "No hay entregables vencidos.")
+        self.assertContains(r, "No hay entregables por vencer en ese período.")
+        self.assertContains(r, "Sin datos con esos filtros.", count=2)
+
+    def test_los_selectores_tienen_etiqueta(self):
+        html = self.ver(self.gerente).content.decode()
+        for campo, etiqueta in (("f-cliente", "Cliente"), ("f-contrato", "Contrato"), ("f-estado", "Estado"),
+                                ("f-desde", "Plazo desde"), ("f-hasta", "Plazo hasta")):
+            self.assertIn(f'<label for="{campo}">{etiqueta}</label>', html)
+
+    def test_aclara_que_la_exportacion_llega_despues(self):
+        self.assertContains(self.ver(self.gerente), "La exportación y los reportes avanzados llegan en la fase 3")
+
+    def test_no_se_cachea(self):
+        self.assertIn("no-store", self.ver(self.gerente)["Cache-Control"])

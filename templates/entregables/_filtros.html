@@ -1,0 +1,33 @@
+<details class="filtros">
+  <summary>Filtros <span class="chip" id="resumen-filtros">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span></summary>
+  <form method="get" action="{{ request.path }}" data-filtros
+        hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="filtros-grid">
+      <div><label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente"><option value="">Todos</option>
+          {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-contrato">Contrato</label>
+        <select id="f-contrato" name="contrato"><option value="">Todos</option>
+          {% for c in opciones.contratos %}<option value="{{ c.pk }}"{% if filtros_activos.contrato == c.pk %} selected{% endif %}>{{ c.numero_contrato }} · {{ c.cliente }}</option>{% endfor %}</select></div>
+      <div><label for="f-responsable">Responsable</label>
+        <select id="f-responsable" name="responsable"><option value="">Todos</option>
+          {% for u in opciones.responsables %}<option value="{{ u.pk }}"{% if filtros_activos.responsable == u.pk %} selected{% endif %}>{{ u.nombre }} ({{ u.get_rol_display }})</option>{% endfor %}</select></div>
+      <div><label for="f-urgencia">Urgencia</label>
+        <select id="f-urgencia" name="urgencia"><option value="">Todas</option>
+          {% for valor, etiqueta in opciones.urgencias %}<option value="{{ valor }}"{% if filtros_activos.urgencia == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-obs">Tipo de observación abierta</label>
+        <select id="f-obs" name="tipo_observacion"><option value="">Todos</option>
+          {% for valor, etiqueta in opciones.tipos_observacion %}<option value="{{ valor }}"{% if filtros_activos.tipo_observacion == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-estado">Estado</label>
+        <select id="f-estado" name="estado"><option value="">Todos</option>
+          {% for valor, etiqueta in opciones.estados %}<option value="{{ valor }}"{% if filtros_activos.estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-orden">Ordenar por</label>
+        <select id="f-orden" name="orden">
+          {% for valor, etiqueta in opciones.ordenes %}<option value="{{ valor }}"{% if orden == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="acciones">
+      <button class="boton">Aplicar</button>
+      <a class="boton sec" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true">Limpiar</a>
+    </div>
+  </form>
+</details>

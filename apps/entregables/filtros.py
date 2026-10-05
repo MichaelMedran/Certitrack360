@@ -83,6 +83,30 @@ def ordenar(qs, orden, hoy=None):
     return qs.order_by("plazo", "id")
 
 
+def chips(params, activos, opciones_):
+    """Un chip por filtro aplicado, con la dirección que lo quita (conservando los demás filtros y el orden)."""
+    titulos = [("cliente", "Cliente"), ("contrato", "Contrato"), ("responsable", "Responsable"), ("estado", "Estado"),
+               ("urgencia", "Urgencia"), ("tipo_observacion", "Observación abierta")]
+    nombres = {
+        "cliente": {c.pk: c.nombre for c in opciones_["clientes"]},
+        "contrato": {c.pk: c.numero_contrato for c in opciones_["contratos"]},
+        "responsable": {u.pk: u.nombre for u in opciones_["responsables"]},
+        "estado": dict(opciones_["estados"]),
+        "urgencia": dict(opciones_["urgencias"]),
+        "tipo_observacion": dict(opciones_["tipos_observacion"]),
+    }
+    salida = []
+    for clave, titulo in titulos:
+        if clave in activos:
+            resto = params.copy()
+            resto.pop(clave, None)
+            salida.append({
+                "clave": clave, "texto": f"{titulo}: {nombres[clave].get(activos[clave], 'no disponible')}",
+                "quitar": "?" + resto.urlencode(),
+            })
+    return salida
+
+
 def opciones(usuario):
     """Contenido de los desplegables: solo clientes, contratos y personas de lo que el usuario ya puede ver."""
     visibles = entregables_visibles(usuario).values("pk")

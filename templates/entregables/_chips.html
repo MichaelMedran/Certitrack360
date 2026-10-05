@@ -1,0 +1,7 @@
+{% if chips %}
+<div class="chips" aria-label="Filtros aplicados">
+  <span class="suave">Activos:</span>
+  {% for c in chips %}<span class="chip">{{ c.texto }}
+    <a href="{{ c.quitar }}" hx-get="{{ c.quitar }}" hx-target="#resultados" hx-push-url="true" aria-label="Quitar el filtro {{ c.texto }}">✕</a></span>{% endfor %}
+</div>
+{% endif %}

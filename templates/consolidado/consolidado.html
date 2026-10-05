@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block titulo %}Consolidado{% endblock %}
+{% block contenido %}
+<h1>Consolidado</h1>
+<p class="suave">Vista de solo lectura de todos los proyectos. Cada entregable enlaza a su detalle.</p>
+
+<details class="filtros"{% if filtros %} open{% endif %}>
+  <summary>Filtros <span class="chip">{{ filtros|length }} activo{{ filtros|length|pluralize }}</span></summary>
+  <form method="get" action="{% url 'consolidado' %}">
+    <div class="filtros-grid">
+      <div><label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente"><option value="">Todos</option>
+          {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-contrato">Contrato</label>
+        <select id="f-contrato" name="contrato"><option value="">Todos</option>
+          {% for c in opciones.contratos %}<option value="{{ c.pk }}"{% if filtros.contrato == c.pk %} selected{% endif %}>{{ c.numero_contrato }} · {{ c.cliente }}</option>{% endfor %}</select></div>
+      <div><label for="f-estado">Estado</label>
+        <select id="f-estado" name="estado"><option value="">Todos</option>
+          {% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if filtros.estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-desde">Plazo desde</label>
+        <input id="f-desde" type="date" name="desde" value="{{ filtros.desde|date:'Y-m-d' }}"></div>
+      <div><label for="f-hasta">Plazo hasta</label>
+        <input id="f-hasta" type="date" name="hasta" value="{{ filtros.hasta|date:'Y-m-d' }}"></div>
+    </div>
+    <div class="acciones"><button class="boton">Aplicar</button><a class="boton sec" href="{% url 'consolidado' %}">Limpiar</a></div>
+  </form>
+</details>
+
+<h2>Entregables por estado</h2>
+<div class="contadores">
+  {% for c in por_estado %}<div class="contador"><b>{{ c.total }}</b>{{ c.etiqueta }}</div>{% endfor %}
+</div>
+<p class="suave">{{ total }} entregable{{ total|pluralize }} en total · {{ activos }} activo{{ activos|pluralize }} (todo lo que no está en «Hecho»).</p>
+
+<h2>Vencidos ({{ vencidos|length }})</h2>
+{% if vencidos %}
+<div class="tabla"><table>
+  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Estado</th><th>Junior</th><th>Senior</th></tr></thead>
+  <tbody>{% for e in vencidos %}
+  <tr><td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
+  <td class="vencido">{{ e.plazo|date:"d/m/Y" }}</td><td>{{ e.get_estado_display }}</td><td>{{ e.junior_asignado.nombre }}</td><td>{{ e.senior_revisor.nombre }}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="tarjeta">No hay entregables vencidos.</p>{% endif %}
+
+<h2>Próximos a vencer — en los próximos {{ ventana_dias }} días ({{ proximos|length }})</h2>
+{% if proximos %}
+<div class="tabla"><table>
+  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Estado</th><th>Junior</th><th>Senior</th></tr></thead>
+  <tbody>{% for e in proximos %}
+  <tr><td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
+  <td>{{ e.plazo|date:"d/m/Y" }}</td><td>{{ e.get_estado_display }}</td><td>{{ e.junior_asignado.nombre }}</td><td>{{ e.senior_revisor.nombre }}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="tarjeta">No hay entregables por vencer en ese período.</p>{% endif %}
+
+<h2>Resumen por cliente</h2>
+<div class="tabla"><table>
+  <thead><tr><th>Cliente</th><th class="num">Total</th><th class="num">Activos</th><th class="num">Vencidos</th>
+    {% for valor, etiqueta in estados %}<th class="num">{{ etiqueta }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for f in por_cliente %}
+  <tr><td>{{ f.nombre }}</td><td class="num">{{ f.total }}</td><td class="num">{{ f.activos }}</td><td class="num">{{ f.vencidos }}</td>
+    {% for n in f.celdas %}<td class="num">{{ n }}</td>{% endfor %}</tr>
+  {% empty %}<tr><td colspan="9">Sin datos con esos filtros.</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>Resumen por contrato</h2>
+<div class="tabla"><table>
+  <thead><tr><th>Contrato</th><th>Cliente</th><th class="num">Total</th><th class="num">Activos</th><th class="num">Vencidos</th>
+    {% for valor, etiqueta in estados %}<th class="num">{{ etiqueta }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for f in por_contrato %}
+  <tr><td>{{ f.nombre }}</td><td>{{ f.cliente }}</td><td class="num">{{ f.total }}</td><td class="num">{{ f.activos }}</td><td class="num">{{ f.vencidos }}</td>
+    {% for n in f.celdas %}<td class="num">{{ n }}</td>{% endfor %}</tr>
+  {% empty %}<tr><td colspan="10">Sin datos con esos filtros.</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>Entregables activos por persona</h2>
+<div class="dos-columnas">
+  <div class="tarjeta"><h3>Juniors</h3>
+    {% for p in carga_juniors %}
+    <div class="carga"><span class="nombre">{{ p.usuario.nombre }}</span>
+      <div class="barra-carga" aria-hidden="true"><i style="width:{{ p.porcentaje }}%"></i></div><b>{{ p.activos }}</b></div>
+    {% empty %}<p class="suave">No hay juniors.</p>{% endfor %}</div>
+  <div class="tarjeta"><h3>Seniors</h3>
+    {% for p in carga_seniors %}
+    <div class="carga"><span class="nombre">{{ p.usuario.nombre }}</span>
+      <div class="barra-carga" aria-hidden="true"><i style="width:{{ p.porcentaje }}%"></i></div><b>{{ p.activos }}</b></div>
+    {% empty %}<p class="suave">No hay seniors.</p>{% endfor %}</div>
+</div>
+
+<p class="suave" style="margin-top:1.5rem">Pantalla de solo lectura. La exportación y los reportes avanzados llegan en la fase 3.</p>
+{% endblock %}

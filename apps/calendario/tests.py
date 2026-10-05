@@ -1,4 +1,9 @@
 """Pruebas del calendario (SDD RF-12; caso 2 de la sección 17.2)."""
+import re
+from pathlib import Path
+
+from django.conf import settings
+from django.templatetags.static import static
 from django.test import override_settings
 from django.urls import reverse
 
@@ -70,3 +75,27 @@ class CalendarioTests(FiltrosBase):
         self.client.logout()
         self.assertEqual(self.client.get(reverse("calendario")).status_code, 302)
         self.assertEqual(self.client.get(reverse("calendario_eventos")).status_code, 302)
+
+
+class PaginaDelCalendarioTests(FiltrosBase):
+    def ver(self):
+        self.client.force_login(self.gerente)
+        return self.client.get(reverse("calendario"))
+
+    def test_carga_las_bibliotecas_locales_y_pide_los_eventos_a_la_api(self):
+        r = self.ver()
+        self.assertContains(r, f'src="{static("js/fullcalendar.min.js")}"')
+        self.assertContains(r, f'src="{static("js/fullcalendar-es.min.js")}"')
+        self.assertContains(r, '<div id="calendario"></div>')
+        self.assertContains(r, f'events: "{reverse("calendario_eventos")}"')
+
+    def test_en_pantallas_angostas_parte_de_la_lista_y_vuelve_a_la_cuadricula_al_ensanchar(self):
+        html = self.ver().content.decode()
+        self.assertIn("window.matchMedia('(max-width: 700px)')", html)
+        self.assertIn("initialView: angosto.matches ? 'listMonth' : 'dayGridMonth'", html)
+        self.assertIn("calendario.changeView(angosto.matches ? 'listMonth' : 'dayGridMonth')", html)
+
+    def test_los_titulos_largos_se_ajustan_para_que_la_urgencia_se_lea_en_el_mes(self):
+        css = (Path(settings.BASE_DIR) / "static" / "css" / "certitrack.css").read_text(encoding="utf-8")
+        self.assertRegex(css, r"#calendario \.fc-daygrid-event\s*\{\s*white-space:\s*normal")
+        self.assertRegex(css, r"#calendario \.fc-header-toolbar\s*\{\s*flex-wrap:\s*wrap")

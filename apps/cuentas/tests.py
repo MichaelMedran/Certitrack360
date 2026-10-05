@@ -1,4 +1,5 @@
 """Pruebas de usuarios, roles y accesos (SDD RF-01, RF-02, RF-18; casos 1 y 2 de la sección 17.2)."""
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -72,13 +73,30 @@ class SesionTests(TestCase):
         self.assertContains(r, "Usuario o contraseña incorrectos")
 
     def test_cada_rol_ve_la_navegacion_que_le_corresponde(self):
+        # Por rol: (¿ve Consolidado y Gestión?, ¿ve Administración, el panel técnico?)
+        esperado = {"JUNIOR": (False, False), "SENIOR": (False, False), "GERENTE": (True, False), "ADMIN": (True, True)}
         for rol, usuario in self.usuarios.items():
             with self.subTest(rol=rol):
                 self.client.force_login(usuario)
                 html = self.client.get(reverse("inicio")).content.decode()
                 for ruta in (reverse("tablero"), reverse("calendario"), reverse("entregables"), reverse("asistente")):
                     self.assertIn(f'href="{ruta}"', html)
-                self.assertEqual(f'href="{reverse("administracion")}"' in html, rol in ("GERENTE", "ADMIN"))
+                gestion, panel = esperado[rol]
+                self.assertEqual(f'href="{reverse("consolidado")}"' in html, gestion)
+                self.assertEqual(f'href="{reverse("gestion")}"' in html, gestion)
+                self.assertEqual(f'href="{reverse("admin:index")}"' in html, panel)
+
+    def test_la_seccion_activa_se_marca_en_la_barra(self):
+        self.client.force_login(self.usuarios["GERENTE"])
+        casos = {"tablero": "Tablero", "entregables": "Entregables", "calendario": "Calendario", "consolidado": "Consolidado",
+                 "notificaciones": "Avisos", "asistente": "Asistente", "inicio": "Inicio"}
+        for nombre, texto in casos.items():
+            with self.subTest(pantalla=nombre):
+                html = self.client.get(reverse(nombre)).content.decode()
+                marcados = re.findall(r'<a [^>]*aria-current="page"[^>]*>(.*?)</a>', html, flags=re.S)
+                self.assertEqual(len(marcados), 1, marcados)
+                self.assertTrue(marcados[0].strip().startswith(texto), marcados)
+        self.assertContains(self.client.get(reverse("adm_lista", args=["plantillas"])), 'aria-current="page"')
 
     def test_la_sesion_se_cierra_por_inactividad(self):
         self.assertEqual(settings.SESSION_COOKIE_AGE, settings.SESSION_IDLE_MINUTES * 60)
@@ -108,7 +126,7 @@ class RutasProtegidasTests(TestCase):
     def rutas(self):
         solo_lectura = [
             reverse(n) for n in ("inicio", "tablero", "entregables", "entregable_nuevo", "calendario", "calendario_eventos",
-                                 "notificaciones", "asistente", "administracion")
+                                 "notificaciones", "asistente", "gestion", "consolidado")
         ] + [
             reverse("entregable_detalle", args=[1]), reverse("adjunto_descargar", args=[1]),
             reverse("adm_editar", args=["clientes", 1]),
@@ -116,7 +134,7 @@ class RutasProtegidasTests(TestCase):
         con_post = [
             reverse("entregable_estado", args=[1]), reverse("observacion_nueva", args=[1]),
             reverse("observacion_resolver", args=[1]), reverse("adjunto_subir", args=[1]),
-            reverse("adjunto_eliminar", args=[1]), reverse("tablero_mover", args=[1]),
+            reverse("adjunto_eliminar", args=[1]),
             reverse("notificaciones_leidas"), reverse("notificacion_leer", args=[1]),
         ]
         return [("get", r) for r in solo_lectura] + [("post", r) for r in con_post]
@@ -136,6 +154,6 @@ class RutasProtegidasTests(TestCase):
         c.force_login(Usuario.objects.create_user("gerente_csrf", password="x", rol="GERENTE"))
         for ruta in (reverse("entregable_estado", args=[1]), reverse("notificaciones_leidas"),
                      reverse("notificacion_leer", args=[1]), reverse("adjunto_eliminar", args=[1]),
-                     reverse("adjunto_subir", args=[1]), reverse("tablero_mover", args=[1])):
+                     reverse("adjunto_subir", args=[1])):
             with self.subTest(ruta=ruta):
                 self.assertEqual(c.post(ruta).status_code, 403)

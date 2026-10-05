@@ -10,13 +10,17 @@
 <script src="{% static 'js/fullcalendar-es.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-  new FullCalendar.Calendar(document.getElementById('calendario'), {
-    initialView: 'dayGridMonth', firstDay: 1, height: 'auto',
+  // En pantallas angostas la cuadrícula del mes no alcanza para el texto de los eventos: se parte de la vista de lista.
+  var angosto = window.matchMedia('(max-width: 700px)');
+  var calendario = new FullCalendar.Calendar(document.getElementById('calendario'), {
+    initialView: angosto.matches ? 'listMonth' : 'dayGridMonth', firstDay: 1, height: 'auto',
     buttonText: {today:'Hoy', month:'Mes', week:'Semana', list:'Lista'},
     headerToolbar: {left:'prev,next today', center:'title', right:'dayGridMonth,dayGridWeek,listMonth'},
     events: "{% url 'calendario_eventos' %}", eventTimeFormat: {hour:'2-digit', minute:'2-digit'},
     noEventsContent: 'No hay plazos en este período', locale: 'es'
-  }).render();
+  });
+  calendario.render();
+  angosto.addEventListener('change', function(){ calendario.changeView(angosto.matches ? 'listMonth' : 'dayGridMonth'); });
 });
 </script>
 {% endblock %}

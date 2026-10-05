@@ -68,9 +68,9 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
     devuelve = clave == (E.VERIFICACION_SENIOR, E.EN_PROCESO)
     if devuelve:
         if not tipo_error or tipo_error not in TipoError.values:
-            raise ValidationError("Para devolver el entregable debe indicar el tipo de error.")
+            raise ValidationError("Para devolver el entregable debe indicar el tipo de error.", code="observacion_requerida")
         if not descripcion.strip():
-            raise ValidationError("Para devolver el entregable debe describir la observación.")
+            raise ValidationError("Para devolver el entregable debe describir la observación.", code="observacion_requerida")
 
     with transaction.atomic():
         entregable.estado = nuevo_estado

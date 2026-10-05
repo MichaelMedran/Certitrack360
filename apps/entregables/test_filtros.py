@@ -242,7 +242,7 @@ class FiltrosEnLasVistasTests(FiltrosBase):
     def test_la_lista_sigue_aceptando_el_filtro_de_estado(self):
         self.client.force_login(self.j1)
         r = self.client.get(reverse("entregables"), {"estado": "EN_PROCESO"})
-        self.assertEqual(r.context["estado"], "EN_PROCESO")
+        self.assertEqual(r.context["filtros_activos"], {"estado": "EN_PROCESO"})
         self.assertEqual({e.titulo for e in r.context["entregables"]}, {"a-vencido", "b-hoy", "c-critico"})
 
     def test_la_lista_de_un_junior_con_cliente_ajeno_queda_vacia(self):

@@ -354,17 +354,19 @@ class AdjuntosRequeridosTests(Base):
         with self.assertRaises(ValidationError):
             servicios.mover(e, E.VERIFICACION_SENIOR, self.gerente)
         self.client.force_login(self.j1)
-        r = self.client.post(reverse("tablero_mover", args=[e.pk]), {"estado": "VERIFICACION_SENIOR"},
-                             content_type="application/json")
-        self.assertEqual(r.status_code, 400)
-        self.assertIn("«Borrador»", r.json()["error"])
+        r = self.client.post(reverse("entregable_estado", args=[e.pk]), {"estado": "VERIFICACION_SENIOR"},
+                             HTTP_HX_REQUEST="true")
+        self.assertEqual(r.status_code, 422)
+        self.assertContains(r, "«Borrador»", status_code=422)  # el motivo viaja dentro del tablero devuelto
+        e.refresh_from_db()
+        self.assertEqual(e.estado, E.EN_PROCESO)
 
     def test_no_se_pide_observacion_en_el_error_de_adjuntos(self):
         e = self.entregable_en_proceso()
         self.client.force_login(self.j1)
-        r = self.client.post(reverse("tablero_mover", args=[e.pk]), {"estado": "VERIFICACION_SENIOR"},
-                             content_type="application/json")
-        self.assertFalse(r.json()["pide_observacion"])
+        r = self.client.post(reverse("entregable_estado", args=[e.pk]), {"estado": "VERIFICACION_SENIOR"},
+                             HTTP_HX_REQUEST="true")
+        self.assertNotIn("HX-Trigger", r)  # el diálogo de devolución es solo para devolver con observación
 
     def test_plantilla_con_codigo_desconocido_no_rompe(self):
         self.exigente.adjuntos_requeridos = ["BORRADOR", "DESCONOCIDO"]
@@ -391,7 +393,8 @@ class AvisoDeVerificacionTests(Base):
 class PlantillaConAdjuntosTests(Base):
     def datos(self, **extra):
         d = {"nombre": "Nueva", "cliente": "", "formato": "PDF", "plazo_dias_por_defecto": 5,
-             "campos_texto": "Periodo | texto", "adjuntos_requeridos": ["BORRADOR", "TDR"]}
+             "campo_nombre": [""], "campo_etiqueta": ["Periodo"], "campo_tipo": ["texto"], "campo_opciones": [""],
+             "adjuntos_requeridos": ["BORRADOR", "TDR"]}
         d.update(extra)
         return d
 

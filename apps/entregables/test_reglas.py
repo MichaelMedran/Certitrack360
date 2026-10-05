@@ -62,10 +62,10 @@ class DatosObligatoriosParaVerificarTests(Base):
     def test_aplica_al_tablero(self):
         e = self.en_proceso({})
         self.client.force_login(self.j1)
-        r = self.client.post(reverse("tablero_mover", args=[e.pk]), {"estado": "VERIFICACION_SENIOR"},
-                             content_type="application/json")
-        self.assertEqual(r.status_code, 400)
-        self.assertIn("«Periodo»", r.json()["error"])
+        r = self.client.post(reverse("entregable_estado", args=[e.pk]), {"estado": "VERIFICACION_SENIOR"},
+                             HTTP_HX_REQUEST="true")
+        self.assertEqual(r.status_code, 422)
+        self.assertContains(r, "«Periodo»", status_code=422)
 
 
 class HistorialTests(Base):

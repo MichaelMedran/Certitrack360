@@ -13,5 +13,4 @@ urlpatterns = [
     path("adjuntos/<int:adjunto_id>/descargar/", views.adjunto_descargar, name="adjunto_descargar"),
     path("adjuntos/<int:adjunto_id>/eliminar/", views.adjunto_eliminar, name="adjunto_eliminar"),
     path("tablero/", views.tablero, name="tablero"),
-    path("tablero/mover/<int:pk>/", views.mover_api, name="tablero_mover"),
 ]

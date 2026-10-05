@@ -51,7 +51,13 @@ PLANTILLAS = [
      [("Periodo reportado", "texto"), ("Responsable del cliente", "texto"), ("Código de riesgo operacional", "texto")]),
 ]
 
-TITULOS = ["Informe técnico", "Acta de conformidad", "Matriz de riesgos", "Informe de avance", "Entregable de cierre"]
+# El título de cada entregable parte del nombre de su plantilla, para que la demo sea coherente.
+TITULO_BASE = {
+    "Informe técnico mensual": "Informe técnico",
+    "Acta de conformidad": "Acta de conformidad",
+    "Matriz de riesgos": "Matriz de riesgos",
+    "Informe técnico mensual (Banco Andino)": "Informe técnico Banco Andino",
+}
 ESTADOS = [E.A_REALIZAR] * 7 + [E.EN_PROCESO] * 7 + [E.VERIFICACION_SENIOR] * 5 + [E.LISTO_PARA_ENTREGA] * 4 + [E.HECHO] * 7
 PLAZOS = [-6, -2, 0, 1, 2, 4, 5, 8, 12, 20]
 
@@ -161,7 +167,7 @@ class Command(BaseCommand):
             plantilla = candidatas[i % len(candidatas)]
             plazo = hoy - datetime.timedelta(days=30) if estado == E.HECHO else hoy + datetime.timedelta(days=PLAZOS[i % len(PLAZOS)])
             e = Entregable.objects.create(
-                contrato=contrato, plantilla=plantilla, titulo=f"{TITULOS[i % len(TITULOS)]} {i + 1:02d}",
+                contrato=contrato, plantilla=plantilla, titulo=f"{TITULO_BASE[plantilla.nombre]} {i + 1:02d}",
                 datos={c["nombre"]: self._valor(c, fake, rnd, hoy) for c in plantilla.campos_requeridos},
                 plazo=plazo, estado=estado, junior_asignado=rnd.choice(list(contrato.juniors.all())),
                 senior_revisor=contrato.senior_responsable, creado_por=contrato.senior_responsable,

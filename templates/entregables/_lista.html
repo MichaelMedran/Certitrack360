@@ -1,0 +1,15 @@
+{% include "entregables/_chips.html" %}
+{% if entregables %}
+<div class="tabla"><table>
+  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Urgencia</th><th>Estado</th><th>Junior</th></tr></thead>
+  <tbody>{% for e in entregables %}
+  <tr>
+    <td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
+    <td>{{ e.plazo|date:"d/m/Y" }}</td>
+    <td>{% if e.estado == 'HECHO' %}<span aria-hidden="true">—</span><span class="sr-only">No aplica</span>{% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</td>
+    <td>{{ e.get_estado_display }}</td><td>{{ e.junior_asignado.nombre }}</td>
+  </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="tarjeta">No hay entregables para mostrar con estos filtros.</p>{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}

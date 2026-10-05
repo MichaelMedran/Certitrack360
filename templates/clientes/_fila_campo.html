@@ -1,0 +1,21 @@
+<tr{% if f.error %} class="con-error"{% endif %}>
+  <td>
+    <input type="hidden" name="campo_nombre" value="{{ f.nombre }}">
+    <input type="text" name="campo_etiqueta" value="{{ f.etiqueta }}" maxlength="120" aria-label="Etiqueta del campo" placeholder="Ej.: Periodo reportado">
+    {% if f.error %}<div class="errorlist" role="alert">{{ f.error }}</div>{% endif %}
+  </td>
+  <td>
+    <select name="campo_tipo" aria-label="Tipo del campo">
+      {% for valor, etiqueta in tipos_campo %}<option value="{{ valor }}"{% if f.tipo == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+    </select>
+  </td>
+  <td>
+    <input type="text" name="campo_opciones" value="{{ f.opciones }}" aria-label="Opciones separadas por comas" placeholder="Alto, Medio, Bajo"{% if f.tipo != 'opcion' %} class="oculto"{% endif %}>
+    <span class="suave sin-opciones{% if f.tipo == 'opcion' %} oculto{% endif %}">—</span>
+  </td>
+  <td class="acciones-fila">
+    <button type="button" class="boton sec chico" data-accion="subir" aria-label="Subir el campo">↑</button>
+    <button type="button" class="boton sec chico" data-accion="bajar" aria-label="Bajar el campo">↓</button>
+    <button type="button" class="boton sec chico" data-accion="quitar">Quitar</button>
+  </td>
+</tr>
