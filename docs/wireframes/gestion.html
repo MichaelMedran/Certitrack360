@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Gestión de clientes, contratos y plantillas</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Índice de pantallas</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span><span>Asistente</span>
+  <span class="nuevo-inline">Consolidado</span><span class="activo">Gestión</span>
+  <span class="der">Avisos (0) · Gabriel · Gerente · Salir</span>
+</div>
+
+<h1>Gestión</h1>
+<div class="pestanas"><span>Clientes</span><span>Contratos</span><span class="activa">Plantillas</span></div>
+
+<div class="panel">
+  <div class="fila"><span class="boton principal">Nueva plantilla</span></div>
+  <table>
+    <tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Adjuntos obligatorios</th><th>Plazo (días)</th><th></th></tr>
+    <tr><td>Informe técnico mensual</td><td>Genérica</td><td>Periodo reportado, Responsable del cliente</td><td>Borrador</td><td>10</td><td><u>Editar</u></td></tr>
+    <tr><td>Acta de conformidad</td><td>Genérica</td><td>Fecha de reunión, Participantes, Número de acta</td><td>Evidencia</td><td>7</td><td><u>Editar</u></td></tr>
+    <tr><td>Matriz de riesgos</td><td>Genérica</td><td>Nivel de riesgo, Impacto, Descripción del riesgo</td><td>Ninguno</td><td>15</td><td><u>Editar</u></td></tr>
+  </table>
+</div>
+
+<h2>Editar plantilla <span class="marca">1</span></h2>
+<div class="panel nuevo">
+  <p><label>Nombre</label><br><span class="campo ancho">Matriz de riesgos</span></p>
+  <div class="fila">
+    <label>Cliente <span class="campo">Genérica (todos) ▾</span></label>
+    <label>Formato <span class="campo">Hoja de cálculo</span></label>
+    <label>Plazo por defecto (días) <span class="campo">15</span></label>
+  </div>
+
+  <h3 style="margin-top:12px">Campos obligatorios</h3>
+  <table>
+    <tr><th>Etiqueta</th><th>Tipo</th><th>Opciones (solo si el tipo es «opción»)</th><th style="width:150px"></th></tr>
+    <tr><td><span class="campo ancho">Nivel de riesgo</span></td><td><span class="campo">Número ▾</span></td><td>—</td><td>↑ ↓ <span class="boton">Quitar</span></td></tr>
+    <tr><td><span class="campo ancho">Impacto</span></td><td><span class="campo">Opción ▾</span></td><td><span class="campo ancho">Alto, Medio, Bajo</span></td><td>↑ ↓ <span class="boton">Quitar</span></td></tr>
+    <tr><td><span class="campo ancho">Descripción del riesgo</span></td><td><span class="campo">Texto largo ▾</span></td><td>—</td><td>↑ ↓ <span class="boton">Quitar</span></td></tr>
+  </table>
+  <div class="fila"><span class="boton">+ Agregar campo</span> <span class="nota">Tipos: texto, texto largo, número, fecha, opción. Empiece con pocos campos obligatorios para no frenar el trabajo.</span></div>
+
+  <h3 style="margin-top:12px">Adjuntos obligatorios <span class="nota">(antes de pasar a verificación)</span></h3>
+  <div class="fila">
+    <label>☐ TDR</label><label>☐ Borrador</label><label>☐ Versión final</label><label>☐ Evidencia</label><label>☐ Otro</label>
+  </div>
+
+  <div class="fila" style="margin-top:12px"><span class="boton principal">Guardar</span><span class="boton">Cancelar</span></div>
+</div>
+
+<h2>Contratos y clientes <span class="marca">2</span></h2>
+<div class="panel">
+  <table>
+    <tr><th>Contrato</th><th>Cliente</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th>Activo</th><th></th></tr>
+    <tr><td>DEMO-2026-001</td><td>Banco Andino Ficticio</td><td>01/06/2026 – 01/06/2027</td><td>Sofía S.</td><td>Julia J., Javier J.</td><td>Sí</td><td><u>Editar</u></td></tr>
+    <tr><td>DEMO-2026-011</td><td>Instituto Regional de Prueba</td><td>01/09/2025 – 05/09/2026</td><td>Sergio S.</td><td>—</td><td>No</td><td><u>Editar</u></td></tr>
+  </table>
+  <p class="nota">Los clientes se muestran igual: nombre, sector (banca, telecomunicaciones, sector público) y si está activo.</p>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Editor de plantillas con una lista de campos</b> (agregar, quitar, reordenar), en lugar de escribir texto especial o JSON a mano. Hoy se edita en un cuadro de texto con el formato «Etiqueta | tipo»; esta propuesta lo reemplaza.</li>
+  <li><b>Baja lógica:</b> clientes y contratos no se borran, se desmarcan como «activo». Conservan su historial pero no admiten entregables ni contratos nuevos. Aquí también se asigna el senior responsable y los juniors de cada contrato.</li>
+  <li>Solo gerente y admin ven «Gestión»; el junior y el senior reciben «sin acceso».</li>
+</ol>
+
+</div>
+</body>
+</html>

@@ -98,6 +98,7 @@ class ProgramadorTests(Base):
     def test_define_las_dos_tareas(self):
         p = programador.crear_programador()
         self.assertEqual({job.id for job in p.get_jobs()}, {"alertas", "lecciones"})
+        self.assertEqual({job.name for job in p.get_jobs()}, {"Alertas de vencimiento", "Indexación de lecciones aprendidas"})
         self.assertEqual(str(p.timezone), "America/Lima")
 
     def test_la_tarea_de_alertas_genera_las_notificaciones(self):

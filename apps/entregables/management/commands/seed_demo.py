@@ -170,16 +170,18 @@ class Command(BaseCommand):
             entregables.append(e)
 
         self._observaciones(entregables)
-        self._adjuntos(entregables)
+        sin_adjuntos = self._adjuntos(entregables)
         self._notificaciones(entregables)
         generar_alertas(hoy)
 
+        bloqueados = ", ".join(f"«{e.titulo}» ({e.junior_asignado.username})" for e in sin_adjuntos)
         return (
             f"Listo: {Usuario.objects.count()} usuarios, {Cliente.objects.count()} clientes, {Contrato.objects.count()} contratos, "
             f"{PlantillaTDR.objects.count()} plantillas, {Entregable.objects.count()} entregables, "
             f"{Adjunto.objects.count()} archivos ficticios, {Observacion.objects.count()} observaciones, "
             f"{Notificacion.objects.count()} notificaciones y {LeccionAprendida.objects.count()} lecciones. "
-            f"Contraseña de prueba: {CLAVE}"
+            f"Contraseña de prueba: {CLAVE}\n"
+            f"Para ver el bloqueo por adjuntos faltantes, mueva a «Verificación senior»: {bloqueados}."
         )
 
     @staticmethod
@@ -278,6 +280,7 @@ class Command(BaseCommand):
                     self._subir(e, "VERSION_FINAL", senior, "Versión aprobada para entrega")
                 if e.estado == E.HECHO and "EVIDENCIA" not in requeridos and i % 2 == 1:
                     self._subir(e, "EVIDENCIA", senior, "Cargo de recepción")
+        return sin_adjuntos
 
     @staticmethod
     def _notificaciones(entregables):

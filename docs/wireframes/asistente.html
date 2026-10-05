@@ -44,10 +44,15 @@
   <p><b>Solución:</b> …</p>
 </div>
 
+<div class="caja gris">
+  <b>Si la consulta no se parece a ningún caso:</b>
+  <p>No encontré casos relacionados con esa consulta. <span class="marca">3</span></p>
+</div>
+
 <ol class="anotaciones">
-  <li>Si Ollama no está disponible, el resto de la aplicación sigue funcionando y la pantalla lo avisa con claridad.</li>
+  <li>Si Ollama no está disponible, el resto de la aplicación sigue funcionando y la pantalla lo avisa con claridad; los casos se buscan entonces por coincidencia de palabras.</li>
   <li>Cada caso cita cliente, contrato y entregable de origen. El enlace solo aparece si el usuario tiene acceso a ese entregable; si no, se muestra el nombre sin enlace.</li>
-  <li>Esta pantalla no cambia con la adenda 1.</li>
+  <li><b>No inventa:</b> si ninguna lección es lo bastante parecida, lo dice y no le pide nada al modelo. El asistente es una pantalla aparte (decisión abierta n.º 6 del SDD: la otra opción es un panel dentro del detalle del entregable).</li>
 </ol>
 
 </div>

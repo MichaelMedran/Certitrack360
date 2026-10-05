@@ -11,64 +11,82 @@
 <div class="pantalla">
 
 <h1>CertiTrack 360 — Wireframes de las pantallas (hito H0.5)</h1>
-<p>Siete pantallas en HTML estático. Se abren con doble clic, sin servidor. Sirven para revisar la estructura, el flujo y la carga visual
-   <b>antes</b> de construir la interfaz de las funciones nuevas de la adenda 1.</p>
+<p>Doce pantallas en HTML estático, una por cada pantalla del SDD (§13.2) más el ingreso. Se abren con doble clic, sin servidor. Sirven para revisar la estructura, el flujo y la carga visual
+   <b>antes</b> de construir la interfaz de lo nuevo, y para la revisión de experiencia de usuario que pidió el cliente (RC-09).</p>
 
-<div class="aviso"><b>Pendiente de aprobación del equipo.</b> Hasta que se aprueben, no se construyen las pantallas nuevas
-   (adjuntos en el detalle, filtros del tablero y de la lista, y el Consolidado del gerente). La lógica de fondo ya está lista y probada.</div>
+<div class="aviso"><b>Pendiente de aprobación del equipo.</b> Hasta que se aprueben no se construyen las pantallas nuevas ni los cambios de las existentes
+   (adjuntos en el detalle, filtros del tablero y la lista, Consolidado, editor de plantillas, notificaciones en el inicio, etc.).
+   La lógica de fondo de todo lo anterior ya está hecha y probada; solo falta la interfaz.</div>
 
 <h2>Cómo leerlos</h2>
 <div class="caja">
   <p>Borde sólido = pantalla o elemento que ya existe en el prototipo.</p>
-  <div class="caja nuevo" style="margin-top:14px"><p>Borde punteado con la etiqueta NUEVO = lo que agrega la adenda 1.</p></div>
+  <div class="caja nuevo" style="margin-top:14px"><p>Borde punteado con la etiqueta NUEVO = lo que agrega o cambia el SDD respecto de lo que hay hoy.</p></div>
   <p>Los círculos numerados <span class="marca">1</span> remiten a las anotaciones al pie de cada pantalla (reglas, permisos y comportamiento).</p>
 </div>
 
 <h2>Pantallas</h2>
 <table>
-  <tr><th>Pantalla</th><th>Quién la ve</th><th>Qué cambia con la adenda 1</th></tr>
-  <tr><td><a href="inicio.html">Inicio según rol</a></td><td>Todos</td><td>Enlace al Consolidado para gerente y admin.</td></tr>
-  <tr><td><a href="tablero.html">Tablero Kanban (con filtros)</a></td><td>Todos, cada rol con lo suyo</td><td>Filtros plegables, orden y etiqueta de urgencia en texto.</td></tr>
-  <tr><td><a href="entregable.html">Detalle del entregable</a></td><td>Quien tenga acceso al entregable</td><td>Sección de adjuntos con versiones; el historial incluye subidas y eliminaciones.</td></tr>
-  <tr><td><a href="calendario.html">Calendario</a></td><td>Todos, cada rol con lo suyo</td><td>Sin cambios.</td></tr>
-  <tr><td><a href="consolidado.html">Consolidado del gerente</a></td><td>Solo gerente y admin (los demás reciben «sin acceso»)</td><td>Pantalla nueva, de solo lectura.</td></tr>
-  <tr><td><a href="notificaciones.html">Notificaciones</a></td><td>Cada usuario, las suyas</td><td>Nuevo aviso al senior cuando un entregable llega a verificación. Sin mensajería entre personas.</td></tr>
-  <tr><td><a href="asistente.html">Asistente (fase 2)</a></td><td>Todos</td><td>Sin cambios.</td></tr>
+  <tr><th>Pantalla</th><th>Quién la ve</th><th>En el prototipo hoy</th></tr>
+  <tr><td><a href="login.html">Ingreso</a></td><td>Cualquiera (único acceso sin sesión)</td><td>Existe</td></tr>
+  <tr><td><a href="inicio.html">Inicio según rol</a></td><td>Todos</td><td>Cambia: notificaciones recientes y enlace al Consolidado</td></tr>
+  <tr><td><a href="tablero.html">Tablero Kanban (con filtros)</a></td><td>Todos, cada rol con lo suyo</td><td>Cambia: filtros plegables, orden y urgencia en texto</td></tr>
+  <tr><td><a href="lista.html">Lista de entregables</a></td><td>Todos, cada rol con lo suyo</td><td>Cambia: mismos filtros y orden, y columna de urgencia</td></tr>
+  <tr><td><a href="entregable.html">Detalle del entregable</a></td><td>Quien tenga acceso al entregable</td><td>Cambia: sección de adjuntos con versiones y historial con sus acciones</td></tr>
+  <tr><td><a href="nuevo.html">Nuevo entregable</a></td><td>Senior, gerente, admin</td><td>Cambia: elegir el senior revisor y ver los adjuntos que exige la plantilla</td></tr>
+  <tr><td><a href="calendario.html">Calendario</a></td><td>Todos, cada rol con lo suyo</td><td>Cambia (ya aplicado): estado y urgencia en el texto de cada evento</td></tr>
+  <tr><td><a href="notificaciones.html">Notificaciones</a></td><td>Cada usuario, las suyas</td><td>Cambia: marcar de una en una; aviso al senior cuando algo llega a verificación</td></tr>
+  <tr><td><a href="consolidado.html">Consolidado del gerente</a></td><td>Solo gerente y admin</td><td>Nueva, de solo lectura</td></tr>
+  <tr><td><a href="gestion.html">Gestión: clientes, contratos y plantillas</a></td><td>Gerente y admin</td><td>Cambia: editor de plantillas por lista de campos, adjuntos obligatorios y baja lógica</td></tr>
+  <tr><td><a href="asistente.html">Asistente (fase 2)</a></td><td>Todos</td><td>Existe (búsqueda por significado cuando hay Ollama)</td></tr>
+  <tr><td><a href="administracion.html">Administración (panel técnico)</a></td><td>Solo admin</td><td>Existe (panel de Django); ahora solo para el rol admin</td></tr>
 </table>
 
 <h2>Flujo principal</h2>
 <div class="caja">
   <div class="fila">
-    <span class="boton">Ingresar</span> → <span class="boton principal">Inicio</span> →
-    <span class="boton">Tablero</span> ⇄ <span class="boton">Detalle del entregable</span>
+    <span class="boton">Ingreso</span> → <span class="boton principal">Inicio</span> →
+    <span class="boton">Tablero</span> ⇄ <span class="boton">Lista</span> → <span class="boton">Detalle del entregable</span>
   </div>
   <div class="fila">
-    <span class="boton">Inicio (gerente / admin)</span> → <span class="boton nuevo-inline">Consolidado</span> → <span class="boton">Detalle del entregable</span>
+    <span class="boton">Tablero / Lista</span> → <span class="boton">Nuevo entregable</span> → <span class="boton">Detalle</span> (subir adjuntos, pasar de estado)
+  </div>
+  <div class="fila">
+    <span class="boton">Inicio (gerente / admin)</span> → <span class="boton nuevo-inline">Consolidado</span> → <span class="boton">Detalle</span>
+    &nbsp;·&nbsp; <span class="boton">Gestión</span> (clientes, contratos, plantillas) &nbsp;·&nbsp; <span class="boton">Administración</span> (solo admin)
   </div>
   <div class="fila">
     <span class="boton">Calendario</span> → <span class="boton">Detalle</span> &nbsp;·&nbsp;
     <span class="boton">Notificaciones</span> → <span class="boton">Detalle</span> &nbsp;·&nbsp;
     <span class="boton">Asistente</span> → <span class="boton">Detalle (si el usuario tiene acceso)</span>
   </div>
-  <p class="nota">Toda pantalla enlaza al detalle del entregable; desde el detalle se sube, se descarga y se cambia de estado.</p>
+  <p class="nota">Toda pantalla enlaza al detalle del entregable; desde el detalle se sube, se descarga y se cambia de estado. No hay chat ni mensajes entre personas: el aviso al senior son las notificaciones automáticas.</p>
 </div>
 
-<h2>Decisiones que necesitan al equipo</h2>
-<div class="pregunta"><b>1. Archivos.</b> Valores por defecto: máximo 10 MB; formatos pdf, docx, xlsx, pptx, png, jpg, txt. ¿Se mantienen?</div>
-<div class="pregunta"><b>2. Quién crea entregables.</b> Hoy: senior (solo de sus contratos), gerente y admin. ¿Deben crearlos también Comercial o Delivery?</div>
-<div class="pregunta"><b>3. Adjuntos exigidos por plantilla.</b> Propuesta para la demo: Informe técnico mensual → Borrador; Acta de conformidad → Evidencia; Matriz de riesgos → ninguno.</div>
-<div class="pregunta"><b>4. Filtro «Estado» en el tablero.</b> Las columnas ya son los estados. Propuesta: mantener el filtro (oculta columnas) o dejarlo solo en la lista.</div>
+<h2>Decisiones que afectan a la interfaz</h2>
+<div class="pregunta"><b>1. Archivos (SDD n.º 4).</b> Valores por defecto: máximo 10 MB; formatos pdf, docx, xlsx, pptx, png, jpg, txt. ¿Se mantienen?</div>
+<div class="pregunta"><b>2. Adjuntos que exige cada plantilla (SDD n.º 3).</b> Propuesta para la demo: Informe técnico mensual → Borrador; Acta de conformidad → Evidencia; Matriz de riesgos → ninguno; Informe técnico del Banco → Borrador y TDR.</div>
+<div class="pregunta"><b>3. Quién crea entregables (SDD n.º 5).</b> Hoy: senior (solo de sus contratos), gerente y admin. ¿Deben crearlos también Comercial o Delivery?</div>
+<div class="pregunta"><b>4. El asistente (SDD n.º 6).</b> Propuesta: pantalla aparte. La alternativa es un panel dentro del detalle del entregable.</div>
+<div class="pregunta"><b>5. Cierre de sesión por inactividad (SDD n.º 9).</b> Propuesta: 60 minutos, configurable.</div>
+<div class="pregunta"><b>6. Filtro «Estado» en el tablero.</b> Las columnas ya son los estados. Propuesta: mantenerlo (oculta columnas) y dejarlo también en la lista.</div>
+<div class="pregunta"><b>7. Editor de plantillas.</b> Propuesta: lista de campos con «Agregar» y «Quitar» (ver Gestión), en lugar del cuadro de texto actual.</div>
 
 <h2>Registro de aprobación</h2>
 <table>
   <tr><th>Pantalla</th><th style="width:120px">¿Aprobada?</th><th>Observaciones del equipo</th></tr>
+  <tr><td>Ingreso</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   <tr><td>Inicio según rol</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   <tr><td>Tablero Kanban (con filtros)</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Lista de entregables</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   <tr><td>Detalle del entregable</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Nuevo entregable</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   <tr><td>Calendario</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-  <tr><td>Consolidado del gerente</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   <tr><td>Notificaciones</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Consolidado del gerente</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Gestión (clientes, contratos y plantillas)</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   <tr><td>Asistente (fase 2)</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  <tr><td>Administración (panel técnico)</td><td>&nbsp;</td><td>&nbsp;</td></tr>
 </table>
 
 </div>

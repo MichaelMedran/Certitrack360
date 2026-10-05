@@ -46,7 +46,7 @@
 
 <!-- Ejemplo del mensaje de error de Poka-Yoke -->
 <div class="aviso nuevo">
-  No se puede enviar a verificación: faltan los adjuntos requeridos («Borrador»). Súbalos en el detalle del entregable. <span class="marca">3</span>
+  No se puede enviar a verificación: faltan los adjuntos requeridos («Borrador»). Suba los adjuntos en el detalle del entregable. <span class="marca">3</span>
 </div>
 
 <div class="tablero">
@@ -105,7 +105,7 @@
   <li><b>Siempre dentro de lo permitido:</b> los filtros se aplican sobre lo que el rol ya puede ver. Un junior que filtre por un cliente que no tiene asignado no ve nada. Los filtros viajan en la dirección (se puede compartir la vista) y la lista se actualiza sin recargar la página.</li>
   <li><b>Urgencia con texto:</b> cada tarjeta lleva una etiqueta (Vencido, Crítico, Próximo, Normal) y los vencidos además un trazo grueso a la izquierda; el color nunca es la única señal. Los umbrales (crítico ≤ 2 días, próximo ≤ 5) salen de la misma configuración que las alertas.</li>
   <li><b>Tipo de observación:</b> el filtro considera solo observaciones <i>no resueltas</i>. La tarjeta muestra el contador; el texto de cada observación está en el detalle.</li>
-  <li><b>Poka-Yoke de adjuntos:</b> si la plantilla exige adjuntos y faltan, la tarjeta vuelve a su columna y aparece el mensaje con los tipos que faltan.</li>
+  <li><b>Poka-Yoke:</b> para pasar a verificación el entregable necesita los datos obligatorios completos y los adjuntos que exige la plantilla. Si falta algo, la tarjeta vuelve a su columna y un solo mensaje dice qué falta (datos, adjuntos o ambos).</li>
   <li>Devolver desde «Verificación senior» abre la ventana de observación obligatoria (sin cambios).</li>
 </ol>
 

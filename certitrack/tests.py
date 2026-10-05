@@ -37,6 +37,73 @@ class SinRecursosExternosTests(SimpleTestCase):
             self.assertNotRegex(etiqueta, r"(?:src|href)=\"(?:https?:)?//")
 
 
+class WireframesTests(SimpleTestCase):
+    """H0.5: los wireframes de todas las pantallas del SDD (§13.2) existen y están bien formados."""
+
+    PANTALLAS = ["login", "inicio", "tablero", "lista", "entregable", "nuevo", "calendario", "notificaciones",
+                 "consolidado", "gestion", "asistente", "administracion"]
+    VACIAS = {"meta", "link", "br", "hr", "img", "input"}
+
+    def paginas(self):
+        return [RAIZ / "docs" / "wireframes" / f"{n}.html" for n in ["index", *self.PANTALLAS]]
+
+    def revisar(self, ruta):
+        from html.parser import HTMLParser
+
+        pila, errores, enlaces = [], [], []
+
+        class Lector(HTMLParser):
+            def handle_starttag(inner, tag, attrs):
+                if tag not in self.VACIAS:
+                    pila.append(tag)
+                enlaces.extend(v for k, v in attrs if k in ("href", "src") and v)
+
+            def handle_endtag(inner, tag):
+                if tag in self.VACIAS:
+                    return
+                if not pila or pila[-1] != tag:
+                    errores.append(f"</{tag}> inesperado")
+                else:
+                    pila.pop()
+
+        lector = Lector()
+        lector.feed(ruta.read_text(encoding="utf-8"))
+        return errores + [f"sin cerrar: {t}" for t in pila], enlaces
+
+    def test_existen_el_indice_y_las_doce_pantallas(self):
+        for ruta in self.paginas():
+            self.assertTrue(ruta.exists(), ruta.name)
+        self.assertTrue((RAIZ / "docs" / "wireframes" / "wf.css").exists())
+
+    def test_el_html_esta_bien_formado_y_los_enlaces_funcionan(self):
+        for ruta in self.paginas():
+            with self.subTest(pagina=ruta.name):
+                errores, enlaces = self.revisar(ruta)
+                self.assertEqual(errores, [])
+                for enlace in enlaces:
+                    self.assertTrue((ruta.parent / enlace).exists(), f"enlace roto: {enlace}")
+
+    def test_el_indice_enlaza_a_todas_las_pantallas_y_las_lista_en_el_registro_de_aprobacion(self):
+        indice = (RAIZ / "docs" / "wireframes" / "index.html").read_text(encoding="utf-8")
+        for nombre in self.PANTALLAS:
+            self.assertIn(f'href="{nombre}.html"', indice)
+        self.assertEqual(indice.count("<td>&nbsp;</td><td>&nbsp;</td>"), len(self.PANTALLAS))
+
+    def test_son_de_baja_fidelidad_sin_colores_ni_scripts(self):
+        css = (RAIZ / "docs" / "wireframes" / "wf.css").read_text(encoding="utf-8")
+        colores = re.findall(r"#([0-9a-fA-F]{3,6})\b", css)
+        self.assertTrue(colores)  # sí usa colores, pero todos son grises
+        self.assertEqual([c for c in colores if not self.es_gris(c)], [])
+        for ruta in self.paginas():
+            self.assertNotIn("<script", ruta.read_text(encoding="utf-8").lower())
+
+    @staticmethod
+    def es_gris(hexa):
+        if len(hexa) == 3:
+            hexa = "".join(ch * 2 for ch in hexa)
+        return hexa[0:2].lower() == hexa[2:4].lower() == hexa[4:6].lower()
+
+
 class ConfiguracionSeguraTests(SimpleTestCase):
     def test_los_archivos_subidos_no_tienen_url_publica(self):
         self.assertIsNone(settings.MEDIA_URL)

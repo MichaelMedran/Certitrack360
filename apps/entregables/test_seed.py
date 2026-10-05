@@ -111,6 +111,15 @@ class SeedDemoTests(MediaTemporal, TestCase):
         bloqueados = [e for e in Entregable.objects.filter(estado=E.EN_PROCESO) if adjuntos.faltantes_requeridos(e)]
         self.assertGreaterEqual(len(bloqueados), 2)
 
+    def test_el_resumen_indica_que_tarjetas_demuestran_el_bloqueo(self):
+        salida = self.salida.getvalue()
+        self.assertIn("bloqueo por adjuntos faltantes", salida)
+        bloqueados = {e.titulo: e.junior_asignado.username
+                      for e in Entregable.objects.filter(estado=E.EN_PROCESO) if adjuntos.faltantes_requeridos(e)}
+        self.assertGreaterEqual(len(bloqueados), 2)
+        for titulo, junior in bloqueados.items():
+            self.assertIn(f"«{titulo}» ({junior})", salida)
+
     def test_los_archivos_estan_ordenados_por_cliente_contrato_y_entregable(self):
         for a in Adjunto.objects.select_related("entregable__contrato__cliente"):
             partes = a.archivo.name.split("/")

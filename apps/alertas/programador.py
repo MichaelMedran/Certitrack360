@@ -48,10 +48,10 @@ def crear_programador():
     programador = BlockingScheduler(timezone=settings.TIME_ZONE)
     programador.add_job(
         _con_conexion_limpia(tarea_alertas), "interval", minutes=ALERTAS_CADA_MINUTOS, id="alertas",
-        max_instances=1, coalesce=True,
+        name="Alertas de vencimiento", max_instances=1, coalesce=True,
     )
     programador.add_job(
         _con_conexion_limpia(tarea_lecciones), "cron", hour=INDEXACION_HORA, minute=0, id="lecciones",
-        max_instances=1, coalesce=True,
+        name="Indexación de lecciones aprendidas", max_instances=1, coalesce=True,
     )
     return programador

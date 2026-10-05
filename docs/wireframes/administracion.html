@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Administración (panel técnico)</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Índice de pantallas</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span><span>Asistente</span>
+  <span class="nuevo-inline">Consolidado</span><span>Gestión</span><span class="activo">Administración</span>
+  <span class="der">Avisos (0) · Alicia · Administrador · Salir</span>
+</div>
+
+<h1>Administración <span class="marca">1</span></h1>
+<p class="nota">Panel técnico para configuración y soporte. No forma parte del trabajo diario.</p>
+
+<div class="panel">
+  <h3>Usuarios y roles</h3>
+  <table>
+    <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Activo</th></tr>
+    <tr><td>junior1</td><td>Julia Jiménez</td><td>Junior</td><td>Sí</td></tr>
+    <tr><td>senior1</td><td>Sofía Sánchez</td><td>Senior</td><td>Sí</td></tr>
+    <tr><td>gerente_demo</td><td>Gabriel Gerente</td><td>Gerente de Proyectos</td><td>Sí</td></tr>
+  </table>
+  <p class="nota">Aquí se crean los usuarios, se les asigna el rol y se activan o desactivan. El rol decide qué ve cada persona. <span class="marca">2</span></p>
+</div>
+
+<div class="panel">
+  <h3>Otras secciones (consulta y soporte)</h3>
+  <ul>
+    <li>Entregables, observaciones e historial</li>
+    <li>Adjuntos (solo los datos del archivo; los archivos se descargan desde el entregable)</li>
+    <li>Clientes, contratos y plantillas</li>
+    <li>Notificaciones</li>
+    <li>Lecciones aprendidas</li>
+  </ul>
+</div>
+
+<ol class="anotaciones">
+  <li>Solo el rol <b>admin</b> ve «Administración». El gerente tiene «Gestión» (clientes, contratos y plantillas) pero no este panel; cualquier otro rol que escriba la dirección es enviado a la pantalla de ingreso del panel.</li>
+  <li>El rol del usuario controla también el acceso a este panel: subirle el rol a admin se lo da y bajárselo se lo quita.</li>
+</ol>
+
+</div>
+</body>
+</html>

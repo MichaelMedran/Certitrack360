@@ -1,3 +1,4 @@
 Django>=5.2,<5.3
 Faker>=30
+APScheduler>=3.10,<4
 psycopg[binary]>=3.2  # solo para PostgreSQL en producción

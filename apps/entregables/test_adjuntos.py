@@ -426,6 +426,27 @@ class PlantillaConAdjuntosTests(Base):
         self.assertEqual(self.client.post(reverse("adm_nuevo", args=["plantillas"]), self.datos()).status_code, 403)
 
 
+class PanelTecnicoTests(Base):
+    def test_el_panel_lista_y_abre_los_adjuntos_sin_romperse_aunque_no_tengan_url_publica(self):
+        a = adjuntos.subir(self.e1, self.j1, pdf("informe_enero.pdf"), "BORRADOR")
+        self.client.force_login(self.admin)
+        r = self.client.get("/admin/entregables/adjunto/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "informe_enero.pdf")
+        r = self.client.get(f"/admin/entregables/adjunto/{a.pk}/change/")
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, "/media/")
+        self.assertContains(r, "Ubicación en el servidor")
+        self.assertContains(r, a.archivo.name)  # la ubicación va en texto, sin enlace
+        self.assertNotContains(r, f'href="{a.archivo.name}"')
+        self.assertEqual(self.client.get("/admin/entregables/adjunto/add/").status_code, 403)  # se suben desde el entregable
+
+    def test_los_demas_roles_no_entran_al_panel_de_adjuntos(self):
+        for usuario in (self.j1, self.s1, self.gerente):
+            self.client.force_login(usuario)
+            self.assertEqual(self.client.get("/admin/entregables/adjunto/").status_code, 302)
+
+
 class ServicioDirectoTests(Base):
     def test_crear_adjunto_con_contentfile_para_datos_de_demostracion(self):
         a = adjuntos.crear_adjunto(self.e1, self.s1, ContentFile(b"hola", name="nota.txt"), "OTRO", "demo")
