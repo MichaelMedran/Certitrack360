@@ -40,6 +40,9 @@ class Contrato(models.Model):
         blank=True,
         limit_choices_to={"rol": "JUNIOR"},
     )
+    activo = models.BooleanField(
+        default=True, help_text="La baja es lógica: el contrato conserva su historial pero no admite entregables nuevos."
+    )
 
     class Meta:
         ordering = ["numero_contrato"]
@@ -51,10 +54,11 @@ class Contrato(models.Model):
 class PlantillaTDR(models.Model):
     """Define los campos obligatorios que exige un tipo de entregable.
 
-    campos_requeridos: lista de {"nombre": "slug", "etiqueta": "Texto", "tipo": "texto|numero|fecha|texto_largo"}
+    campos_requeridos: lista de {"nombre": "slug", "etiqueta": "Texto", "tipo": "texto|texto_largo|numero|fecha|opcion"};
+    los campos de tipo «opcion» llevan además "opciones": ["A", "B", ...].
     """
 
-    TIPOS_CAMPO = ("texto", "texto_largo", "numero", "fecha")
+    TIPOS_CAMPO = ("texto", "texto_largo", "numero", "fecha", "opcion")
 
     cliente = models.ForeignKey(
         Cliente, null=True, blank=True, on_delete=models.CASCADE, related_name="plantillas",

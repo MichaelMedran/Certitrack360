@@ -13,7 +13,7 @@ from apps.cuentas.permisos import solo_senior_o_superior
 
 from . import adjuntos, filtros, servicios
 from .forms import AdjuntoForm, EntregableForm, ObservacionForm, contratos_para
-from .models import Adjunto, Entregable
+from .models import Adjunto, Entregable, Observacion
 from .visibilidad import entregables_visibles, es_senior_del_entregable
 
 
@@ -211,9 +211,10 @@ def registrar_observacion(request, pk):
 
 @login_required
 @require_POST
-def resolver_observacion(request, pk, obs_id):
-    e = get_object_or_404(_base(request.user), pk=pk)
-    obs = get_object_or_404(e.observaciones, pk=obs_id)
+def resolver_observacion(request, obs_id):
+    # La observación solo existe para quien puede ver su entregable (si no, 404).
+    obs = get_object_or_404(Observacion.objects.filter(entregable__in=entregables_visibles(request.user)), pk=obs_id)
+    e = _base(request.user).get(pk=obs.entregable_id)
     if not es_senior_del_entregable(request.user, e):
         raise PermissionDenied
     solucion = request.POST.get("solucion", "").strip()

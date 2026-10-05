@@ -1,5 +1,6 @@
 """Configuración de CertiTrack 360. Todo se lee de variables de entorno (ver .env.example y SDD §18.2)."""
 import os
+import sys
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -113,6 +114,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Solo al correr las pruebas: un hash rápido para no perder minutos calculando PBKDF2 en cada usuario de prueba.
+# En la aplicación real se usa el predeterminado de Django (PBKDF2); hay una prueba que lo verifica.
+if "test" in sys.argv:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "login"
@@ -154,3 +160,5 @@ CONSOLIDADO_WINDOW_DAYS = int(os.environ.get("CONSOLIDADO_WINDOW_DAYS", "7"))
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "nomic-embed-text")
+# Similitud mínima (0 a 1) para considerar relevante una lección; ajustar según el modelo de embeddings.
+ASSISTANT_MIN_SIMILARITY = float(os.environ.get("ASSISTANT_MIN_SIMILARITY", "0.5"))

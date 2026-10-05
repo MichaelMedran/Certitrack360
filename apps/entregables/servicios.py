@@ -20,6 +20,31 @@ TRANSICIONES = {
 }
 
 
+def datos_faltantes(entregable):
+    """Etiquetas de los campos obligatorios de la plantilla que el entregable no tiene completos."""
+    return [
+        c["etiqueta"]
+        for c in entregable.plantilla.campos_requeridos
+        if str(entregable.datos.get(c["nombre"], "")).strip() == ""
+    ]
+
+
+def requisitos_para_verificacion(entregable):
+    """Mensaje con todo lo que falta para pasar a Verificación senior, o None si ya se puede (SDD §10.1)."""
+    partes, ayudas = [], []
+    datos = datos_faltantes(entregable)
+    if datos:
+        partes.append("los datos obligatorios (" + ", ".join(f"«{d}»" for d in datos) + ")")
+        ayudas.append("Un gerente o admin puede completar los datos.")
+    adjuntos_faltan = adjuntos.faltantes_requeridos(entregable)
+    if adjuntos_faltan:
+        partes.append("los adjuntos requeridos (" + ", ".join(f"«{adjuntos.etiqueta_tipo(t)}»" for t in adjuntos_faltan) + ")")
+        ayudas.append("Suba los adjuntos en el detalle del entregable.")
+    if not partes:
+        return None
+    return f"No se puede enviar a verificación: faltan {' y '.join(partes)}. {' '.join(ayudas)}"
+
+
 def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
     """Cambia el estado y registra el historial. Lanza ValidationError o PermissionDenied."""
     actual = entregable.estado
@@ -36,13 +61,9 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
         raise PermissionDenied("No tiene permiso para realizar este movimiento.")
 
     if nuevo_estado == E.VERIFICACION_SENIOR:
-        faltan = adjuntos.faltantes_requeridos(entregable)
-        if faltan:
-            tipos = ", ".join(f"«{adjuntos.etiqueta_tipo(t)}»" for t in faltan)
-            raise ValidationError(
-                f"No se puede enviar a verificación: faltan los adjuntos requeridos ({tipos}). "
-                "Súbalos en el detalle del entregable."
-            )
+        faltante = requisitos_para_verificacion(entregable)
+        if faltante:
+            raise ValidationError(faltante)
 
     devuelve = clave == (E.VERIFICACION_SENIOR, E.EN_PROCESO)
     if devuelve:
@@ -55,7 +76,8 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
         entregable.estado = nuevo_estado
         entregable.save(update_fields=["estado", "actualizado_en"])
         HistorialEstado.objects.create(
-            entregable=entregable, estado_anterior=actual, estado_nuevo=nuevo_estado, usuario=usuario
+            entregable=entregable, estado_anterior=actual, estado_nuevo=nuevo_estado, usuario=usuario,
+            detalle=f"Devuelto con observación ({TipoError(tipo_error).label})" if devuelve else "",
         )
         if nuevo_estado == E.VERIFICACION_SENIOR and entregable.senior_revisor_id != usuario.pk:
             Notificacion.objects.create(
@@ -70,13 +92,19 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
                 usuario=entregable.junior_asignado, entregable=entregable, tipo=Notificacion.Tipo.OBSERVACION,
                 mensaje=f"«{entregable.titulo}» fue devuelto con una observación.",
             )
+        if nuevo_estado == E.HECHO:
+            # Fase 2: las observaciones resueltas de un entregable cerrado se convierten en lecciones aprendidas.
+            from apps.conocimiento.servicios import generar_lecciones
+
+            generar_lecciones(entregable)
     return entregable
 
 
 def registrar_creacion(entregable, usuario):
     """Primer registro del historial y aviso de asignación al junior."""
     HistorialEstado.objects.create(
-        entregable=entregable, estado_anterior="", estado_nuevo=entregable.estado, usuario=usuario
+        entregable=entregable, estado_anterior="", estado_nuevo=entregable.estado, usuario=usuario,
+        detalle="Entregable creado",
     )
     Notificacion.objects.create(
         usuario=entregable.junior_asignado, entregable=entregable, tipo=Notificacion.Tipo.ASIGNACION,

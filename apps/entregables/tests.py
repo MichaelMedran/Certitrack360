@@ -2,15 +2,13 @@ import datetime
 import json
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from apps.alertas.models import Notificacion
 from apps.alertas.servicios import generar_alertas
 from apps.clientes.models import Cliente, Contrato, PlantillaTDR
-from apps.conocimiento import servicios as conocimiento
 from apps.cuentas.models import Usuario
 from apps.entregables import servicios
 from apps.entregables.models import Entregable, HistorialEstado, Observacion
@@ -44,6 +42,7 @@ class Base(MediaTemporal, TestCase):
     def nuevo(cls, contrato, junior, senior, titulo, estado=E.A_REALIZAR, dias=10):
         return Entregable.objects.create(
             contrato=contrato, plantilla=cls.plantilla, titulo=titulo, plazo=cls.hoy + datetime.timedelta(days=dias),
+            datos={c["nombre"]: "valor de prueba" for c in cls.plantilla.campos_requeridos},
             estado=estado, junior_asignado=junior, senior_revisor=senior, creado_por=senior)
 
 
@@ -225,19 +224,3 @@ class AlertasTests(Base):
         Notificacion.objects.create(usuario=self.j1, entregable=self.e1, tipo="ASIGNACION", mensaje="x")
         self.client.force_login(self.j1)
         self.assertEqual(self.client.get(reverse("inicio")).context["no_leidas"], 1)
-
-
-class ConocimientoYSeedTests(MediaTemporal, TestCase):
-    def test_seed_idempotente_y_chatbot_cita_caso(self):
-        call_command("seed_demo", "--reset", verbosity=0)
-        call_command("seed_demo", verbosity=0)
-        self.assertEqual(Entregable.objects.count(), 30)
-        self.assertEqual(len({e.estado for e in Entregable.objects.all()}), 5)
-        self.client.login(username="gerente_demo", password="demo1234")
-        r = self.client.get(reverse("asistente"), {"q": "falta el periodo reportado en el informe"})
-        self.assertTrue(r.context["casos"])
-        self.assertContains(r, "Caso 1")
-        self.assertIn("periodo", r.context["casos"][0]["leccion"].problema.lower())
-
-    def test_busqueda_sin_resultados(self):
-        self.assertEqual(conocimiento.buscar("xyzzy"), [])

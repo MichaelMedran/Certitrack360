@@ -8,10 +8,10 @@
   <tr><th>Nombre</th><th>Sector</th><th>Activo</th><th></th></tr>
   {% for o in objetos %}<tr><td>{{ o.nombre }}</td><td>{{ o.get_sector_display }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
   {% elif entidad == 'contratos' %}
-  <tr><th>Contrato</th><th>Cliente</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th></th></tr>
+  <tr><th>Contrato</th><th>Cliente</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th>Activo</th><th></th></tr>
   {% for o in objetos %}<tr><td>{{ o.numero_contrato }}<div class="suave">{{ o.descripcion }}</div></td><td>{{ o.cliente }}</td>
   <td>{{ o.fecha_inicio|date:"d/m/Y" }} – {{ o.fecha_fin|date:"d/m/Y" }}</td><td>{{ o.senior_responsable }}</td>
-  <td>{{ o.juniors.all|join:", " }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
+  <td>{{ o.juniors.all|join:", " }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
   {% else %}
   <tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Adjuntos obligatorios</th><th>Plazo (días)</th><th></th></tr>
   {% for o in objetos %}<tr><td>{{ o.nombre }}<div class="suave">{{ o.formato }}</div></td><td>{{ o.cliente|default:"Genérica" }}</td>

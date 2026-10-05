@@ -15,7 +15,10 @@ class ClienteForm(forms.ModelForm):
 class ContratoForm(forms.ModelForm):
     class Meta:
         model = Contrato
-        fields = ["cliente", "numero_contrato", "descripcion", "fecha_inicio", "fecha_fin", "senior_responsable", "juniors"]
+        fields = [
+            "cliente", "numero_contrato", "descripcion", "fecha_inicio", "fecha_fin", "senior_responsable", "juniors",
+            "activo",
+        ]
         widgets = {
             "fecha_inicio": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "fecha_fin": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
@@ -26,7 +29,11 @@ class ContratoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["senior_responsable"].queryset = Usuario.objects.filter(rol=Usuario.Rol.SENIOR, is_active=True)
         self.fields["juniors"].queryset = Usuario.objects.filter(rol=Usuario.Rol.JUNIOR, is_active=True)
-        self.fields["cliente"].queryset = Cliente.objects.filter(activo=True)
+        # Un contrato existente conserva su cliente aunque este se haya dado de baja; los nuevos solo admiten clientes activos.
+        permitidos = Cliente.objects.filter(activo=True)
+        if self.instance.pk:
+            permitidos = Cliente.objects.filter(activo=True) | Cliente.objects.filter(pk=self.instance.cliente_id)
+        self.fields["cliente"].queryset = permitidos
 
     def clean(self):
         datos = super().clean()
@@ -40,8 +47,8 @@ class PlantillaForm(forms.ModelForm):
     campos_texto = forms.CharField(
         label="Campos obligatorios",
         widget=forms.Textarea(attrs={"rows": 6}),
-        help_text="Un campo por línea con el formato: Etiqueta | tipo. Tipos: texto, texto_largo, numero, fecha. "
-        "Ejemplo: Número de informe | texto",
+        help_text="Un campo por línea con el formato: Etiqueta | tipo. Tipos: texto, texto_largo, numero, fecha, opcion. "
+        "Ejemplos: «Número de informe | texto» · «Nivel | opcion | Alto, Medio, Bajo».",
     )
 
     adjuntos_requeridos = forms.MultipleChoiceField(
@@ -56,17 +63,22 @@ class PlantillaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            self.fields["campos_texto"].initial = "\n".join(
-                f"{c['etiqueta']} | {c['tipo']}" for c in self.instance.campos_requeridos
-            )
+            self.fields["campos_texto"].initial = "\n".join(self._linea(c) for c in self.instance.campos_requeridos)
+
+    @staticmethod
+    def _linea(campo):
+        linea = f"{campo['etiqueta']} | {campo['tipo']}"
+        if campo["tipo"] == "opcion":
+            linea += " | " + ", ".join(campo.get("opciones", []))
+        return linea
 
     def clean_campos_texto(self):
         campos, vistos = [], set()
         for n, linea in enumerate(self.cleaned_data["campos_texto"].splitlines(), start=1):
             if not linea.strip():
                 continue
-            etiqueta, _, tipo = (p.strip() for p in linea.partition("|"))
-            tipo = tipo or "texto"
+            partes = [p.strip() for p in linea.split("|", 2)]
+            etiqueta, tipo = partes[0], (partes[1] if len(partes) > 1 and partes[1] else "texto")
             if not etiqueta:
                 raise forms.ValidationError(f"Línea {n}: falta la etiqueta del campo.")
             if tipo not in PlantillaTDR.TIPOS_CAMPO:
@@ -77,7 +89,16 @@ class PlantillaForm(forms.ModelForm):
             if nombre in vistos:
                 raise forms.ValidationError(f"Línea {n}: el campo «{etiqueta}» está repetido.")
             vistos.add(nombre)
-            campos.append({"nombre": nombre, "etiqueta": etiqueta, "tipo": tipo})
+            campo = {"nombre": nombre, "etiqueta": etiqueta, "tipo": tipo}
+            if tipo == "opcion":
+                opciones = list(dict.fromkeys(o.strip() for o in (partes[2] if len(partes) > 2 else "").split(",") if o.strip()))
+                if len(opciones) < 2:
+                    raise forms.ValidationError(
+                        f"Línea {n}: el campo «{etiqueta}» es de tipo opcion y necesita al menos dos opciones "
+                        "separadas por comas. Ejemplo: Nivel | opcion | Alto, Medio, Bajo."
+                    )
+                campo["opciones"] = opciones
+            campos.append(campo)
         if not campos:
             raise forms.ValidationError("Indique al menos un campo obligatorio.")
         return campos

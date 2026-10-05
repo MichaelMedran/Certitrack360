@@ -11,7 +11,8 @@ from .tipos import TipoAdjunto
 
 
 def contratos_para(usuario):
-    qs = Contrato.objects.select_related("cliente")
+    """Contratos en los que el usuario puede crear entregables: vigentes (baja lógica) y, si es senior, a su cargo."""
+    qs = Contrato.objects.select_related("cliente").filter(activo=True, cliente__activo=True)
     if usuario.es_gerente_o_admin:
         return qs
     return qs.filter(senior_responsable=usuario)
@@ -22,7 +23,10 @@ class EntregableForm(forms.Form):
 
     contrato = forms.ModelChoiceField(
         queryset=Contrato.objects.none(), label="Contrato",
-        error_messages={"required": "Falta elegir el contrato."},
+        error_messages={
+            "required": "Falta elegir el contrato.",
+            "invalid_choice": "Elija un contrato vigente de la lista (los contratos dados de baja no admiten entregables).",
+        },
     )
     titulo = forms.CharField(label="Título", max_length=200, error_messages={"required": "Falta el título."})
     plazo = forms.DateField(
@@ -51,6 +55,11 @@ class EntregableForm(forms.Form):
                 campo = forms.DateField(
                     label=c["etiqueta"], widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
                     error_messages={**msg, "invalid": f"«{c['etiqueta']}» debe ser una fecha válida."},
+                )
+            elif tipo == "opcion":
+                campo = forms.ChoiceField(
+                    label=c["etiqueta"], choices=[("", "— Elija una opción —")] + [(o, o) for o in c.get("opciones", [])],
+                    error_messages={**msg, "invalid_choice": f"Elija una opción válida para «{c['etiqueta']}»."},
                 )
             elif tipo == "texto_largo":
                 campo = forms.CharField(label=c["etiqueta"], widget=forms.Textarea(attrs={"rows": 3}), error_messages=msg)

@@ -41,7 +41,7 @@
   <p>{{ o.descripcion }}</p>
   {% if o.resuelta %}<p><strong>Solución:</strong> {{ o.solucion }}</p>
   {% elif es_senior %}
-  <form method="post" action="{% url 'observacion_resolver' e.pk o.pk %}">{% csrf_token %}
+  <form method="post" action="{% url 'observacion_resolver' o.pk %}">{% csrf_token %}
     <label>Solución aplicada</label><textarea name="solucion" rows="2"></textarea><br><button class="boton sec">Marcar como resuelta</button>
   </form>{% endif %}
 </div>
