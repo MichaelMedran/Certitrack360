@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from apps.entregables.tipos import TipoAdjunto
+
 
 class Cliente(models.Model):
     class Sector(models.TextChoices):
@@ -61,6 +63,10 @@ class PlantillaTDR(models.Model):
     nombre = models.CharField(max_length=150)
     formato = models.CharField("formato del entregable", max_length=100, blank=True, help_text="Ej.: Informe en PDF")
     campos_requeridos = models.JSONField(default=list, blank=True)
+    adjuntos_requeridos = models.JSONField(
+        "adjuntos obligatorios", default=list, blank=True,
+        help_text="Tipos de adjunto que el entregable debe tener antes de pasar a Verificación senior.",
+    )
     plazo_dias_por_defecto = models.PositiveIntegerField("plazo por defecto (días)", default=10)
 
     class Meta:
@@ -70,3 +76,8 @@ class PlantillaTDR(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.cliente or 'genérica'})"
+
+    @property
+    def adjuntos_requeridos_etiquetas(self):
+        etiquetas = dict(TipoAdjunto.choices)
+        return [str(etiquetas.get(t, t)) for t in self.adjuntos_requeridos]

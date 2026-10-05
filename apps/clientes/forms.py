@@ -1,6 +1,7 @@
 from django import forms
 
 from apps.cuentas.models import Usuario
+from apps.entregables.tipos import TipoAdjunto
 
 from .models import Cliente, Contrato, PlantillaTDR
 
@@ -43,9 +44,14 @@ class PlantillaForm(forms.ModelForm):
         "Ejemplo: Número de informe | texto",
     )
 
+    adjuntos_requeridos = forms.MultipleChoiceField(
+        label="Adjuntos obligatorios", choices=TipoAdjunto.choices, widget=forms.CheckboxSelectMultiple, required=False,
+        help_text="Tipos de documento que el entregable debe tener antes de pasar a Verificación senior. Puede dejarlos vacíos.",
+    )
+
     class Meta:
         model = PlantillaTDR
-        fields = ["nombre", "cliente", "formato", "plazo_dias_por_defecto"]
+        fields = ["nombre", "cliente", "formato", "plazo_dias_por_defecto", "adjuntos_requeridos"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

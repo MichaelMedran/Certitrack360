@@ -13,9 +13,10 @@
   <td>{{ o.fecha_inicio|date:"d/m/Y" }} – {{ o.fecha_fin|date:"d/m/Y" }}</td><td>{{ o.senior_responsable }}</td>
   <td>{{ o.juniors.all|join:", " }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
   {% else %}
-  <tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Plazo (días)</th><th></th></tr>
+  <tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Adjuntos obligatorios</th><th>Plazo (días)</th><th></th></tr>
   {% for o in objetos %}<tr><td>{{ o.nombre }}<div class="suave">{{ o.formato }}</div></td><td>{{ o.cliente|default:"Genérica" }}</td>
-  <td>{% for c in o.campos_requeridos %}{{ c.etiqueta }}{% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{{ o.plazo_dias_por_defecto }}</td>
+  <td>{% for c in o.campos_requeridos %}{{ c.etiqueta }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+  <td>{{ o.adjuntos_requeridos_etiquetas|join:", "|default:"Ninguno" }}</td><td>{{ o.plazo_dias_por_defecto }}</td>
   <td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
   {% endif %}
 </table>

@@ -14,11 +14,12 @@ from apps.conocimiento import servicios as conocimiento
 from apps.cuentas.models import Usuario
 from apps.entregables import servicios
 from apps.entregables.models import Entregable, HistorialEstado, Observacion
+from apps.entregables.testing import MediaTemporal
 
 E = Entregable.Estado
 
 
-class Base(TestCase):
+class Base(MediaTemporal, TestCase):
     @classmethod
     def setUpTestData(cls):
         mk = lambda n, r: Usuario.objects.create_user(n, password="x", rol=r)
@@ -226,7 +227,7 @@ class AlertasTests(Base):
         self.assertEqual(self.client.get(reverse("inicio")).context["no_leidas"], 1)
 
 
-class ConocimientoYSeedTests(TestCase):
+class ConocimientoYSeedTests(MediaTemporal, TestCase):
     def test_seed_idempotente_y_chatbot_cita_caso(self):
         call_command("seed_demo", "--reset", verbosity=0)
         call_command("seed_demo", verbosity=0)

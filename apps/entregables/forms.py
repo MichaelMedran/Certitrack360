@@ -7,6 +7,7 @@ from apps.clientes.models import Contrato
 from apps.cuentas.models import Usuario
 
 from .models import Entregable, TipoError
+from .tipos import TipoAdjunto
 
 
 def contratos_para(usuario):
@@ -81,6 +82,28 @@ class EntregableForm(forms.Form):
             contrato=d["contrato"], plantilla=self.plantilla, titulo=d["titulo"], datos=valores, plazo=d["plazo"],
             junior_asignado=d["junior_asignado"], senior_revisor=d["contrato"].senior_responsable, creado_por=usuario,
         )
+
+
+class AdjuntoForm(forms.Form):
+    """Campos de la subida. La validación de extensión y tamaño la hace `adjuntos.validar_archivo`."""
+
+    tipo = forms.ChoiceField(
+        choices=TipoAdjunto.choices, label="Tipo",
+        error_messages={"required": "Elija el tipo de adjunto.", "invalid_choice": "Elija un tipo de adjunto válido."},
+    )
+    archivo = forms.FileField(
+        label="Archivo",
+        error_messages={
+            "required": "Elija el archivo que desea subir.",
+            "missing": "Elija el archivo que desea subir.",
+            "empty": "El archivo está vacío.",
+            "invalid": "No se pudo leer el archivo.",
+        },
+    )
+    comentario = forms.CharField(
+        label="Comentario (opcional)", max_length=255, required=False,
+        error_messages={"max_length": "El comentario no puede superar los 255 caracteres."},
+    )
 
 
 class ObservacionForm(forms.Form):

@@ -4,6 +4,7 @@ from django.db import transaction
 
 from apps.alertas.models import Notificacion
 
+from . import adjuntos
 from .models import Entregable, HistorialEstado, Observacion, TipoError
 from .visibilidad import es_senior_del_entregable
 
@@ -34,6 +35,15 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
     if not autorizado:
         raise PermissionDenied("No tiene permiso para realizar este movimiento.")
 
+    if nuevo_estado == E.VERIFICACION_SENIOR:
+        faltan = adjuntos.faltantes_requeridos(entregable)
+        if faltan:
+            tipos = ", ".join(f"«{adjuntos.etiqueta_tipo(t)}»" for t in faltan)
+            raise ValidationError(
+                f"No se puede enviar a verificación: faltan los adjuntos requeridos ({tipos}). "
+                "Súbalos en el detalle del entregable."
+            )
+
     devuelve = clave == (E.VERIFICACION_SENIOR, E.EN_PROCESO)
     if devuelve:
         if not tipo_error or tipo_error not in TipoError.values:
@@ -47,6 +57,11 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
         HistorialEstado.objects.create(
             entregable=entregable, estado_anterior=actual, estado_nuevo=nuevo_estado, usuario=usuario
         )
+        if nuevo_estado == E.VERIFICACION_SENIOR and entregable.senior_revisor_id != usuario.pk:
+            Notificacion.objects.create(
+                usuario=entregable.senior_revisor, entregable=entregable, tipo=Notificacion.Tipo.VERIFICACION,
+                mensaje=f"«{entregable.titulo}» está en verificación y espera su revisión.",
+            )
         if devuelve:
             Observacion.objects.create(
                 entregable=entregable, autor=usuario, tipo_error=tipo_error, descripcion=descripcion.strip()

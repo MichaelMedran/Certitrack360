@@ -76,7 +76,7 @@ def preguntar_ollama(pregunta, lecciones):
         for i, l in enumerate(lecciones, 1)
     )
     cuerpo = json.dumps({
-        "model": settings.OLLAMA_MODELO, "stream": False,
+        "model": settings.OLLAMA_MODEL, "stream": False,
         "messages": [
             {"role": "system", "content": "Eres un asistente de CERTICOM. Responde en español, breve, usando SOLO los casos dados. Cita el número de caso, por ejemplo [Caso 1]."},
             {"role": "user", "content": f"Casos:\n{contexto}\n\nPregunta: {pregunta}"},

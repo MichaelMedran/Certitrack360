@@ -3,7 +3,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -11,9 +11,9 @@ from django.views.decorators.http import require_POST
 from apps.clientes.models import PlantillaTDR
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import servicios
-from .forms import EntregableForm, ObservacionForm, contratos_para
-from .models import Entregable
+from . import adjuntos, servicios
+from .forms import AdjuntoForm, EntregableForm, ObservacionForm, contratos_para
+from .models import Adjunto, Entregable
 from .visibilidad import entregables_visibles, es_senior_del_entregable
 
 
@@ -119,6 +119,55 @@ def mover_api(request, pk):
     except PermissionDenied as exc:
         return JsonResponse({"ok": False, "error": str(exc) or "No tiene permiso."}, status=403)
     return JsonResponse({"ok": True, "estado": e.estado})
+
+
+@login_required
+@require_POST
+def adjunto_subir(request, pk):
+    e = get_object_or_404(_base(request.user), pk=pk)
+    if not adjuntos.puede_subir(request.user, e):
+        raise PermissionDenied
+    form = AdjuntoForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, " ".join(m for errores in form.errors.values() for m in errores))
+    else:
+        try:
+            a = adjuntos.subir(
+                e, request.user, form.cleaned_data["archivo"], form.cleaned_data["tipo"], form.cleaned_data["comentario"]
+            )
+        except ValidationError as exc:
+            messages.error(request, " ".join(exc.messages))
+        else:
+            messages.success(request, f"Se subió «{a.nombre_original}» como {adjuntos.etiqueta_tipo(a.tipo)} v{a.version}.")
+    return redirect("entregable_detalle", pk=e.pk)
+
+
+def _adjunto_visible(usuario, adjunto_id):
+    """El adjunto solo existe para quien puede ver su entregable (si no, 404)."""
+    return get_object_or_404(Adjunto.objects.filter(entregable__in=entregables_visibles(usuario)), pk=adjunto_id)
+
+
+@login_required
+def adjunto_descargar(request, adjunto_id):
+    """Única vía de descarga: exige los mismos permisos de visibilidad que el entregable."""
+    a = _adjunto_visible(request.user, adjunto_id)
+    try:
+        archivo = a.archivo.open("rb")
+    except (FileNotFoundError, ValueError):
+        raise Http404("El archivo no se encuentra en el servidor.")
+    respuesta = FileResponse(archivo, as_attachment=True, filename=a.nombre_original)
+    respuesta["Cache-Control"] = "private, no-store"
+    return respuesta
+
+
+@login_required
+@require_POST
+def adjunto_eliminar(request, adjunto_id):
+    a = _adjunto_visible(request.user, adjunto_id)
+    entregable_id, nombre = a.entregable_id, a.nombre_original
+    adjuntos.eliminar(a, request.user)  # PermissionDenied (403) si no es gerente o admin
+    messages.success(request, f"Se eliminó «{nombre}».")
+    return redirect("entregable_detalle", pk=entregable_id)
 
 
 @login_required
