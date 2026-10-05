@@ -51,6 +51,19 @@ class Entregable(models.Model):
     def cliente(self):
         return self.contrato.cliente
 
+    @property
+    def urgencia(self):
+        """VENCIDO, CRITICO, PROXIMO o NORMAL, calculada al momento (no se guarda)."""
+        from .urgencia import calcular
+
+        return calcular(self.plazo, self.estado)
+
+    @property
+    def urgencia_etiqueta(self):
+        from .urgencia import ETIQUETAS
+
+        return ETIQUETAS[self.urgencia]
+
     def datos_etiquetados(self):
         """Pares (etiqueta, valor) según los campos de la plantilla."""
         return [(c["etiqueta"], self.datos.get(c["nombre"], "")) for c in self.plantilla.campos_requeridos]

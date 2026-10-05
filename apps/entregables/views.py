@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from apps.clientes.models import PlantillaTDR
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import adjuntos, servicios
+from . import adjuntos, filtros, servicios
 from .forms import AdjuntoForm, EntregableForm, ObservacionForm, contratos_para
 from .models import Adjunto, Entregable
 from .visibilidad import entregables_visibles, es_senior_del_entregable
@@ -23,12 +23,12 @@ def _base(usuario):
 
 @login_required
 def lista(request):
-    qs = _base(request.user)
-    estado = request.GET.get("estado", "")
-    if estado in Entregable.Estado.values:
-        qs = qs.filter(estado=estado)
+    # Los filtros (cliente, contrato, responsable, estado, urgencia, tipo_observacion) y el orden viajan en la URL
+    # y se aplican sobre el queryset ya restringido por rol: solo pueden reducirlo.
+    resultado = filtros.aplicar(_base(request.user), request.GET)
     return render(request, "entregables/lista.html", {
-        "entregables": qs, "estado": estado, "estados": Entregable.Estado.choices,
+        "entregables": resultado.queryset, "estado": resultado.activos.get("estado", ""),
+        "estados": Entregable.Estado.choices, "filtros_activos": resultado.activos, "orden": resultado.orden,
     })
 
 
@@ -172,11 +172,16 @@ def adjunto_eliminar(request, adjunto_id):
 
 @login_required
 def tablero(request):
-    qs = _base(request.user)
-    columnas = []
-    for valor, etiqueta in Entregable.Estado.choices:
-        columnas.append({"valor": valor, "etiqueta": etiqueta, "tarjetas": [e for e in qs if e.estado == valor]})
-    return render(request, "entregables/tablero.html", {"columnas": columnas, "hoy": timezone.localdate()})
+    resultado = filtros.aplicar(_base(request.user), request.GET)
+    tarjetas = list(resultado.queryset)  # una sola consulta; ya viene filtrada y ordenada
+    columnas = [
+        {"valor": valor, "etiqueta": etiqueta, "tarjetas": [e for e in tarjetas if e.estado == valor]}
+        for valor, etiqueta in Entregable.Estado.choices
+    ]
+    return render(request, "entregables/tablero.html", {
+        "columnas": columnas, "hoy": timezone.localdate(),
+        "filtros_activos": resultado.activos, "orden": resultado.orden,
+    })
 
 
 @login_required
