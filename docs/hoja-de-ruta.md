@@ -4,7 +4,7 @@ La propuesta recomendada es **empezar simple y crecer por fases**: cada fase se 
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 1 — MVP | Poka-Yoke, Kanban, calendario con alertas, adjuntos, accesos por rol, filtros y consolidado | Construida; falta la interfaz que depende de la aprobación de los wireframes (ver `docs/trazabilidad.md`) |
+| 1 — MVP | Poka-Yoke, Kanban, calendario con alertas, adjuntos, accesos por rol, filtros y consolidado | Construida, con la interfaz de los wireframes aprobados el 2026-10-05; falta la prueba de uso con personas del equipo (ver `docs/trazabilidad.md`) |
 | 2 — Conocimiento | Asistente de lecciones aprendidas, local | Construida; falta probarla contra un Ollama real |
 | 3 — Optimización | Asignación automática por carga y capacitación; reportes para el gerente | **Solo visión; no implementar** |
 | 4 — Expansión | Extender la herramienta a otras áreas o líneas de negocio | Visión |

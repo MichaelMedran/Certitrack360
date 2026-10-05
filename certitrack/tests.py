@@ -87,7 +87,18 @@ class WireframesTests(SimpleTestCase):
         indice = (RAIZ / "docs" / "wireframes" / "index.html").read_text(encoding="utf-8")
         for nombre in self.PANTALLAS:
             self.assertIn(f'href="{nombre}.html"', indice)
-        self.assertEqual(indice.count("<td>&nbsp;</td><td>&nbsp;</td>"), len(self.PANTALLAS))
+        registro = indice.split("<h2>Registro de aprobación</h2>")[1]
+        filas = re.findall(r"<tr><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>", registro)
+        self.assertEqual(len(filas), len(self.PANTALLAS))  # una fila por pantalla, sin ninguna en blanco
+        for pantalla, aprobada, observaciones in filas:
+            with self.subTest(pantalla=pantalla):
+                self.assertEqual(aprobada, "Sí · 2026-10-05")
+                self.assertTrue(observaciones.strip() and observaciones != "&nbsp;")
+
+    def test_el_indice_declara_los_wireframes_aprobados(self):
+        indice = (RAIZ / "docs" / "wireframes" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("Aprobados por el equipo el 2026-10-05", indice)
+        self.assertNotIn("Pendiente de aprobación", indice)
 
     def test_son_de_baja_fidelidad_sin_colores_ni_scripts(self):
         css = (RAIZ / "docs" / "wireframes" / "wf.css").read_text(encoding="utf-8")
