@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Notificaciones{% endblock %}
+{% block contenido %}
+<h1>Notificaciones</h1>
+{% if no_leidas %}<form method="post" action="{% url 'notificaciones_leidas' %}" class="acciones">{% csrf_token %}<button class="boton sec">Marcar todas como leídas</button></form>{% endif %}
+{% for n in notificaciones %}
+<div class="tarjeta" style="margin-bottom:.5rem;{% if not n.leida %}border-left:4px solid var(--primario){% endif %}">
+  <span class="etiqueta">{{ n.get_tipo_display }}</span> {{ n.mensaje }}
+  <a href="{% url 'entregable_detalle' n.entregable_id %}">Ver</a>
+  <div class="suave">{{ n.creada_en|date:"d/m/Y H:i" }}</div>
+</div>
+{% empty %}<p class="tarjeta">No tiene notificaciones.</p>{% endfor %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<h1>Hola, {{ user.first_name|default:user.username }}</h1>
+<p class="suave">
+  {% if user.es_junior %}Resumen de las tareas que tiene asignadas.
+  {% elif user.es_senior %}Resumen de los proyectos a su cargo.
+  {% else %}Consolidado general de proyectos.{% endif %}
+</p>
+<div class="cuadricula">
+  <div class="tarjeta"><div class="cifra">{{ total_activos }}</div>Entregables activos</div>
+  <div class="tarjeta"><div class="cifra rojo">{{ vencidos }}</div>Vencidos</div>
+  <div class="tarjeta"><div class="cifra ambar">{{ por_vencer }}</div>Vencen en 5 días</div>
+  <div class="tarjeta"><div class="cifra">{{ en_verificacion }}</div>En verificación senior</div>
+</div>
+<h2>Próximos plazos</h2>
+{% if proximos %}
+<table>
+  <tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Estado</th></tr>
+  {% for e in proximos %}
+  <tr><td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
+  <td>{{ e.plazo|date:"d/m/Y" }}</td><td>{{ e.get_estado_display }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}<p class="tarjeta">No tiene entregables pendientes.</p>{% endif %}
+<div class="acciones" style="margin-top:1rem"><a class="boton" href="{% url 'tablero' %}">Abrir tablero</a></div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titulo %}Asistente{% endblock %}
+{% block contenido %}
+<h1>Asistente de lecciones aprendidas</h1>
+<p class="suave">Pregunte por un error o duda frecuente. La respuesta se basa en casos de proyectos anteriores y se procesa en el servidor local.</p>
+<form method="get" class="acciones">
+  <input type="search" name="q" value="{{ pregunta }}" placeholder="Ej.: ¿Qué hacer si falta la firma en el informe?" aria-label="Pregunta" style="flex:1;max-width:640px">
+  <button class="boton">Consultar</button>
+</form>
+{% if buscado %}
+  {% if aviso %}<div class="aviso aviso-warning">{{ aviso }}</div>{% endif %}
+  {% if respuesta %}<div class="tarjeta" style="margin-bottom:1rem"><h2 style="margin-top:0">Respuesta</h2>{{ respuesta|linebreaks }}</div>{% endif %}
+  {% for c in casos %}
+  <div class="tarjeta" style="margin-bottom:.6rem">
+    <strong>Caso {{ forloop.counter }}</strong> · {{ c.leccion.cliente }} · <span class="etiqueta">{{ c.leccion.get_tipo_error_display }}</span>
+    {% if c.leccion.entregable_origen %}<div class="suave">Contrato {{ c.leccion.entregable_origen.contrato.numero_contrato }} ·
+      {% if c.enlace %}<a href="{% url 'entregable_detalle' c.leccion.entregable_origen_id %}">{{ c.leccion.entregable_origen.titulo }}</a>{% else %}{{ c.leccion.entregable_origen.titulo }} (sin acceso){% endif %}</div>{% endif %}
+    <p><strong>Problema:</strong> {{ c.leccion.problema }}</p>
+    <p><strong>Solución:</strong> {{ c.leccion.solucion }}</p>
+  </div>
+  {% empty %}<p class="tarjeta">No encontré casos relacionados con esa consulta.</p>{% endfor %}
+{% endif %}
+{% endblock %}

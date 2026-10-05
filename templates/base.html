@@ -1,0 +1,36 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}CertiTrack 360{% endblock %} · CertiTrack 360</title>
+  <link rel="stylesheet" href="{% static 'css/certitrack.css' %}">
+  <script src="{% static 'js/htmx.min.js' %}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<header class="barra">
+  <a class="marca" href="{% url 'inicio' %}">CertiTrack 360</a>
+  <nav>
+    <a href="{% url 'inicio' %}">Inicio</a>
+    <a href="{% url 'tablero' %}">Tablero</a>
+    <a href="{% url 'calendario' %}">Calendario</a>
+    <a href="{% url 'entregables' %}">Entregables</a>
+    <a href="{% url 'asistente' %}">Asistente</a>
+    {% if user.es_gerente_o_admin %}<a href="{% url 'administracion' %}">Administración</a>{% endif %}
+  </nav>
+  <div class="usuario">
+    <a href="{% url 'notificaciones' %}" class="campana" title="Notificaciones">Avisos{% if no_leidas %} <span class="insignia">{{ no_leidas }}</span>{% endif %}</a>
+    <span>{{ user.nombre }} · {{ user.get_rol_display }}</span>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="enlace">Salir</button></form>
+  </div>
+</header>
+{% endif %}
+<main class="contenedor">
+  {% for m in messages %}<div class="aviso aviso-{{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% block contenido %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

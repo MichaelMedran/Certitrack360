@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Calendario{% endblock %}
+{% block contenido %}
+<h1>Calendario de plazos</h1>
+<div id="calendario"></div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/fullcalendar.min.js' %}"></script>
+<script src="{% static 'js/fullcalendar-es.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  new FullCalendar.Calendar(document.getElementById('calendario'), {
+    initialView: 'dayGridMonth', firstDay: 1, height: 'auto',
+    buttonText: {today:'Hoy', month:'Mes', week:'Semana', list:'Lista'},
+    headerToolbar: {left:'prev,next today', center:'title', right:'dayGridMonth,dayGridWeek,listMonth'},
+    events: "{% url 'calendario_eventos' %}", eventTimeFormat: {hour:'2-digit', minute:'2-digit'},
+    noEventsContent: 'No hay plazos en este período', locale: 'es'
+  }).render();
+});
+</script>
+{% endblock %}

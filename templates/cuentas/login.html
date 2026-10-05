@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Ingresar{% endblock %}
+{% block contenido %}
+<div class="login tarjeta">
+  <h1>CertiTrack 360</h1>
+  <p class="suave">Seguimiento de entregables de Proyectos.</p>
+  {% if form.errors %}<div class="aviso aviso-error">Usuario o contraseña incorrectos. Inténtelo de nuevo.</div>{% endif %}
+  <form method="post">{% csrf_token %}
+    <p><label for="id_username">Usuario</label><input type="text" name="username" id="id_username" autofocus required></p>
+    <p><label for="id_password">Contraseña</label><input type="password" name="password" id="id_password" required></p>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="boton">Ingresar</button>
+  </form>
+</div>
+{% endblock %}

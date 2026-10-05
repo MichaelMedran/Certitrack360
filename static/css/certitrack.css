@@ -1,0 +1,55 @@
+:root{--fondo:#f4f6f8;--tarjeta:#fff;--texto:#1f2933;--suave:#5b6b7a;--borde:#d9e0e6;--primario:#1e4e8c;--primario-osc:#163a69;--ok:#15803d;--alerta:#b45309;--error:#b91c1c}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:var(--fondo);color:var(--texto)}
+a{color:var(--primario)}
+.barra{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;background:var(--primario);color:#fff;padding:.6rem 1.25rem}
+.barra a{color:#fff;text-decoration:none}
+.marca{font-weight:700;font-size:1.15rem}
+.barra nav{display:flex;flex-wrap:wrap;gap:.25rem;flex:1}
+.barra nav a{padding:.35rem .7rem;border-radius:6px}
+.barra nav a:hover{background:var(--primario-osc)}
+.usuario{display:flex;align-items:center;gap:.9rem;font-size:.9rem}
+.insignia{background:#fbbf24;color:#1f2933;border-radius:999px;padding:0 .5rem;font-weight:700}
+.enlace{background:none;border:0;color:#fff;cursor:pointer;text-decoration:underline;font:inherit}
+.contenedor{max-width:1280px;margin:0 auto;padding:1.25rem}
+h1{font-size:1.5rem;margin:.2rem 0 1rem}
+h2{font-size:1.1rem;margin:1.2rem 0 .5rem}
+.tarjeta{background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;padding:1rem}
+.cuadricula{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem}
+.cifra{font-size:2rem;font-weight:700}
+.cifra.rojo{color:var(--error)}.cifra.ambar{color:var(--alerta)}
+.suave{color:var(--suave);font-size:.9rem}
+table{width:100%;border-collapse:collapse;background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px}
+th,td{text-align:left;padding:.55rem .75rem;border-bottom:1px solid var(--borde);vertical-align:top}
+th{background:#eef2f6;font-size:.85rem}
+.boton,button.boton{display:inline-block;background:var(--primario);color:#fff;border:0;border-radius:6px;padding:.5rem 1rem;font:inherit;cursor:pointer;text-decoration:none}
+.boton:hover{background:var(--primario-osc)}
+.boton.sec{background:#fff;color:var(--primario);border:1px solid var(--primario)}
+.boton.peligro{background:var(--error)}
+.acciones{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0 1rem}
+form p,.campo{margin:0 0 .9rem}
+label{display:block;font-weight:600;margin-bottom:.2rem}
+input[type=text],input[type=password],input[type=date],input[type=number],input[type=search],select,textarea{width:100%;max-width:560px;padding:.5rem;border:1px solid #aab6c2;border-radius:6px;font:inherit;background:#fff}
+input:focus,select:focus,textarea:focus,button:focus,a:focus{outline:3px solid #93c5fd}
+.helptext{display:block;color:var(--suave);font-size:.85rem}
+.errorlist{list-style:none;margin:.2rem 0;padding:0;color:var(--error);font-weight:600}
+.aviso{padding:.7rem 1rem;border-radius:6px;margin-bottom:1rem;border:1px solid}
+.aviso-success{background:#ecfdf3;border-color:#86efac}.aviso-error{background:#fef2f2;border-color:#fca5a5;color:var(--error)}.aviso-warning,.aviso-info{background:#fffbeb;border-color:#fcd34d}
+.etiqueta{display:inline-block;font-size:.78rem;padding:.05rem .5rem;border-radius:999px;background:#e2e8f0}
+.vencido{color:var(--error);font-weight:700}
+/* Kanban */
+.tablero{display:grid;grid-template-columns:repeat(5,minmax(210px,1fr));gap:.75rem;overflow-x:auto;align-items:start}
+.columna{background:#e8edf2;border-radius:8px;padding:.6rem;min-height:300px}
+.columna h3{margin:.1rem 0 .6rem;font-size:.95rem}
+.zona{min-height:240px}
+.ficha{background:#fff;border:1px solid var(--borde);border-left:4px solid var(--primario);border-radius:6px;padding:.55rem .65rem;margin-bottom:.55rem;cursor:grab;font-size:.9rem}
+.ficha a{font-weight:600;text-decoration:none}
+.ficha.vencida{border-left-color:var(--error)}
+.ficha.sin-mover{cursor:default}
+.sortable-ghost{opacity:.4}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:10}
+.modal.abierto{display:flex}
+.modal .tarjeta{width:min(480px,92vw)}
+.login{max-width:380px;margin:4rem auto}
+#calendario{background:#fff;padding:.75rem;border-radius:8px;border:1px solid var(--borde)}
+@media(max-width:900px){.tablero{grid-template-columns:repeat(5,230px)}}

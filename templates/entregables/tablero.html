@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Tablero{% endblock %}
+{% block contenido %}
+<h1>Tablero</h1>
+<p class="suave">Arrastre una tarjeta a la columna siguiente. El sistema solo acepta los movimientos permitidos para su rol.</p>
+<div id="msg" class="aviso aviso-error" style="display:none"></div>
+<div class="tablero">
+  {% for c in columnas %}
+  <section class="columna">
+    <h3>{{ c.etiqueta }} <span class="suave">({{ c.tarjetas|length }})</span></h3>
+    <div class="zona" data-estado="{{ c.valor }}">
+      {% for e in c.tarjetas %}
+      <article class="ficha {% if e.estado != 'HECHO' and e.plazo < hoy %}vencida{% endif %}" data-id="{{ e.pk }}">
+        <a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a>
+        <div class="suave">{{ e.contrato.cliente }} · {{ e.contrato.numero_contrato }}</div>
+        <div>Plazo: {{ e.plazo|date:"d/m/Y" }}</div>
+        <div class="suave">{{ e.junior_asignado }}</div>
+        {% with n=e.observaciones.all|length %}{% if n %}<span class="etiqueta">{{ n }} observ.</span>{% endif %}{% endwith %}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+
+<div class="modal" id="modal">
+  <form class="tarjeta" id="form-devolver">
+    <h2>Devolver al junior</h2>
+    <p class="suave">Para devolver el entregable debe registrar una observación.</p>
+    <p><label for="m-tipo">Tipo de error</label>
+      <select id="m-tipo">
+        <option value="DATO_FALTANTE">Dato faltante</option><option value="FORMATO">Formato</option>
+        <option value="PLAZO">Plazo</option><option value="CONTENIDO">Contenido</option><option value="OTRO">Otro</option>
+      </select></p>
+    <p><label for="m-desc">Descripción</label><textarea id="m-desc" rows="3"></textarea></p>
+    <button class="boton">Devolver</button>
+    <button type="button" class="boton sec" id="m-cancelar">Cancelar</button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/Sortable.min.js' %}"></script>
+<script>
+(function(){
+  const urlBase = "{% url 'tablero_mover' 0 %}";
+  const csrf = "{{ csrf_token }}";
+  const aviso = document.getElementById('msg');
+  const modal = document.getElementById('modal');
+  let pendiente = null;
+
+  function error(t){ aviso.textContent = t; aviso.style.display = 'block'; }
+  function revertir(p){ const ref = p.from.children[p.oldIndex]; p.from.insertBefore(p.item, ref || null); }
+
+  async function enviar(p, extra){
+    const r = await fetch(urlBase.replace('/0/', '/' + p.item.dataset.id + '/'), {
+      method:'POST', headers:{'X-CSRFToken':csrf,'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({estado: p.to.dataset.estado}, extra||{}))
+    });
+    return {ok:r.ok, data: await r.json()};
+  }
+
+  async function mover(p, extra){
+    aviso.style.display = 'none';
+    const res = await enviar(p, extra);
+    if(res.ok){ location.reload(); return; }
+    revertir(p);
+    if(res.data.pide_observacion && !extra){ pendiente = p; modal.classList.add('abierto'); return; }
+    error(res.data.error || 'No se pudo mover la tarjeta.');
+  }
+
+  document.querySelectorAll('.zona').forEach(z => new Sortable(z, {
+    group:'tablero', animation:120,
+    onEnd: ev => { if(ev.from !== ev.to) mover({item:ev.item, from:ev.from, to:ev.to, oldIndex:ev.oldIndex}); }
+  }));
+
+  document.getElementById('m-cancelar').onclick = () => { modal.classList.remove('abierto'); pendiente = null; };
+  document.getElementById('form-devolver').onsubmit = async ev => {
+    ev.preventDefault();
+    const desc = document.getElementById('m-desc').value;
+    const p = pendiente; modal.classList.remove('abierto');
+    p.to.appendChild(p.item);
+    const res = await enviar(p, {tipo_error: document.getElementById('m-tipo').value, descripcion: desc});
+    if(res.ok){ location.reload(); } else { revertir(p); error(res.data.error); }
+  };
+})();
+</script>
+{% endblock %}

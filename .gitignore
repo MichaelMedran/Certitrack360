@@ -1,0 +1,15 @@
+# Entorno virtual y cachés de Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Base de datos local y archivos generados (se recrean con migrate y seed_demo)
+db.sqlite3
+staticfiles/
+
+# Variables de entorno reales (solo se versiona .env.example)
+.env
+
+# Editores
+.vscode/
+.idea/
