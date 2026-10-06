@@ -3,16 +3,18 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
+from apps.entregables import urgencia
 from apps.entregables.models import Entregable
 from apps.entregables.visibilidad import entregables_visibles
 
+# El color refuerza la urgencia, pero nunca es la única señal: el título lleva el estado y la urgencia en texto.
 COLORES = {
-    Entregable.Estado.A_REALIZAR: "#64748b",
-    Entregable.Estado.EN_PROCESO: "#2563eb",
-    Entregable.Estado.VERIFICACION_SENIOR: "#b45309",
-    Entregable.Estado.LISTO_PARA_ENTREGA: "#0f766e",
-    Entregable.Estado.HECHO: "#15803d",
+    urgencia.VENCIDO: "#991b1b",
+    urgencia.CRITICO: "#c2410c",
+    urgencia.PROXIMO: "#a16207",
+    urgencia.NORMAL: "#1e4e8c",
 }
+COLOR_HECHO = "#4b5563"
 
 
 @login_required
@@ -29,15 +31,19 @@ def eventos(request):
         qs = qs.filter(plazo__gte=inicio)
     if fin:
         qs = qs.filter(plazo__lte=fin)
-    datos = [
-        {
+    datos = []
+    for e in qs:
+        nivel = e.urgencia
+        titulo = f"[{e.get_estado_display()}] {e.contrato.cliente.nombre}: {e.titulo}"
+        if nivel != urgencia.NORMAL:
+            titulo += f" — {urgencia.ETIQUETAS[nivel]}"
+        datos.append({
             "id": e.pk,
-            "title": f"{e.contrato.cliente.nombre}: {e.titulo}",
+            "title": titulo,
             "start": e.plazo.isoformat(),
             "allDay": True,
             "url": reverse("entregable_detalle", args=[e.pk]),
-            "color": COLORES[e.estado],
-        }
-        for e in qs
-    ]
+            "color": COLOR_HECHO if e.estado == Entregable.Estado.HECHO else COLORES[nivel],
+            "extendedProps": {"estado": e.estado, "urgencia": nivel},
+        })
     return JsonResponse(datos, safe=False)

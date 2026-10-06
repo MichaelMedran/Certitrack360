@@ -7,6 +7,7 @@ class Notificacion(models.Model):
         VENCIMIENTO = "VENCIMIENTO", "Vencimiento"
         OBSERVACION = "OBSERVACION", "Observación"
         ASIGNACION = "ASIGNACION", "Asignación"
+        VERIFICACION = "VERIFICACION", "Verificación"  # aviso al senior: un entregable espera su revisión
 
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notificaciones")
     entregable = models.ForeignKey("entregables.Entregable", on_delete=models.CASCADE, related_name="notificaciones")

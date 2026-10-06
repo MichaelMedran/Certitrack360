@@ -1,0 +1,6 @@
+<h1>Gestión</h1>
+<nav class="pestanas" aria-label="Gestión">
+  <a href="{% url 'adm_lista' 'clientes' %}"{% if entidad == 'clientes' %} aria-current="page"{% endif %}>Clientes</a>
+  <a href="{% url 'adm_lista' 'contratos' %}"{% if entidad == 'contratos' %} aria-current="page"{% endif %}>Contratos</a>
+  <a href="{% url 'adm_lista' 'plantillas' %}"{% if entidad == 'plantillas' %} aria-current="page"{% endif %}>Plantillas</a>
+</nav>

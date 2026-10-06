@@ -1,22 +1,29 @@
 {% extends "base.html" %}
-{% block titulo %}{{ titulo }}{% endblock %}
+{% block titulo %}Gestión · {{ config.titulo }}{% endblock %}
 {% block contenido %}
-<h1>{{ titulo }}</h1>
-<div class="acciones"><a class="boton" href="{% url 'adm_nuevo' entidad %}">Nuevo {{ singular }}</a><a class="boton sec" href="{% url 'administracion' %}">Volver</a></div>
-<table>
+{% include "clientes/_pestanas.html" %}
+<div class="acciones"><a class="boton" href="{% url 'adm_nuevo' entidad %}">{{ config.nuevo }}</a></div>
+<div class="tabla"><table>
   {% if entidad == 'clientes' %}
-  <tr><th>Nombre</th><th>Sector</th><th>Activo</th><th></th></tr>
-  {% for o in objetos %}<tr><td>{{ o.nombre }}</td><td>{{ o.get_sector_display }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
+  <thead><tr><th>Nombre</th><th>Sector</th><th>Activo</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>{% for o in objetos %}<tr><td>{{ o.nombre }}</td><td>{{ o.get_sector_display }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>
+  {% empty %}<tr><td colspan="4">Todavía no hay clientes.</td></tr>{% endfor %}</tbody>
   {% elif entidad == 'contratos' %}
-  <tr><th>Contrato</th><th>Cliente</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th></th></tr>
-  {% for o in objetos %}<tr><td>{{ o.numero_contrato }}<div class="suave">{{ o.descripcion }}</div></td><td>{{ o.cliente }}</td>
-  <td>{{ o.fecha_inicio|date:"d/m/Y" }} – {{ o.fecha_fin|date:"d/m/Y" }}</td><td>{{ o.senior_responsable }}</td>
-  <td>{{ o.juniors.all|join:", " }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
+  <thead><tr><th>Contrato</th><th>Cliente</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th>Activo</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>{% for o in objetos %}<tr><td>{{ o.numero_contrato }}<div class="suave">{{ o.descripcion }}</div></td><td>{{ o.cliente }}</td>
+  <td>{{ o.fecha_inicio|date:"d/m/Y" }} – {{ o.fecha_fin|date:"d/m/Y" }}</td><td>{{ o.senior_responsable.nombre }}</td>
+  <td>{{ o.juniors.all|join:", " }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>
+  {% empty %}<tr><td colspan="7">Todavía no hay contratos.</td></tr>{% endfor %}</tbody>
   {% else %}
-  <tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Plazo (días)</th><th></th></tr>
-  {% for o in objetos %}<tr><td>{{ o.nombre }}<div class="suave">{{ o.formato }}</div></td><td>{{ o.cliente|default:"Genérica" }}</td>
-  <td>{% for c in o.campos_requeridos %}{{ c.etiqueta }}{% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{{ o.plazo_dias_por_defecto }}</td>
-  <td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>{% endfor %}
+  <thead><tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Adjuntos obligatorios</th><th>Plazo (días)</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>{% for o in objetos %}<tr><td>{{ o.nombre }}<div class="suave">{{ o.formato }}</div></td><td>{{ o.cliente|default:"Genérica" }}</td>
+  <td>{% for c in o.campos_requeridos %}{{ c.etiqueta }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+  <td>{{ o.adjuntos_requeridos_etiquetas|join:", "|default:"Ninguno" }}</td><td>{{ o.plazo_dias_por_defecto }}</td>
+  <td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>
+  {% empty %}<tr><td colspan="6">Todavía no hay plantillas.</td></tr>{% endfor %}</tbody>
   {% endif %}
-</table>
+</table></div>
+{% if entidad == 'clientes' or entidad == 'contratos' %}
+<p class="suave">Un cliente o contrato no se borra: se desmarca «Activo» (baja lógica). Conserva su historial pero no admite entregables ni contratos nuevos.</p>
+{% endif %}
 {% endblock %}

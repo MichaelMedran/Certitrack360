@@ -4,7 +4,13 @@ from apps.conocimiento.servicios import indexar_lecciones
 
 
 class Command(BaseCommand):
-    help = "Convierte observaciones resueltas de entregables cerrados en lecciones aprendidas."
+    help = (
+        "Genera las lecciones aprendidas de los entregables cerrados y calcula sus embeddings con Ollama local. "
+        "Se puede ejecutar varias veces; también lo corre la tarea programada."
+    )
 
     def handle(self, *args, **opts):
-        self.stdout.write(f"Lecciones nuevas: {indexar_lecciones()}")
+        nuevas, indexadas, aviso = indexar_lecciones()
+        self.stdout.write(f"Lecciones nuevas: {nuevas} · Embeddings calculados: {indexadas}")
+        if aviso:
+            self.stderr.write(self.style.WARNING(aviso))

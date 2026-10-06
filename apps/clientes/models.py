@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from apps.entregables.tipos import TipoAdjunto
+
 
 class Cliente(models.Model):
     class Sector(models.TextChoices):
@@ -38,6 +40,9 @@ class Contrato(models.Model):
         blank=True,
         limit_choices_to={"rol": "JUNIOR"},
     )
+    activo = models.BooleanField(
+        default=True, help_text="La baja es lógica: el contrato conserva su historial pero no admite entregables nuevos."
+    )
 
     class Meta:
         ordering = ["numero_contrato"]
@@ -49,10 +54,11 @@ class Contrato(models.Model):
 class PlantillaTDR(models.Model):
     """Define los campos obligatorios que exige un tipo de entregable.
 
-    campos_requeridos: lista de {"nombre": "slug", "etiqueta": "Texto", "tipo": "texto|numero|fecha|texto_largo"}
+    campos_requeridos: lista de {"nombre": "slug", "etiqueta": "Texto", "tipo": "texto|texto_largo|numero|fecha|opcion"};
+    los campos de tipo «opcion» llevan además "opciones": ["A", "B", ...].
     """
 
-    TIPOS_CAMPO = ("texto", "texto_largo", "numero", "fecha")
+    TIPOS_CAMPO = ("texto", "texto_largo", "numero", "fecha", "opcion")
 
     cliente = models.ForeignKey(
         Cliente, null=True, blank=True, on_delete=models.CASCADE, related_name="plantillas",
@@ -61,6 +67,10 @@ class PlantillaTDR(models.Model):
     nombre = models.CharField(max_length=150)
     formato = models.CharField("formato del entregable", max_length=100, blank=True, help_text="Ej.: Informe en PDF")
     campos_requeridos = models.JSONField(default=list, blank=True)
+    adjuntos_requeridos = models.JSONField(
+        "adjuntos obligatorios", default=list, blank=True,
+        help_text="Tipos de adjunto que el entregable debe tener antes de pasar a Verificación senior.",
+    )
     plazo_dias_por_defecto = models.PositiveIntegerField("plazo por defecto (días)", default=10)
 
     class Meta:
@@ -70,3 +80,8 @@ class PlantillaTDR(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.cliente or 'genérica'})"
+
+    @property
+    def adjuntos_requeridos_etiquetas(self):
+        etiquetas = dict(TipoAdjunto.choices)
+        return [str(etiquetas.get(t, t)) for t in self.adjuntos_requeridos]

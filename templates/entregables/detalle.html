@@ -6,23 +6,29 @@
   <div class="tarjeta"><div class="suave">Cliente / contrato</div>{{ e.contrato.cliente }}<br>{{ e.contrato.numero_contrato }}</div>
   <div class="tarjeta"><div class="suave">Plazo</div><strong>{{ e.plazo|date:"d/m/Y" }}</strong></div>
   <div class="tarjeta"><div class="suave">Estado</div><strong>{{ e.get_estado_display }}</strong></div>
-  <div class="tarjeta"><div class="suave">Responsables</div>Junior: {{ e.junior_asignado }}<br>Senior: {{ e.senior_revisor }}</div>
+  <div class="tarjeta"><div class="suave">Urgencia</div>
+    {% if e.estado == 'HECHO' %}<strong>No aplica</strong> <span class="suave">(entregado)</span>
+    {% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</div>
+  <div class="tarjeta"><div class="suave">Responsables</div>Junior: {{ e.junior_asignado.nombre }}<br>Senior: {{ e.senior_revisor.nombre }}</div>
 </div>
 
 {% if siguientes %}
 <div class="tarjeta">
   <h2 style="margin-top:0">Mover entregable</h2>
   {% for destino, etiqueta in siguientes %}
+    {% if destino == 'VERIFICACION_SENIOR' and falta_para_verificar %}
+    <div class="aviso aviso-warning" role="status">{{ falta_para_verificar }}</div>
+    {% endif %}
     {% if e.estado == 'VERIFICACION_SENIOR' and destino == 'EN_PROCESO' %}
-    <form method="post" action="{% url 'entregable_estado' e.pk %}" style="margin-bottom:.8rem">{% csrf_token %}
+    <form method="post" action="{% url 'entregable_estado' e.pk %}" style="margin-bottom:1rem">{% csrf_token %}
       <input type="hidden" name="estado" value="{{ destino }}">
-      <strong>Devolver a «{{ etiqueta }}» (requiere observación)</strong>
-      <p><label>Tipo de error</label>{{ form_obs.tipo_error }}</p>
-      <p><label>Descripción</label>{{ form_obs.descripcion }}</p>
+      <strong>Devolver a «{{ etiqueta }}» (requiere una observación)</strong>
+      <p><label for="{{ form_devolver.tipo_error.id_for_label }}">Tipo de error</label>{{ form_devolver.tipo_error }}</p>
+      <p><label for="{{ form_devolver.descripcion.id_for_label }}">Descripción</label>{{ form_devolver.descripcion }}</p>
       <button class="boton peligro">Devolver</button>
     </form>
     {% else %}
-    <form method="post" action="{% url 'entregable_estado' e.pk %}" style="display:inline">{% csrf_token %}
+    <form class="en-linea" method="post" action="{% url 'entregable_estado' e.pk %}">{% csrf_token %}
       <input type="hidden" name="estado" value="{{ destino }}"><button class="boton">Pasar a «{{ etiqueta }}»</button>
     </form>
     {% endif %}
@@ -31,18 +37,65 @@
 {% endif %}
 
 <h2>Datos del entregable ({{ e.plantilla.nombre }})</h2>
-<table>{% for etiqueta, valor in e.datos_etiquetados %}<tr><th style="width:30%">{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table>
+<div class="tabla"><table>{% for etiqueta, valor in e.datos_etiquetados %}<tr><th style="width:30%">{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table></div>
+
+<h2>Adjuntos</h2>
+<div class="tarjeta">
+  {% if requeridos %}
+  <div class="requeridos"><strong>Requeridos por la plantilla:</strong>
+    {% for r in requeridos %}<span class="etiqueta {% if r.cumplido %}cumple{% else %}falta{% endif %}">{{ r.etiqueta }} — {% if r.cumplido %}cumplido{% else %}falta{% endif %}</span>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if grupos_adjuntos %}
+  <div class="tabla"><table>
+    <thead><tr><th>Tipo</th><th>Archivo</th><th>Versión</th><th>Subido por</th><th>Fecha</th><th>Comentario</th><th>Acciones</th></tr></thead>
+    <tbody>{% for g in grupos_adjuntos %}{% with a=g.ultima %}
+      <tr><td>{{ g.etiqueta }}</td><td>{{ a.nombre_original }}</td><td>v{{ a.version }}</td><td>{{ a.subido_por.nombre }}</td>
+        <td>{{ a.subido_en|date:"d/m/Y H:i" }}</td><td>{{ a.comentario|default:"—" }}</td><td>{% include "entregables/_acciones_adjunto.html" %}</td></tr>
+    {% endwith %}{% endfor %}</tbody>
+  </table></div>
+
+  {% for g in grupos_adjuntos %}{% if g.anteriores %}
+  <details class="versiones">
+    <summary>Ver versiones anteriores de «{{ g.etiqueta }}» ({{ g.anteriores|length }})</summary>
+    <div class="tabla"><table>
+      <tbody>{% for a in g.anteriores %}
+        <tr><td>{{ g.etiqueta }}</td><td>{{ a.nombre_original }}</td><td>v{{ a.version }}</td><td>{{ a.subido_por.nombre }}</td>
+          <td>{{ a.subido_en|date:"d/m/Y H:i" }}</td><td>{{ a.comentario|default:"—" }}</td><td>{% include "entregables/_acciones_adjunto.html" %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </details>
+  {% endif %}{% endfor %}
+  {% else %}<p class="suave">Todavía no hay adjuntos.</p>{% endif %}
+
+  {% if puede_subir %}
+  <h3>Subir un adjunto</h3>
+  <form method="post" action="{% url 'adjunto_subir' e.pk %}" enctype="multipart/form-data">{% csrf_token %}
+    <div class="filtros-grid">
+      <div><label for="{{ form_adjunto.tipo.id_for_label }}">Tipo</label>{{ form_adjunto.tipo }}</div>
+      <div><label for="{{ form_adjunto.archivo.id_for_label }}">Archivo</label>{{ form_adjunto.archivo }}</div>
+      <div><label for="{{ form_adjunto.comentario.id_for_label }}">Comentario (opcional)</label>{{ form_adjunto.comentario }}</div>
+    </div>
+    <button class="boton">Subir</button>
+    <p class="suave">Formatos: {{ extensiones }} · máximo {{ tamano_max }} MB. Si ya existe un adjunto de ese tipo se crea una versión nueva; nada se sobrescribe.</p>
+  </form>
+  {% elif junior_sin_subida %}
+  <p class="suave">Ya no puede subir adjuntos: solo se suben mientras el entregable está en «A realizar» o «En proceso».</p>
+  {% endif %}
+</div>
 
 <h2>Observaciones</h2>
 {% for o in observaciones %}
 <div class="tarjeta" style="margin-bottom:.6rem">
-  <span class="etiqueta">{{ o.get_tipo_error_display }}</span> <span class="suave">{{ o.autor }} · {{ o.creada_en|date:"d/m/Y H:i" }}</span>
-  {% if o.resuelta %}<span class="etiqueta" style="background:#bbf7d0">Resuelta</span>{% endif %}
+  <span class="etiqueta">{{ o.get_tipo_error_display }}</span>
+  {% if o.resuelta %}<span class="etiqueta cumple">Resuelta</span>{% else %}<span class="etiqueta falta">Abierta</span>{% endif %}
+  <span class="suave">{{ o.autor.nombre }} · {{ o.creada_en|date:"d/m/Y H:i" }}</span>
   <p>{{ o.descripcion }}</p>
   {% if o.resuelta %}<p><strong>Solución:</strong> {{ o.solucion }}</p>
   {% elif es_senior %}
-  <form method="post" action="{% url 'observacion_resolver' e.pk o.pk %}">{% csrf_token %}
-    <label>Solución aplicada</label><textarea name="solucion" rows="2"></textarea><br><button class="boton sec">Marcar como resuelta</button>
+  <form method="post" action="{% url 'observacion_resolver' o.pk %}">{% csrf_token %}
+    <label for="sol-{{ o.pk }}">Solución aplicada</label><textarea id="sol-{{ o.pk }}" name="solucion" rows="2"></textarea><br><button class="boton sec">Marcar como resuelta</button>
   </form>{% endif %}
 </div>
 {% empty %}<p class="suave">Sin observaciones.</p>{% endfor %}
@@ -50,13 +103,15 @@
 {% if es_senior %}
 <form method="post" action="{% url 'observacion_nueva' e.pk %}" class="tarjeta">{% csrf_token %}
   <h2 style="margin-top:0">Registrar observación</h2>
-  <p><label>Tipo de error</label>{{ form_obs.tipo_error }}</p>
-  <p><label>Descripción</label>{{ form_obs.descripcion }}</p>
+  <p><label for="{{ form_obs.tipo_error.id_for_label }}">Tipo de error</label>{{ form_obs.tipo_error }}</p>
+  <p><label for="{{ form_obs.descripcion.id_for_label }}">Descripción</label>{{ form_obs.descripcion }}</p>
   <button class="boton">Registrar</button>
 </form>
 {% endif %}
 
-<h2>Historial de estados</h2>
-<table><tr><th>Fecha</th><th>De</th><th>A</th><th>Usuario</th></tr>
-{% for h in historial %}<tr><td>{{ h.fecha|date:"d/m/Y H:i" }}</td><td>{{ h.get_estado_anterior_display|default:"—" }}</td><td>{{ h.get_estado_nuevo_display }}</td><td>{{ h.usuario }}</td></tr>{% endfor %}</table>
+<h2>Historial</h2>
+<div class="tabla"><table>
+  <thead><tr><th>Fecha</th><th>Evento</th><th>Usuario</th></tr></thead>
+  <tbody>{% for h in historial %}<tr><td>{{ h.fecha|date:"d/m/Y H:i" }}</td><td>{{ h.descripcion }}</td><td>{{ h.usuario.nombre }}</td></tr>{% endfor %}</tbody>
+</table></div>
 {% endblock %}

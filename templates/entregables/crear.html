@@ -3,28 +3,48 @@
 {% block contenido %}
 <h1>Nuevo entregable</h1>
 {% if not hay_contratos %}
-<div class="aviso aviso-warning">No tiene contratos a su cargo, por eso no puede crear entregables.</div>
+<div class="aviso aviso-warning" role="status">No hay contratos vigentes a su cargo, por eso no puede crear entregables.</div>
 {% endif %}
+
 <form method="get" class="tarjeta" style="margin-bottom:1rem">
   <label for="plantilla">1. Elija la plantilla de TDR</label>
   <select name="plantilla" id="plantilla" onchange="this.form.submit()">
     <option value="">— Seleccione —</option>
-    {% for p in plantillas %}<option value="{{ p.pk }}" {% if plantilla.pk == p.pk %}selected{% endif %}>{{ p.nombre }} ({{ p.cliente|default:"genérica" }})</option>{% endfor %}
+    {% for p in plantillas %}<option value="{{ p.pk }}"{% if plantilla.pk == p.pk %} selected{% endif %}>{{ p.nombre }} ({{ p.cliente|default:"genérica" }})</option>{% endfor %}
   </select>
   <noscript><button class="boton sec">Continuar</button></noscript>
+  {% if plantilla %}
+  <div class="aviso aviso-info" style="margin:.8rem 0 0" role="status">
+    {% if plantilla.adjuntos_requeridos %}
+    Esta plantilla exige estos adjuntos antes de pasar a verificación: <strong>{{ plantilla.adjuntos_requeridos_etiquetas|join:", " }}</strong>.
+    Se suben en el detalle del entregable, después de crearlo.
+    {% else %}
+    Esta plantilla no exige adjuntos para pasar a verificación.
+    {% endif %}
+  </div>
+  {% endif %}
 </form>
+
 {% if form %}
 <form method="post" class="tarjeta">{% csrf_token %}
   <input type="hidden" name="plantilla" value="{{ plantilla.pk }}">
-  <h2>2. Complete los datos requeridos</h2>
+  <h2 style="margin-top:0">2. Complete los datos requeridos</h2>
   {% if form.errors %}
-  <div class="aviso aviso-error"><strong>No se pudo guardar. Revise lo siguiente:</strong>
+  <div class="aviso aviso-error" role="alert"><strong>No se pudo guardar. Revise lo siguiente:</strong>
     <ul>{% for campo, errs in form.errors.items %}{% for e in errs %}<li>{{ e }}</li>{% endfor %}{% endfor %}</ul></div>
   {% endif %}
-  {% for campo in form %}
-  <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}</div>
+  {% for campo in form.campos_base %}
+  <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
+    {% if campo.help_text %}<span class="helptext">{{ campo.help_text }}</span>{% endif %}</div>
   {% endfor %}
-  <button class="boton">Crear y asignar</button>
+  {% if form.campos_plantilla %}
+  <h3>Campos de la plantilla</h3>
+  {% for campo in form.campos_plantilla %}
+  <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
+    {% if campo.help_text %}<span class="helptext">{{ campo.help_text }}</span>{% endif %}</div>
+  {% endfor %}
+  {% endif %}
+  <div class="acciones"><button class="boton">Crear y asignar</button><a class="boton sec" href="{% url 'entregables' %}">Cancelar</a></div>
 </form>
 {% endif %}
 {% endblock %}

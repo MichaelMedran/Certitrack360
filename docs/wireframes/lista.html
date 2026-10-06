@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Lista de entregables</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Índice de pantallas</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span class="activo">Entregables</span><span>Asistente</span>
+  <span class="der">Avisos (1) · Sofía Sánchez · Senior · Salir</span>
+</div>
+
+<h1>Entregables</h1>
+<div class="fila">
+  <span class="boton principal">Nuevo entregable</span> <span class="marca">1</span>
+</div>
+
+<div class="caja nuevo">
+  <details>
+    <summary>Filtros <span class="chip">1 activo</span> <span class="marca">2</span></summary>
+    <div class="fila" style="margin-top:8px">
+      <label>Cliente <span class="campo">Todos ▾</span></label>
+      <label>Contrato <span class="campo">Todos ▾</span></label>
+      <label>Responsable <span class="campo">Todos ▾</span></label>
+      <label>Estado <span class="campo">Todos ▾</span></label>
+      <label>Urgencia <span class="campo">Todas ▾</span></label>
+      <label>Tipo de observación abierta <span class="campo">Todos ▾</span></label>
+      <label>Ordenar por <span class="campo">Plazo (más próximo primero) ▾</span></label>
+      <span class="boton principal">Aplicar</span><span class="boton">Limpiar</span>
+    </div>
+  </details>
+  <div class="fila"><span class="nota">Activos:</span><span class="chip">Urgencia: Vencido ✕</span></div>
+</div>
+
+<table>
+  <tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Urgencia</th><th>Estado</th><th>Junior</th></tr>
+  <tr><td><u>Informe técnico 03</u></td><td>Banco Andino Ficticio</td><td>DEMO-2026-001</td><td>29/09/2026</td><td><span class="tag">Vencido</span></td><td>En proceso</td><td>Julia J.</td></tr>
+  <tr><td><u>Acta de conformidad 07</u></td><td>Redes Altiplano</td><td>DEMO-2026-004</td><td>02/10/2026</td><td><span class="tag">Vencido</span></td><td>A realizar</td><td>Javier J.</td></tr>
+  <tr><td><u>Matriz de riesgos 06</u></td><td>Financiera Costa Sur</td><td>DEMO-2026-002</td><td>06/10/2026</td><td><span class="tag">Crítico</span></td><td>En proceso</td><td>Jimena J.</td></tr>
+  <tr><td><u>Informe de avance 14</u></td><td>Redes Altiplano</td><td>DEMO-2026-004</td><td>09/10/2026</td><td><span class="tag suave">Próximo</span></td><td>Verificación senior</td><td>Julia J.</td></tr>
+  <tr><td><u>Entregable de cierre 21</u></td><td>Instituto Regional de Prueba</td><td>DEMO-2026-006</td><td>28/10/2026</td><td><span class="tag suave">Normal</span></td><td>A realizar</td><td>Javier J.</td></tr>
+</table>
+
+<ol class="anotaciones">
+  <li><b>Nuevo entregable</b> solo aparece para senior, gerente y admin; el junior no lo ve.</li>
+  <li><b>Mismos filtros y orden que el tablero</b> (plegados por defecto). Se aplican sobre lo que el rol ya puede ver y viajan en la dirección. El orden por defecto es el plazo; también se puede ordenar por urgencia o por cliente.</li>
+  <li>La urgencia siempre va escrita (Vencido, Crítico, Próximo, Normal); el color nunca es la única señal. Cada fila enlaza al detalle.</li>
+  <li>Cada rol ve solo sus entregables: el junior los asignados; el senior, los de sus contratos; el gerente y el admin, todos.</li>
+</ol>
+
+</div>
+</body>
+</html>

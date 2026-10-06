@@ -1,0 +1,11 @@
+<article class="ficha nivel-{{ e.urgencia|lower }}" data-id="{{ e.pk }}">
+  {% if e.estado != 'HECHO' %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}
+  <a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a>
+  <div class="suave">{{ e.contrato.cliente }} · {{ e.contrato.numero_contrato }}</div>
+  <div>Plazo: {{ e.plazo|date:"d/m/Y" }}</div>
+  <div class="suave">{{ e.junior_asignado.nombre }}</div>
+  <div class="insignias">
+    {% if e.n_obs_abiertas %}<span class="etiqueta">{{ e.n_obs_abiertas }} observaci{{ e.n_obs_abiertas|pluralize:"ón,ones" }} abierta{{ e.n_obs_abiertas|pluralize }}: {{ e.tipos_obs_abiertas|join:", " }}</span>{% endif %}
+    <span class="etiqueta">Adjuntos: {{ e.n_adjuntos }}</span>
+  </div>
+</article>

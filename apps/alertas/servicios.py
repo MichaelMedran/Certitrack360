@@ -16,7 +16,7 @@ def generar_alertas(hoy=None):
     Devuelve la cantidad de notificaciones creadas.
     """
     hoy = hoy or timezone.localdate()
-    umbrales = sorted(settings.UMBRALES_ALERTA)
+    umbrales = sorted(settings.ALERT_THRESHOLDS_DAYS)
     creadas = 0
     activos = Entregable.objects.exclude(estado=Entregable.Estado.HECHO).select_related(
         "junior_asignado", "senior_revisor"

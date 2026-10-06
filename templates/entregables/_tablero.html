@@ -1,0 +1,15 @@
+{% if error %}<div class="aviso aviso-error" role="alert">{{ error }}</div>{% endif %}
+{% if exito %}<div class="aviso aviso-success" role="status">{{ exito }}</div>{% endif %}
+{% include "entregables/_chips.html" %}
+<div class="tablero">
+  {% for col in columnas %}
+  <section class="columna" aria-labelledby="col-{{ col.valor }}">
+    <h3 id="col-{{ col.valor }}">{{ col.etiqueta }} <span class="suave">({{ col.tarjetas|length }})</span></h3>
+    <div class="zona" data-estado="{{ col.valor }}">
+      {% for e in col.tarjetas %}{% include "entregables/_tarjeta.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% if not total_tarjetas %}<p class="suave">No hay entregables con estos filtros.</p>{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}

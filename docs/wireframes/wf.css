@@ -1,0 +1,80 @@
+/* Wireframes de CertiTrack 360 — baja fidelidad.
+   Solo escala de grises y trazos simples: lo que se evalúa es la estructura y el flujo,
+   no los colores ni la tipografía finales. */
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.45 Arial, Helvetica, sans-serif; color: #222; background: #fff; }
+a { color: #222; }
+h1 { font-size: 20px; margin: 14px 0 6px; }
+h2 { font-size: 15px; margin: 18px 0 6px; }
+h3 { font-size: 13px; margin: 0 0 6px; }
+p { margin: 6px 0; }
+
+.nota-wf { background: #ececec; border-bottom: 1px solid #999; padding: 6px 16px; font-size: 12px; }
+.pantalla { max-width: 1120px; margin: 0 auto; padding: 0 16px 40px; }
+.nota { color: #555; font-size: 12px; font-style: italic; }
+
+/* Barra superior de la aplicación */
+.app-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; border: 1px solid #777; background: #dcdcdc; padding: 8px 12px; margin: 10px 0 14px; }
+.app-bar .der { margin-left: auto; font-size: 12px; }
+.app-bar .activo { font-weight: bold; text-decoration: underline; }
+
+/* Bloques */
+.caja { border: 1px solid #777; padding: 10px 12px; margin: 8px 0; background: #fff; }
+.caja.gris { background: #f0f0f0; }
+.aviso { border: 1px solid #333; border-left-width: 6px; padding: 6px 10px; margin: 8px 0; background: #f6f6f6; }
+.rol { display: inline-block; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; background: #e6e6e6; border: 1px solid #777; padding: 2px 8px; margin-top: 18px; }
+
+/* Lo que agrega la adenda 1: borde punteado + etiqueta NUEVO */
+.nuevo { border: 2px dashed #333; position: relative; padding-top: 14px; }
+.nuevo::before { content: "NUEVO"; position: absolute; top: -10px; left: 10px; background: #fff; border: 1px solid #333; font-size: 10px; letter-spacing: .5px; padding: 0 5px; }
+.nuevo-inline { border: 1px dashed #333; padding: 0 5px; font-size: 10px; margin-left: 4px; }
+
+/* Controles */
+.fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 4px 0; }
+.campo { display: inline-block; min-width: 150px; border: 1px solid #777; background: #fff; padding: 3px 8px; color: #555; }
+.campo.ancho { min-width: 300px; }
+.boton { display: inline-block; border: 1px solid #555; background: #f6f6f6; padding: 3px 12px; }
+.boton.principal { border-width: 2px; font-weight: bold; }
+.tag { display: inline-block; border: 1px solid #333; padding: 0 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; background: #fff; }
+.tag.suave { font-weight: normal; border-style: dashed; }
+.chip { display: inline-block; border: 1px solid #777; border-radius: 10px; padding: 0 8px; font-size: 12px; background: #f6f6f6; }
+details { margin: 6px 0; }
+details > summary { cursor: pointer; font-weight: bold; }
+
+/* Tablas */
+table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+th, td { border: 1px solid #888; padding: 4px 8px; text-align: left; vertical-align: top; }
+th { background: #e6e6e6; font-size: 12px; }
+td.num, th.num { text-align: right; }
+
+/* Tablero Kanban */
+.tablero { display: grid; grid-template-columns: repeat(5, minmax(170px, 1fr)); gap: 8px; overflow-x: auto; }
+.columna { border: 1px solid #777; background: #f3f3f3; padding: 6px; min-height: 250px; }
+.ficha { border: 1px solid #555; background: #fff; padding: 6px; margin-bottom: 6px; font-size: 12px; }
+.ficha.vencida { border-left: 6px solid #222; } /* marca adicional: el color no es la única señal */
+
+/* Contadores y barras */
+.contadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 8px 0; }
+.contador { border: 1px solid #777; padding: 8px; text-align: center; background: #fff; }
+.contador b { display: block; font-size: 22px; }
+.barra-g { background: #ddd; height: 12px; }
+.barra-g i { display: block; background: #777; height: 12px; }
+
+/* Calendario */
+.mes { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border: 1px solid #777; }
+.mes div { border: 1px solid #bbb; min-height: 70px; padding: 3px; font-size: 11px; }
+.mes .dia { background: #ececec; min-height: 0; text-align: center; font-weight: bold; }
+.mes .evento { border: 1px solid #555; background: #fff; margin-top: 2px; padding: 1px 3px; }
+
+/* Pestañas y filas de edición */
+.pestanas { display: flex; margin: 10px 0 0; }
+.pestanas span { border: 1px solid #777; border-bottom: none; padding: 4px 16px; background: #e6e6e6; }
+.pestanas .activa { background: #fff; font-weight: bold; }
+.panel { border: 1px solid #777; padding: 10px 12px; margin: 0 0 8px; }
+.login { max-width: 360px; margin: 30px auto; }
+
+/* Anotaciones numeradas */
+.marca { display: inline-block; border: 1px solid #333; border-radius: 50%; font-size: 10px; width: 16px; height: 16px; line-height: 14px; text-align: center; margin-left: 3px; vertical-align: middle; background: #fff; }
+.anotaciones { margin-top: 26px; border-top: 2px solid #777; padding-top: 6px; font-size: 13px; }
+.anotaciones li { margin: 4px 0; }
+.pregunta { border-left: 4px solid #333; padding: 2px 8px; margin: 6px 0; }

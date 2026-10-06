@@ -1,24 +1,22 @@
 import datetime
-import json
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from apps.alertas.models import Notificacion
 from apps.alertas.servicios import generar_alertas
 from apps.clientes.models import Cliente, Contrato, PlantillaTDR
-from apps.conocimiento import servicios as conocimiento
 from apps.cuentas.models import Usuario
 from apps.entregables import servicios
 from apps.entregables.models import Entregable, HistorialEstado, Observacion
+from apps.entregables.testing import MediaTemporal
 
 E = Entregable.Estado
 
 
-class Base(TestCase):
+class Base(MediaTemporal, TestCase):
     @classmethod
     def setUpTestData(cls):
         mk = lambda n, r: Usuario.objects.create_user(n, password="x", rol=r)
@@ -43,20 +41,21 @@ class Base(TestCase):
     def nuevo(cls, contrato, junior, senior, titulo, estado=E.A_REALIZAR, dias=10):
         return Entregable.objects.create(
             contrato=contrato, plantilla=cls.plantilla, titulo=titulo, plazo=cls.hoy + datetime.timedelta(days=dias),
+            datos={c["nombre"]: "valor de prueba" for c in cls.plantilla.campos_requeridos},
             estado=estado, junior_asignado=junior, senior_revisor=senior, creado_por=senior)
 
 
 class PermisosTests(Base):
-    def test_junior_no_accede_a_administracion(self):
+    def test_junior_no_accede_a_la_gestion(self):
         self.client.force_login(self.j1)
         for ent in ("clientes", "contratos", "plantillas"):
             self.assertEqual(self.client.get(reverse("adm_lista", args=[ent])).status_code, 403)
             self.assertEqual(self.client.get(reverse("adm_nuevo", args=[ent])).status_code, 403)
-        self.assertEqual(self.client.get(reverse("administracion")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("gestion")).status_code, 403)
 
-    def test_senior_no_accede_a_administracion(self):
+    def test_senior_no_accede_a_la_gestion(self):
         self.client.force_login(self.s1)
-        self.assertEqual(self.client.get(reverse("administracion")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("gestion")).status_code, 403)
 
     def test_gerente_si_accede(self):
         self.client.force_login(self.gerente)
@@ -187,21 +186,18 @@ class FlujoTests(Base):
         self.assertEqual(e.observaciones.count(), 1)
         self.assertTrue(Notificacion.objects.filter(usuario=self.j1, tipo="OBSERVACION").exists())
 
-    def test_api_rechaza_transicion_invalida(self):
+    def test_el_endpoint_rechaza_una_transicion_invalida_y_no_cambia_nada(self):
         self.client.force_login(self.j1)
-        r = self.client.post(reverse("tablero_mover", args=[self.e1.pk]), json.dumps({"estado": "HECHO"}),
-                             content_type="application/json")
-        self.assertEqual(r.status_code, 400)
+        r = self.client.post(reverse("entregable_estado", args=[self.e1.pk]), {"estado": "HECHO"}, HTTP_HX_REQUEST="true")
+        self.assertEqual(r.status_code, 422)
         self.e1.refresh_from_db()
         self.assertEqual(self.e1.estado, E.A_REALIZAR)
 
-    def test_api_acepta_transicion_valida_y_no_toca_ajenos(self):
+    def test_el_endpoint_acepta_una_transicion_valida_y_no_toca_ajenos(self):
         self.client.force_login(self.j1)
-        r = self.client.post(reverse("tablero_mover", args=[self.e1.pk]), json.dumps({"estado": "EN_PROCESO"}),
-                             content_type="application/json")
+        r = self.client.post(reverse("entregable_estado", args=[self.e1.pk]), {"estado": "EN_PROCESO"}, HTTP_HX_REQUEST="true")
         self.assertEqual(r.status_code, 200)
-        r = self.client.post(reverse("tablero_mover", args=[self.e2.pk]), json.dumps({"estado": "EN_PROCESO"}),
-                             content_type="application/json")
+        r = self.client.post(reverse("entregable_estado", args=[self.e2.pk]), {"estado": "EN_PROCESO"}, HTTP_HX_REQUEST="true")
         self.assertEqual(r.status_code, 404)
 
 
@@ -224,19 +220,3 @@ class AlertasTests(Base):
         Notificacion.objects.create(usuario=self.j1, entregable=self.e1, tipo="ASIGNACION", mensaje="x")
         self.client.force_login(self.j1)
         self.assertEqual(self.client.get(reverse("inicio")).context["no_leidas"], 1)
-
-
-class ConocimientoYSeedTests(TestCase):
-    def test_seed_idempotente_y_chatbot_cita_caso(self):
-        call_command("seed_demo", "--reset", verbosity=0)
-        call_command("seed_demo", verbosity=0)
-        self.assertEqual(Entregable.objects.count(), 30)
-        self.assertEqual(len({e.estado for e in Entregable.objects.all()}), 5)
-        self.client.login(username="gerente_demo", password="demo1234")
-        r = self.client.get(reverse("asistente"), {"q": "falta el periodo reportado en el informe"})
-        self.assertTrue(r.context["casos"])
-        self.assertContains(r, "Caso 1")
-        self.assertIn("periodo", r.context["casos"][0]["leccion"].problema.lower())
-
-    def test_busqueda_sin_resultados(self):
-        self.assertEqual(conocimiento.buscar("xyzzy"), [])

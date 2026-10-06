@@ -1,0 +1,6 @@
+<a class="boton sec chico" href="{% url 'adjunto_descargar' a.pk %}">Descargar<span class="sr-only"> {{ a.nombre_original }}</span></a>
+{% if puede_eliminar %}
+<form class="en-linea" method="post" action="{% url 'adjunto_eliminar' a.pk %}" data-confirmar="¿Eliminar «{{ a.nombre_original }}»? Esta acción no se puede deshacer.">{% csrf_token %}
+  <button class="boton sec chico">Eliminar<span class="sr-only"> {{ a.nombre_original }}</span></button>
+</form>
+{% endif %}

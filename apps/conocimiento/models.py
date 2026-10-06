@@ -4,6 +4,8 @@ from apps.entregables.models import TipoError
 
 
 class LeccionAprendida(models.Model):
+    """Problema detectado en un entregable junto con su solución (SDD §9.2). Se genera al cerrar el entregable."""
+
     entregable_origen = models.ForeignKey(
         "entregables.Entregable", null=True, blank=True, on_delete=models.SET_NULL, related_name="lecciones"
     )
@@ -15,6 +17,9 @@ class LeccionAprendida(models.Model):
     problema = models.TextField()
     solucion = models.TextField()
     creada_en = models.DateTimeField(auto_now_add=True)
+    # Índice vectorial local: embedding calculado por Ollama y el modelo que lo generó (se recalcula si cambia).
+    embedding = models.JSONField(null=True, blank=True)
+    embedding_modelo = models.CharField(max_length=100, blank=True)
 
     class Meta:
         ordering = ["-creada_en"]
@@ -22,3 +27,7 @@ class LeccionAprendida(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_error_display()} · {self.cliente}"
+
+    @property
+    def texto_indexable(self):
+        return f"{self.get_tipo_error_display()}. {self.problema} Solución: {self.solucion}"

@@ -1,10 +1,13 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
+# /clientes/, /contratos/ y /plantillas/ (SDD §14): listado, alta y edición. `gestion/` es el acceso común.
+_ENTIDADES = r"(?P<entidad>clientes|contratos|plantillas)"
+
 urlpatterns = [
-    path("administracion/", views.administracion, name="administracion"),
-    path("administracion/<str:entidad>/", views.lista, name="adm_lista"),
-    path("administracion/<str:entidad>/nuevo/", views.editar, name="adm_nuevo"),
-    path("administracion/<str:entidad>/<int:pk>/", views.editar, name="adm_editar"),
+    path("gestion/", views.gestion, name="gestion"),
+    re_path(rf"^{_ENTIDADES}/$", views.lista, name="adm_lista"),
+    re_path(rf"^{_ENTIDADES}/nuevo/$", views.editar, name="adm_nuevo"),
+    re_path(rf"^{_ENTIDADES}/(?P<pk>[0-9]+)/$", views.editar, name="adm_editar"),
 ]
