@@ -17,6 +17,7 @@ def rellenar(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    atomic = False
 
     dependencies = [
         ('entregables', '0003_codigo_y_datos_de_recepcion'),
