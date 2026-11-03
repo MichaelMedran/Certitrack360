@@ -1,11 +1,12 @@
 from django.contrib import admin
 
 from . import adjuntos
-from .models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion, ResponsableApoyo
+from .models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion, RegistroTiempo, ResponsableApoyo
 
 admin.site.register(Observacion)
 admin.site.register(HistorialEstado)
 admin.site.register(ResponsableApoyo)
+admin.site.register(RegistroTiempo)
 
 
 @admin.register(Entregable)

@@ -303,6 +303,109 @@
 </form>
 {% endif %}
 
+<h2 id="tiempo">Tiempo por etapa</h2>
+<div class="tarjeta">
+  {% if puede_registrar_tiempo %}
+  <form method="post" action="{% url 'entregable_tiempo' e.pk %}" style="margin-bottom:.75rem">{% csrf_token %}
+    <div class="filtros-grid" style="align-items:end">
+      <div>
+        <label for="tiempo-etapa">Etapa</label>
+        <select id="tiempo-etapa" name="etapa">
+          {% for valor, etiqueta in etapas_tiempo %}
+          <option value="{{ valor }}"{% if resumen_tiempo.etapa_sugerida == valor %} selected{% endif %}>{{ etiqueta }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="acciones">
+        <button class="boton" name="accion" value="iniciar">▶ Iniciar</button>
+        {% if resumen_tiempo.abierto_entregable %}
+        <button class="boton sec" name="accion" value="pausar">❚❚ Pausar</button>
+        {% endif %}
+        <button class="boton sec" name="accion" value="finalizar">■ Finalizar etapa</button>
+      </div>
+    </div>
+    {% if resumen_tiempo.abierto_entregable %}
+    <p style="margin:.4rem 0 0"><span class="etiqueta">Corriendo: {{ resumen_tiempo.abierto_entregable.get_etapa_display }} · {{ resumen_tiempo.abierto_entregable.duracion_calculada }} (desde {{ resumen_tiempo.abierto_entregable.inicio|date:"H:i" }})</span></p>
+    {% elif resumen_tiempo.abierto_otro %}
+    <p class="suave" style="margin:.4rem 0 0">Tiene un tramo abierto en {{ resumen_tiempo.abierto_otro.entregable.referencia }} ({{ resumen_tiempo.abierto_otro.get_etapa_display }}); al iniciar aquí se pausará automáticamente.</p>
+    {% endif %}
+  </form>
+  {% endif %}
+
+  <div class="tabla"><table>
+    <thead><tr><th>Etapa</th><th class="num">Acumulado</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for et in resumen_tiempo.etapas %}
+      <tr>
+        <td>{{ et.etiqueta }}</td>
+        <td class="num">{{ et.duracion_texto }}</td>
+        <td>{{ et.estado }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th>Total del entregable</th><th class="num">{{ resumen_tiempo.total_texto }}</th><th></th></tr>
+    </tfoot>
+  </table></div>
+
+  {% if resumen_tiempo.registros %}
+  <details style="margin:.6rem 0">
+    <summary>Tramos registrados ({{ resumen_tiempo.registros|length }})</summary>
+    <div class="tabla"><table>
+      <thead><tr><th>Fecha</th><th>Etapa</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th class="num">Duración</th><th>Tipo</th></tr></thead>
+      <tbody>
+        {% for r in resumen_tiempo.registros %}
+        <tr>
+          <td>{{ r.inicio|date:"d/m/Y" }}</td>
+          <td>{{ r.get_etapa_display }}{% if r.cierra_etapa %} <span class="etiqueta">Cierra etapa</span>{% endif %}</td>
+          <td>{{ r.usuario.nombre }}</td>
+          <td>{{ r.inicio|date:"H:i" }}</td>
+          <td>{% if r.fin %}{{ r.fin|date:"H:i" }}{% else %}<span class="etiqueta">En curso</span>{% endif %}</td>
+          <td class="num">{{ r.duracion_calculada }}</td>
+          <td>{% if r.manual %}Manual · «{{ r.motivo }}»{% else %}Cronómetro{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </details>
+  {% endif %}
+
+  {% if puede_registrar_tiempo %}
+  <details style="margin-top:.5rem">
+    <summary><strong>Registrar tiempo olvidado (ajuste manual)</strong></summary>
+    <form method="post" action="{% url 'entregable_tiempo' e.pk %}" class="caja-gris">{% csrf_token %}
+      <input type="hidden" name="accion" value="manual">
+      <div class="filtros-grid">
+        <div>
+          <label for="tiempo-manual-etapa">Etapa</label>
+          <select id="tiempo-manual-etapa" name="etapa">
+            {% for valor, etiqueta in etapas_tiempo %}
+            <option value="{{ valor }}">{{ etiqueta }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="tiempo-manual-inicio">Inicio</label>
+          <input id="tiempo-manual-inicio" name="inicio" type="datetime-local" required>
+        </div>
+        <div>
+          <label for="tiempo-manual-fin">Fin</label>
+          <input id="tiempo-manual-fin" name="fin" type="datetime-local" required>
+        </div>
+        <div>
+          <label for="tiempo-manual-motivo">Motivo <strong>(obligatorio)</strong></label>
+          <input id="tiempo-manual-motivo" name="motivo" type="text" maxlength="255" required placeholder="p. ej. Olvidé iniciar el cronómetro">
+        </div>
+      </div>
+      <div class="acciones">
+        <button class="boton">Guardar ajuste</button>
+      </div>
+      <p class="suave">Exige motivo, no admite fechas futuras ni bloques mayores a 12 horas, y queda marcado como «Manual».</p>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
 <h2 id="entregas">Entregas y acta de conformidad</h2>
 <div class="tarjeta">
   {% if entregas %}

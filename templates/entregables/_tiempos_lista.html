@@ -1,0 +1,49 @@
+{% include "entregables/_chips.html" %}
+{% if registros %}
+<p class="suave">{{ total }} registro{{ total|pluralize }} · Total del filtro: <strong>{{ total_texto }}</strong>.</p>
+<div class="tabla"><table>
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Entregable</th>
+      <th>Cliente</th>
+      <th>Etapa</th>
+      <th>Responsable</th>
+      <th>Inicio</th>
+      <th>Fin</th>
+      <th class="num">Duración</th>
+      <th>Tipo</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in registros %}
+    <tr>
+      <td>{{ r.inicio|date:"d/m/Y" }}</td>
+      <td class="codigo"><a href="{% url 'entregable_detalle' r.entregable_id %}#tiempo" title="{{ r.entregable.titulo }}">{{ r.entregable.codigo|default:r.entregable.titulo }}</a></td>
+      <td>{{ r.entregable.contrato.cliente.nombre }}</td>
+      <td>{{ r.get_etapa_display }}{% if r.cierra_etapa %} <span class="etiqueta">Finalizada</span>{% endif %}</td>
+      <td>{{ r.usuario.nombre }}</td>
+      <td>{{ r.inicio|date:"H:i" }}</td>
+      <td>{% if r.fin %}{{ r.fin|date:"H:i" }}{% else %}<span class="etiqueta">En curso</span>{% endif %}</td>
+      <td class="num">{{ r.duracion_texto }}</td>
+      <td>{% if r.manual %}Manual · «{{ r.motivo }}»{% else %}Cronómetro{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <th colspan="7">Total del filtro</th>
+      <th class="num">{{ total_texto }}</th>
+      <th></th>
+    </tr>
+  </tfoot>
+</table></div>
+{% if pagina.has_other_pages %}
+<nav class="acciones" aria-label="Páginas">
+  {% if pagina.has_previous %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span class="suave">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}<p class="tarjeta">No hay registros de tiempo para mostrar con estos filtros.</p>{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}

@@ -18,12 +18,12 @@ from apps.clientes.models import PlantillaTDR
 from apps.cuentas.models import Usuario
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import adjuntos, entregas, filtros, personal, servicios, subestado
-from . import filtros_entregas, filtros_observaciones
+from . import adjuntos, entregas, filtros, personal, servicios, subestado, tiempos
+from . import filtros_entregas, filtros_observaciones, filtros_tiempos
 from . import observaciones as obs_servicio
 from .forms import ActaForm, AdjuntoForm, EntregaForm, EntregableForm, ObservacionForm, contratos_para
 from .htmx import con_vary, es_htmx, pide_parcial
-from .models import Adjunto, Entrega, Entregable, Observacion, ResponsableApoyo, TipoError
+from .models import Adjunto, Entrega, Entregable, Observacion, RegistroTiempo, ResponsableApoyo, TipoError
 from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
 from .visibilidad import entregables_visibles, es_elaborador_del_entregable, es_senior_del_entregable
 
@@ -286,6 +286,9 @@ def _contexto_detalle(usuario, e):
         "seniors_disponibles": seniors_disponibles,
         "colaboradores_apoyo": colaboradores_apoyo,
         "funciones_apoyo": ResponsableApoyo.Funcion.choices,
+        "resumen_tiempo": tiempos.resumen_tiempos(e, usuario=usuario),
+        "puede_registrar_tiempo": tiempos.puede_registrar_tiempo(usuario, e),
+        "etapas_tiempo": RegistroTiempo.Etapa.choices,
         "admite_observaciones": obs_servicio.admite_observaciones(e),
         "observaciones": observaciones,
         "con_correcciones": subestado.aplica(e, bool(abiertas)), "etiqueta_subestado": subestado.ETIQUETA,
@@ -707,3 +710,87 @@ def historial_observaciones(request):
         "consulta_sin_pagina": resto.urlencode(), "pestana": "observaciones",
     }
     return _respuesta(request, "entregables/observaciones.html", "entregables/_observaciones_lista.html", contexto)
+
+
+
+# ------------------------------------------------------------------ tiempo por etapa (RF-32)
+
+def _volver_a_tiempo(request, e):
+    destino = tiempos.enlace_tiempo(e)
+    if es_htmx(request):
+        respuesta = HttpResponse("")
+        respuesta["HX-Redirect"] = destino
+        return con_vary(respuesta)
+    return redirect(destino)
+
+
+@login_required
+@require_POST
+def gestionar_tiempo(request, pk):
+    """POST /entregables/<pk>/tiempo/: iniciar, pausar, finalizar etapa o registrar ajuste manual (RF-32)."""
+    e = get_object_or_404(_base(request.user), pk=pk)  # 404 si no lo ve
+    if not tiempos.puede_registrar_tiempo(request.user, e):
+        raise PermissionDenied("Solo los responsables del entregable pueden registrar tiempo.")
+
+    accion = (request.POST.get("accion") or "").strip().lower()
+    etapa = (request.POST.get("etapa") or "").strip()
+
+    try:
+        if accion == "iniciar":
+            nuevo, pausado = tiempos.iniciar(e, request.user, etapa)
+            msg = f"Se inició el registro de tiempo en «{nuevo.get_etapa_display()}»."
+            if pausado is not None:
+                msg += f" Se pausó el tramo abierto en {pausado.entregable.referencia}."
+            messages.success(request, msg)
+        elif accion == "pausar":
+            reg = tiempos.pausar(e, request.user)
+            messages.success(
+                request, f"Se pausó el tramo de «{reg.get_etapa_display()}» ({reg.duracion_texto})."
+            )
+        elif accion in ("finalizar", "finalizar_etapa"):
+            reg = tiempos.finalizar_etapa(e, request.user, etapa=etapa or None)
+            messages.success(request, f"La etapa «{reg.get_etapa_display()}» quedó marcada como finalizada.")
+        elif accion in ("manual", "ajuste_manual"):
+            cierra = request.POST.get("cierra_etapa") in ("1", "true", "si", "on")
+            reg = tiempos.registrar_manual(
+                e,
+                request.user,
+                etapa=etapa,
+                inicio=request.POST.get("inicio"),
+                fin=request.POST.get("fin"),
+                motivo=request.POST.get("motivo", ""),
+                cierra_etapa=cierra,
+            )
+            messages.success(
+                request, f"Se registró el ajuste manual en «{reg.get_etapa_display()}» ({reg.duracion_texto})."
+            )
+        else:
+            raise ValidationError("Elija una acción válida sobre el tiempo por etapa.")
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+    return _volver_a_tiempo(request, e)
+
+
+@login_required
+def historial_tiempos(request):
+    """Pestaña «Tiempos» de Entregables (/tiempos/): historial filtrable según visibilidad del rol (RF-32)."""
+    resultado = filtros_tiempos.aplicar(tiempos.visibles(request.user), request.GET)
+    paginador = Paginator(resultado.queryset, 50)
+    pagina = paginador.get_page(request.GET.get("pagina"))
+    resto = request.GET.copy()
+    resto.pop("pagina", None)
+    opciones = filtros_tiempos.opciones(request.user)
+    contexto = {
+        "pagina": pagina,
+        "registros": pagina.object_list,
+        "total": paginador.count,
+        "total_segundos": resultado.total_segundos,
+        "total_texto": resultado.total_texto,
+        "opciones": opciones,
+        "filtros_activos": resultado.activos,
+        "n_filtros": len(resultado.activos),
+        "chips": filtros_tiempos.chips(request.GET, resultado.activos, opciones),
+        "consulta_sin_pagina": resto.urlencode(),
+        "pestana": "tiempos",
+    }
+    return _respuesta(request, "entregables/tiempos.html", "entregables/_tiempos_lista.html", contexto)

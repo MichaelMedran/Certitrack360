@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Registros de tiempo{% endblock %}
+{% block contenido %}
+<h1>Entregables</h1>
+{% include "entregables/_pestanas.html" %}
+<h2 style="margin-top:0">Registros de tiempo</h2>
+
+<details class="filtros"{% if n_filtros %} open{% endif %}>
+  <summary>Filtros <span class="chip" id="resumen-filtros">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span></summary>
+  <form method="get" action="{{ request.path }}" data-filtros
+        hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="filtros-grid">
+      <div><label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente"><option value="">Todos</option>
+          {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-etapa">Etapa</label>
+        <select id="f-etapa" name="etapa"><option value="">Todas</option>
+          {% for valor, etiqueta in opciones.etapas %}<option value="{{ valor }}"{% if filtros_activos.etapa == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-responsable">Responsable</label>
+        <select id="f-responsable" name="responsable"><option value="">Todos</option>
+          {% for u in opciones.responsables %}<option value="{{ u.pk }}"{% if filtros_activos.responsable == u.pk %} selected{% endif %}>{{ u.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-desde">Desde</label>
+        <input id="f-desde" name="desde" type="date" value="{{ filtros_activos.desde|date:'Y-m-d' }}"></div>
+      <div><label for="f-hasta">Hasta</label>
+        <input id="f-hasta" name="hasta" type="date" value="{{ filtros_activos.hasta|date:'Y-m-d' }}"></div>
+    </div>
+    <div class="acciones">
+      <button class="boton">Aplicar</button>
+      <a class="boton sec" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true">Limpiar</a>
+    </div>
+  </form>
+  <p class="suave">El junior ve sus propios registros, el senior los de sus entregables y el gerente y el admin todos. Los ajustes manuales llevan su motivo a la vista.</p>
+</details>
+
+<div id="resultados" aria-live="polite">
+  {% include "entregables/_tiempos_lista.html" %}
+</div>
+{% endblock %}

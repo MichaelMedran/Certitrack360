@@ -8,6 +8,8 @@ urlpatterns = [
     path("entregables/<int:pk>/", views.detalle, name="entregable_detalle"),
     path("entregables/<int:pk>/mover/", views.cambiar_estado, name="entregable_estado"),
     path("entregables/<int:pk>/responsables/", views.gestionar_responsables, name="entregable_responsables"),
+    path("entregables/<int:pk>/tiempo/", views.gestionar_tiempo, name="entregable_tiempo"),
+    path("tiempos/", views.historial_tiempos, name="tiempos"),
     path("entregables/<int:pk>/observaciones/", views.registrar_observacion, name="observacion_nueva"),
     path("observaciones/<int:obs_id>/resolver/", views.resolver_observacion, name="observacion_resolver"),
     # Sprint 2 (RF-25 a RF-27)

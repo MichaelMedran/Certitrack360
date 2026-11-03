@@ -384,3 +384,66 @@ class ResponsableApoyo(models.Model):
 
     def __str__(self):
         return f"{self.usuario.nombre} · Apoyo ({self.get_funcion_display().lower()}) en {self.entregable}"
+
+
+
+class RegistroTiempo(models.Model):
+    """Registro de tiempo por etapa de un entregable (SDD del Sprint 2, RF-32, §6.2 y §7.7).
+
+    Cada tramo iniciado y pausado (o registrado manualmente con justificación) es una fila.
+    - Un usuario tiene a lo sumo un registro abierto (`fin__isnull=True`) en todo momento.
+    - Un registro manual exige motivo no vacío (`tiempo_manual_con_motivo`).
+    """
+
+    class Etapa(models.TextChoices):
+        RECOPILACION = "RECOPILACION", "Recopilación"
+        CONSOLIDACION = "CONSOLIDACION", "Consolidación"
+        REVISION = "REVISION", "Revisión"
+
+    entregable = models.ForeignKey(
+        Entregable, on_delete=models.CASCADE, related_name="registros_tiempo", verbose_name="entregable"
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="registros_tiempo", verbose_name="colaborador"
+    )
+    etapa = models.CharField("etapa", max_length=20, choices=Etapa.choices)
+    inicio = models.DateTimeField("inicio")
+    fin = models.DateTimeField("fin", null=True, blank=True)
+    cierra_etapa = models.BooleanField("cierra etapa", default=False)
+    manual = models.BooleanField("ajuste manual", default=False)
+    motivo = models.CharField("motivo del ajuste", max_length=255, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-inicio", "-id"]
+        verbose_name = "registro de tiempo"
+        verbose_name_plural = "registros de tiempo"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario"],
+                condition=models.Q(fin__isnull=True),
+                name="un_registro_tiempo_abierto_por_usuario",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(manual=False) | ~models.Q(motivo=""),
+                name="tiempo_manual_con_motivo",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.entregable} · {self.get_etapa_display()} · {self.usuario.nombre}"
+
+    @property
+    def abierto(self):
+        return self.fin is None
+
+    def segundos(self, ahora=None):
+        """Segundos transcurridos del tramo (si sigue abierto, hasta `ahora` o el instante actual)."""
+        fin_ef = self.fin or ahora or timezone.now()
+        return max(0, int((fin_ef - self.inicio).total_seconds()))
+
+    @property
+    def duracion_texto(self):
+        total_min = round(self.segundos() / 60)
+        horas, minutos = divmod(total_min, 60)
+        return f"{horas} h {minutos:02d} min"
