@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block titulo %}{% if es_anonimizado %}Publicar ejemplo anonimizado{% else %}Cargar plantilla{% endif %} · Repositorio{% endblock %}
+{% block contenido %}
+<p><a href="{% url 'repositorio' %}{% if es_anonimizado %}?pestana=anonimizados{% endif %}">← Repositorio</a></p>
+
+{% if es_anonimizado %}
+<h1>Publicar ejemplo anonimizado</h1>
+<form method="post" enctype="multipart/form-data" class="tarjeta">
+  {% csrf_token %}
+  <input type="hidden" name="categoria" value="EJEMPLO_ANONIMIZADO">
+  <div class="campo">
+    <label for="id_titulo">Título *</label>
+    <input id="id_titulo" type="text" name="titulo" value="{{ valores.titulo }}" required maxlength="200">
+  </div>
+  <div class="filtros-grid">
+    <div>
+      <label for="id_tipo_documento">Tipo de documento *</label>
+      <select id="id_tipo_documento" name="tipo_documento" required>
+        <option value="">— Elija el tipo —</option>
+        {% for val, etiq in tipos %}
+        <option value="{{ val }}"{% if valores.tipo_documento == val %} selected{% endif %}>{{ etiq }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_linea_servicio">Línea de servicio</label>
+      <select id="id_linea_servicio" name="linea_servicio">
+        <option value="">— Opcional —</option>
+        {% for l in lineas %}
+        <option value="{{ l.pk }}"{% if valores.linea_servicio == l.pk|stringformat:"s" %} selected{% endif %}>{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_archivo">Archivo *</label>
+      <input id="id_archivo" type="file" name="archivo" required>
+      <span class="helptext">Formatos permitidos: {{ extensiones }} (máx. {{ tamano_max }} MB).</span>
+    </div>
+  </div>
+  <div class="campo">
+    <label for="id_comentario">Comentario</label>
+    <input id="id_comentario" type="text" name="comentario" value="{{ valores.comentario }}" maxlength="255">
+  </div>
+
+  <div class="caja-gris">
+    <h2>Confirme que eliminó la información confidencial (política NDA)</h2>
+    {% for item in items_nda %}
+    <p>
+      <label>
+        <input type="checkbox" name="{{ item.clave }}" value="on"{% if item.marcado %} checked{% endif %}>
+        {{ item.etiqueta }}
+      </label>
+    </p>
+    {% endfor %}
+  </div>
+
+  <div class="acciones">
+    <button class="boton" type="submit">Publicar</button>
+    <a class="boton sec" href="{% url 'repositorio' %}?pestana=anonimizados">Cancelar</a>
+  </div>
+</form>
+
+{% else %}
+<h1>Cargar plantilla</h1>
+<form method="post" enctype="multipart/form-data" class="tarjeta">
+  {% csrf_token %}
+  <input type="hidden" name="categoria" value="PLANTILLA_CLIENTE">
+  <div class="campo">
+    <label for="id_titulo">Título *</label>
+    <input id="id_titulo" type="text" name="titulo" value="{{ valores.titulo }}" required maxlength="200">
+    <span class="helptext">Cargar una plantilla nueva del mismo título y cliente crea una versión vigente y deja la anterior como histórico.</span>
+  </div>
+  <div class="filtros-grid">
+    <div>
+      <label for="id_cliente">Cliente</label>
+      <select id="id_cliente" name="cliente"{% if not admite_generica %} required{% endif %}>
+        {% if admite_generica %}
+        <option value="">Genérica (todos los clientes)</option>
+        {% else %}
+        <option value="">— Elija el cliente —</option>
+        {% endif %}
+        {% for c in clientes %}
+        <option value="{{ c.pk }}"{% if valores.cliente == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_tipo_documento">Tipo de documento *</label>
+      <select id="id_tipo_documento" name="tipo_documento" required>
+        <option value="">— Elija el tipo —</option>
+        {% for val, etiq in tipos %}
+        <option value="{{ val }}"{% if valores.tipo_documento == val %} selected{% endif %}>{{ etiq }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_linea_servicio">Línea de servicio</label>
+      <select id="id_linea_servicio" name="linea_servicio">
+        <option value="">— Opcional —</option>
+        {% for l in lineas %}
+        <option value="{{ l.pk }}"{% if valores.linea_servicio == l.pk|stringformat:"s" %} selected{% endif %}>{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_archivo">Archivo *</label>
+      <input id="id_archivo" type="file" name="archivo" required>
+      <span class="helptext">Formatos permitidos: {{ extensiones }} (máx. {{ tamano_max }} MB).</span>
+    </div>
+  </div>
+  <div class="campo">
+    <label for="id_comentario">Comentario</label>
+    <input id="id_comentario" type="text" name="comentario" value="{{ valores.comentario }}" maxlength="255" placeholder="Ej.: Versión inicial">
+  </div>
+  <div class="acciones">
+    <button class="boton" type="submit">Cargar</button>
+    <a class="boton sec" href="{% url 'repositorio' %}">Cancelar</a>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

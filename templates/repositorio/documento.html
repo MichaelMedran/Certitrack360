@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block titulo %}{{ documento.titulo }} · Repositorio{% endblock %}
+{% block contenido %}
+<p><a href="{% url 'repositorio' %}{% if documento.es_anonimizado %}?pestana=anonimizados{% endif %}">← Repositorio</a></p>
+
+<h1>{{ documento.titulo }} {% if documento.es_anonimizado %}<span class="etiqueta">Anonimizado</span>{% endif %}{% if not documento.activo %} <span class="etiqueta falta">Inactivo</span>{% endif %}</h1>
+
+<div class="contadores">
+  <div class="contador">
+    {% if documento.es_anonimizado %}Categoría{% else %}Cliente{% endif %}
+    <b style="font-size:1rem">{% if documento.es_anonimizado %}Anonimizado{% elif documento.cliente %}{{ documento.cliente.nombre }}{% else %}Genérica{% endif %}</b>
+  </div>
+  <div class="contador">
+    Tipo · Línea
+    <b style="font-size:1rem">{{ documento.get_tipo_documento_display }} · {{ documento.linea_servicio.nombre|default:"—" }}</b>
+  </div>
+  <div class="contador">
+    Versión vigente
+    <b style="font-size:1rem">{% if vigente %}v{{ vigente.numero }} · {{ vigente.subido_en|date:"d/m/Y" }}{% else %}—{% endif %}</b>
+  </div>
+  <div class="contador">
+    Cargado por
+    <b style="font-size:1rem">{% if vigente %}{{ vigente.subido_por.nombre }}{% else %}{{ documento.creado_por.nombre }}{% endif %}</b>
+  </div>
+</div>
+
+<div class="acciones">
+  {% if vigente %}
+  <a class="boton" href="{% url 'repositorio_descargar' vigente.pk %}">Descargar versión vigente</a>
+  {% endif %}
+  {% if puede_dar_de_baja %}
+  <form method="post" action="{% url 'repositorio_documento' documento.pk %}" class="en-linea">
+    {% csrf_token %}
+    {% if documento.activo %}
+    <input type="hidden" name="accion" value="baja">
+    <button type="submit" class="boton peligro">Dar de baja</button>
+    {% else %}
+    <input type="hidden" name="accion" value="reactivar">
+    <button type="submit" class="boton sec">Reactivar</button>
+    {% endif %}
+  </form>
+  {% endif %}
+</div>
+
+<h2>Versiones</h2>
+<div class="tarjeta">
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Versión</th>
+          <th>Archivo</th>
+          <th>Cargado por</th>
+          <th>Fecha</th>
+          <th>Comentario</th>
+          <th><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in versiones %}
+        <tr>
+          <td>
+            {% if v.vigente %}
+            <span class="etiqueta vigente">Vigente · v{{ v.numero }}</span>
+            {% else %}
+            v{{ v.numero }} · histórico
+            {% endif %}
+          </td>
+          <td>{{ v.nombre_original }}</td>
+          <td>{{ v.subido_por.nombre }}</td>
+          <td>{{ v.subido_en|date:"d/m/Y H:i" }}</td>
+          <td>{{ v.comentario|default:"—" }}</td>
+          <td>
+            <a class="boton chico sec" href="{% url 'repositorio_descargar' v.pk %}">Descargar</a>
+            {% if not v.vigente and puede_editar %}
+            <form method="post" action="{% url 'repositorio_documento' documento.pk %}" class="en-linea">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="restaurar">
+              <input type="hidden" name="version" value="{{ v.pk }}">
+              <button type="submit" class="boton chico sec">Restaurar como vigente</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Sin versiones registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if puede_editar %}
+  <h3>Cargar nueva versión</h3>
+  <form method="post" action="{% url 'repositorio_documento' documento.pk %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="nueva_version">
+    <div class="filtros-grid">
+      <div>
+        <label for="id_archivo_version">Archivo</label>
+        <input id="id_archivo_version" type="file" name="archivo" required>
+        <span class="helptext">Formatos: {{ extensiones }} (máx. {{ tamano_max }} MB).</span>
+      </div>
+      <div>
+        <label for="id_comentario_version">Comentario *</label>
+        <input id="id_comentario_version" type="text" name="comentario" required maxlength="255">
+      </div>
+    </div>
+    <div class="acciones">
+      <button class="boton" type="submit">Cargar</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+
+{% if puede_ver_accesos %}
+<h2>Registro de cargas y descargas</h2>
+<div class="tarjeta">
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha y hora</th>
+          <th>Usuario</th>
+          <th>Acción</th>
+          <th>Versión</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acc in accesos %}
+        <tr>
+          <td>{{ acc.fecha|date:"d/m/Y H:i" }}</td>
+          <td>{{ acc.usuario.nombre }}</td>
+          <td>{{ acc.get_accion_display }}</td>
+          <td>v{{ acc.version.numero }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Sin accesos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

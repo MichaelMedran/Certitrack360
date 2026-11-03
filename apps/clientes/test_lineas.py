@@ -317,7 +317,7 @@ class NavegacionTests(Base):
             for nombre in ("inicio", "tablero", "calendario", "entregables"):
                 html = self.client.get(reverse(nombre)).content.decode()
                 # /observaciones/ (S2-H3), /entregas/ (S2-H4), /personal/ (S2-H6), /tiempos/ (S2-H7) e /indicadores/ (S2-H8) ya existen.
-                for ruta in ("/repositorio/", "/buscar/",
+                for ruta in ("/buscar/",
                              "/incorporacion/", "/procedimientos/"):
                     self.assertNotIn(f'href="{ruta}', html, f"{usuario.username} {nombre} {ruta}")
 

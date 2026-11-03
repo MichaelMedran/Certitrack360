@@ -120,11 +120,19 @@ class PlantillaForm(forms.ModelForm):
 
     class Meta:
         model = PlantillaTDR
-        fields = ["nombre", "cliente", "formato", "plazo_dias_por_defecto", "adjuntos_requeridos"]
+        fields = ["nombre", "cliente", "formato", "documento_formato", "plazo_dias_por_defecto", "adjuntos_requeridos"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["cliente"].empty_label = "Genérica (para todos los clientes)"
+        if "documento_formato" in self.fields:
+            from apps.repositorio.models import DocumentoRepositorio
+
+            cond = Q(categoria=DocumentoRepositorio.Categoria.PLANTILLA_CLIENTE, activo=True)
+            if self.instance.pk and self.instance.documento_formato_id:
+                cond |= Q(pk=self.instance.documento_formato_id)
+            self.fields["documento_formato"].queryset = DocumentoRepositorio.objects.filter(cond)
+            self.fields["documento_formato"].empty_label = "— Sin formato enlazado —"
         self.campos_limpios = []
         self.filas = self._filas()
 

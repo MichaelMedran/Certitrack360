@@ -11,6 +11,7 @@ SECCIONES = {
     "observaciones": "entregables",  # pestaña «Observaciones» de Entregables (SDD del Sprint 2, §9.2)
     "entregas": "entregables", "entregable_entregar": "entregables",  # pestaña «Entregas» y formulario de entrega (RF-29)
     "indicadores": "indicadores",
+    "repositorio": "repositorio", "repositorio_nuevo": "repositorio", "repositorio_documento": "repositorio",
     "asistente": "asistente",
     "consolidado": "consolidado",
     "gestion": "gestion", "adm_lista": "gestion", "adm_nuevo": "gestion", "adm_editar": "gestion",

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block titulo %}Repositorio{% endblock %}
+{% block contenido %}
+<h1>Repositorio de plantillas y ejemplos</h1>
+
+<nav class="pestanas" aria-label="Categorías del repositorio">
+  <a href="{% url 'repositorio' %}?pestana=plantillas"{% if pestana == 'plantillas' %} aria-current="true"{% endif %}>Plantillas de clientes</a>
+  <a href="{% url 'repositorio' %}?pestana=anonimizados"{% if pestana == 'anonimizados' %} aria-current="true"{% endif %}>Ejemplos anonimizados</a>
+  <a href="{% url 'repositorio' %}?pestana=procedimientos"{% if pestana == 'procedimientos' %} aria-current="true"{% endif %}>Procedimientos</a>
+</nav>
+
+{% if pestana == 'procedimientos' %}
+<div class="tarjeta">
+  {% if user.es_gerente_o_admin %}
+  <p class="suave">Los procedimientos son texto que el asistente usa para responder (HU-10). Los cargan y aprueban el gerente y el admin.</p>
+  {% else %}
+  <p class="suave">Los procedimientos son texto aprobado que el asistente usa para responder (HU-10).</p>
+  {% endif %}
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Procedimiento</th>
+          <th>Línea</th>
+          <th>Aprobado</th>
+          <th>Vigente</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for proc in procedimientos %}
+        <tr>
+          <td>{{ proc.titulo }}</td>
+          <td>{{ proc.linea_servicio.nombre|default:"Todas" }}</td>
+          <td>{{ proc.aprobado_por.nombre }} · {{ proc.aprobado_en|date:"d/m/Y" }}</td>
+          <td>{% if proc.vigente %}Sí{% else %}No{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No hay procedimientos aprobados registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% elif pestana == 'anonimizados' %}
+<form method="get" action="{% url 'repositorio' %}" class="tarjeta">
+  <input type="hidden" name="pestana" value="anonimizados">
+  <div class="filtros-grid">
+    <div>
+      <label for="f-q-anon">Buscar</label>
+      <input id="f-q-anon" type="search" name="q" value="{{ filtro_q }}" placeholder="título…">
+    </div>
+    <div>
+      <label for="f-tipo-anon">Tipo de documento</label>
+      <select id="f-tipo-anon" name="tipo">
+        <option value="">Todos</option>
+        {% for val, etiq in tipos %}
+        <option value="{{ val }}"{% if filtro_tipo == val %} selected{% endif %}>{{ etiq }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="f-linea-anon">Línea de servicio</label>
+      <select id="f-linea-anon" name="linea">
+        <option value="">Todas</option>
+        {% for l in lineas %}
+        <option value="{{ l.pk }}"{% if filtro_linea == l.pk %} selected{% endif %}>{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="acciones">
+    <button class="boton" type="submit">Filtrar</button>
+    <a class="boton sec" href="{% url 'repositorio' %}?pestana=anonimizados">Limpiar</a>
+    {% if puede_publicar_anonimizado %}
+    <a class="boton" href="{% url 'repositorio_nuevo' %}?categoria=EJEMPLO_ANONIMIZADO">+ Publicar ejemplo anonimizado</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="tabla" style="margin-top:1rem">
+  <table>
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Tipo</th>
+        <th>Línea</th>
+        <th>Etiqueta</th>
+        <th>Publicado</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doc in anonimizados_docs %}
+      {% with vig=doc.version_vigente %}
+      <tr>
+        <td><a href="{% url 'repositorio_documento' doc.pk %}">{{ doc.titulo }}</a></td>
+        <td>{{ doc.get_tipo_documento_display }}</td>
+        <td>{{ doc.linea_servicio.nombre|default:"—" }}</td>
+        <td><span class="etiqueta">Anonimizado</span></td>
+        <td>{% if vig %}{{ vig.subido_en|date:"d/m/Y" }} · {{ vig.subido_por.nombre }}{% else %}—{% endif %}</td>
+        <td>
+          {% if vig %}
+          <a class="boton chico sec" href="{% url 'repositorio_descargar' vig.pk %}">Descargar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endwith %}
+      {% empty %}
+      <tr><td colspan="6">No hay ejemplos anonimizados publicados con esos filtros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<form method="get" action="{% url 'repositorio' %}" class="tarjeta">
+  <input type="hidden" name="pestana" value="plantillas">
+  <div class="filtros-grid">
+    <div>
+      <label for="f-q">Buscar</label>
+      <input id="f-q" type="search" name="q" value="{{ filtro_q }}" placeholder="título…">
+    </div>
+    <div>
+      <label for="f-cliente">Cliente</label>
+      <select id="f-cliente" name="cliente">
+        <option value="">Todos los míos</option>
+        <option value="generica"{% if filtro_cliente == 'generica' %} selected{% endif %}>Genérica</option>
+        {% for c in clientes %}
+        <option value="{{ c.pk }}"{% if filtro_cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="f-tipo">Tipo de documento</label>
+      <select id="f-tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for val, etiq in tipos %}
+        <option value="{{ val }}"{% if filtro_tipo == val %} selected{% endif %}>{{ etiq }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="f-linea">Línea de servicio</label>
+      <select id="f-linea" name="linea">
+        <option value="">Todas</option>
+        {% for l in lineas %}
+        <option value="{{ l.pk }}"{% if filtro_linea == l.pk %} selected{% endif %}>{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="acciones">
+    <button class="boton" type="submit">Filtrar</button>
+    <a class="boton sec" href="{% url 'repositorio' %}">Limpiar</a>
+    {% if puede_cargar_plantilla %}
+    <a class="boton" href="{% url 'repositorio_nuevo' %}?categoria=PLANTILLA_CLIENTE">+ Cargar plantilla</a>
+    {% endif %}
+    {% if puede_publicar_anonimizado %}
+    <a class="boton sec" href="{% url 'repositorio_nuevo' %}?categoria=EJEMPLO_ANONIMIZADO">+ Publicar ejemplo anonimizado</a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="tabla" style="margin-top:1rem">
+  <table>
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Cliente</th>
+        <th>Tipo</th>
+        <th>Línea</th>
+        <th>Vigente</th>
+        <th>Actualizada</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doc in plantillas_docs %}
+      {% with vig=doc.version_vigente %}
+      <tr>
+        <td><a href="{% url 'repositorio_documento' doc.pk %}">{{ doc.titulo }}</a></td>
+        <td>{% if doc.cliente %}{{ doc.cliente.nombre }}{% else %}<i>Genérica</i>{% endif %}</td>
+        <td>{{ doc.get_tipo_documento_display }}</td>
+        <td>{{ doc.linea_servicio.nombre|default:"—" }}</td>
+        <td>{% if vig %}v{{ vig.numero }}{% else %}—{% endif %}</td>
+        <td>{% if vig %}{{ vig.subido_en|date:"d/m/Y" }} · {{ vig.subido_por.nombre }}{% else %}—{% endif %}</td>
+        <td>
+          {% if vig %}
+          <a class="boton chico sec" href="{% url 'repositorio_descargar' vig.pk %}">Descargar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endwith %}
+      {% empty %}
+      <tr><td colspan="7">No hay plantillas en el repositorio con esos filtros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="suave">Descargar con un clic baja siempre la versión vigente.</p>
+{% endif %}
+{% endblock %}

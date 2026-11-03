@@ -104,6 +104,15 @@ class PlantillaTDR(models.Model):
         help_text="Tipos de adjunto que el entregable debe tener antes de pasar a Revisión senior.",
     )
     plazo_dias_por_defecto = models.PositiveIntegerField("plazo por defecto (días)", default=10)
+    documento_formato = models.ForeignKey(
+        "repositorio.DocumentoRepositorio",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="plantillas_tdr",
+        verbose_name="formato en el repositorio",
+        help_text="Documento del repositorio que sirve de formato (opcional).",
+    )
 
     class Meta:
         ordering = ["nombre"]
