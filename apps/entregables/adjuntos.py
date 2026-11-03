@@ -1,68 +1,21 @@
 """Adjuntos de los entregables: validación, versionado, permisos y registro en el historial."""
-import os
-import re
-import unicodedata
-
-from django.conf import settings
-from django.core.exceptions import PermissionDenied, SuspiciousFileOperation, ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Max
-from django.utils.text import get_valid_filename
 
+# La validación de archivos es común a otras apps (ficha de levantamiento, repositorio) y vive en archivos.py. Sus nombres
+# se siguen ofreciendo aquí para quienes ya los usaban desde adjuntos (formularios, vistas y pruebas).
+from .archivos import NOMBRE_MAX, extensiones_permitidas, sanear_nombre, tamano_maximo_bytes, validar_archivo  # noqa: F401
 from .models import Adjunto, Entregable, HistorialEstado
 from .tipos import TipoAdjunto
 from .visibilidad import es_senior_del_entregable
 
 # El junior solo puede subir mientras el entregable está en estas columnas.
 ESTADOS_INICIALES = (Entregable.Estado.A_REALIZAR, Entregable.Estado.EN_PROCESO)
-NOMBRE_MAX = 100
 
 
 def etiqueta_tipo(codigo):
     return str(dict(TipoAdjunto.choices).get(codigo, codigo))
-
-
-def extensiones_permitidas():
-    return [e.lower().lstrip(".") for e in settings.ALLOWED_UPLOAD_EXTENSIONS]
-
-
-def tamano_maximo_bytes():
-    return int(settings.MEDIA_MAX_UPLOAD_MB * 1024 * 1024)
-
-
-def sanear_nombre(nombre):
-    """Deja solo el nombre del archivo: sin carpetas, sin caracteres de control ni símbolos raros, y con largo acotado."""
-    nombre = (nombre or "").replace("\\", "/").split("/")[-1]
-    nombre = unicodedata.normalize("NFC", nombre)
-    nombre = re.sub(r"[\x00-\x1f\x7f]", "", nombre)
-    try:
-        nombre = get_valid_filename(nombre)
-    except SuspiciousFileOperation:
-        nombre = ""
-    nombre = nombre.lstrip(".")  # sin archivos ocultos
-    base, ext = os.path.splitext(nombre)
-    if len(nombre) > NOMBRE_MAX:
-        nombre = base[: max(1, NOMBRE_MAX - len(ext))] + ext
-    return nombre or "archivo"
-
-
-def validar_archivo(archivo):
-    """Devuelve el nombre saneado, o lanza ValidationError con un mensaje que dice qué corregir."""
-    nombre = sanear_nombre(getattr(archivo, "name", ""))
-    extension = os.path.splitext(nombre)[1].lower().lstrip(".")
-    permitidas = extensiones_permitidas()
-    if extension not in permitidas:
-        raise ValidationError(
-            f"El archivo «{nombre}» no es de un tipo permitido. Formatos permitidos: {', '.join(permitidas)}."
-        )
-    if archivo.size == 0:
-        raise ValidationError(f"El archivo «{nombre}» está vacío.")
-    if archivo.size > tamano_maximo_bytes():
-        pesa = f"{archivo.size / (1024 * 1024):.1f}".replace(".", ",")
-        raise ValidationError(
-            f"El archivo «{nombre}» pesa {pesa} MB y el máximo permitido es {settings.MEDIA_MAX_UPLOAD_MB:g} MB."
-        )
-    return nombre
 
 
 def puede_subir(usuario, entregable):

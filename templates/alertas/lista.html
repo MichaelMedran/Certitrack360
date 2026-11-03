@@ -11,7 +11,7 @@
   {% if not n.leida %}<span class="etiqueta" style="background:#dbeafe">Sin leer</span>{% else %}<span class="etiqueta">Leída</span>{% endif %}
   <span class="etiqueta">{{ n.get_tipo_display }}</span>
   {{ n.mensaje }}
-  <a href="{% url 'entregable_detalle' n.entregable_id %}">Ver</a>
+  {% with destino=n.destino %}{% if destino %}<a href="{{ destino }}">Ver</a>{% endif %}{% endwith %}
   {% if not n.leida %}
   <form class="en-linea" method="post" action="{% url 'notificacion_leer' n.pk %}">{% csrf_token %}<button class="boton sec chico">Marcar como leída</button></form>
   {% endif %}

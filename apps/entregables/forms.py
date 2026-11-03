@@ -196,7 +196,8 @@ class EntregableForm(forms.Form):
 
 
 class AdjuntoForm(forms.Form):
-    """Campos de la subida. La validación de extensión y tamaño la hace `adjuntos.validar_archivo`."""
+    """Campos de la subida. La validación de extensión, tamaño y nombre la hace `archivos.validar_archivo` (común a otras
+    apps), que el servicio `adjuntos` aplica al guardar."""
 
     tipo = forms.ChoiceField(
         choices=[("", "— Elija el tipo —")] + TipoAdjunto.choices, label="Tipo",

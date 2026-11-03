@@ -1,7 +1,7 @@
 # Trazabilidad frente al SDD v1.0 y al SDD del Sprint 2
 
-Estado de cada requisito, su hito y lo que lo prueba. Las pruebas se corren con `python manage.py test` (553 hoy: las 445 del
-Sprint 1 y 108 del Sprint 2). El Sprint 2 (`docs/sdd-sprint-2.md`) está más abajo, en [Sprint 2](#sprint-2-docssdd-sprint-2md).
+Estado de cada requisito, su hito y lo que lo prueba. Las pruebas se corren con `python manage.py test` (606 hoy: las 445 del
+Sprint 1 y 161 del Sprint 2). El Sprint 2 (`docs/sdd-sprint-2.md`) está más abajo, en [Sprint 2](#sprint-2-docssdd-sprint-2md).
 
 **Leyenda.** *Hecho*: implementado y probado. *Parcial*: lo esencial está hecho y se indica lo que falta. *Sin probar*: escrito, pero no se pudo ejecutar en este entorno.
 
@@ -44,7 +44,7 @@ editor de plantillas, consolidado, notificaciones, calendario y que ninguna pág
 | RNF-03 Accesibilidad | Parcial | La urgencia va siempre en texto (tablero, lista, detalle y calendario; el consolidado separa «Vencidos» y «Próximos a vencer» con su propio título); etiquetas en todos los campos; foco visible; «Saltar al contenido»; la barra marca la página actual; los mensajes se anuncian con `role` según su gravedad; cada acción del tablero tiene su equivalente con botones en el detalle (se usa con teclado). Falta revisarlo con un lector de pantalla y recorrerlo entero solo con el teclado |
 | RNF-04 Seguridad | Hecho | Permisos en el servidor, CSRF (también en las peticiones HTMX), hash PBKDF2, validadores, descarga solo por vista, archivos validados, y las páginas con sesión no se guardan en la caché del navegador (`Cache-Control: no-store`) (`apps/cuentas/tests.py`, `apps/cuentas/test_interfaz.py`, `test_adjuntos.py`) |
 | RNF-05 Rendimiento | Hecho para el volumen del prototipo | Las tarjetas traen sus adjuntos y observaciones con dos consultas en total, no una por tarjeta |
-| RNF-06 Mantenibilidad | Hecho | Una app por módulo, migraciones versionadas, 553 pruebas (445 del Sprint 1) |
+| RNF-06 Mantenibilidad | Hecho | Una app por módulo, migraciones versionadas, 606 pruebas (445 del Sprint 1) |
 | RNF-07 Portabilidad | Sin probar | `Dockerfile` y `docker-compose.yml` escritos y validados como YAML; no había Docker disponible |
 | RNF-08 Localización | Hecho | `es-pe`, `America/Lima`, fechas en formato local |
 | RNF-09 Degradación controlada | Hecho | `apps/conocimiento/tests.py` (ConsultaTests) |
@@ -98,7 +98,20 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 | RF-22 Alertas a 48 y 24 h y aviso con código | S2-H1 / S2-H3 | Parcial: el umbral de 24 h funciona y sale una sola vez (restricción «una alerta por umbral»); «Crítico» = segundo umbral mayor (2 días con 5,2,1,0 y con 5,2,0); los avisos llevan el código. **El valor por defecto sigue en 5,2,0** (decisión pendiente, abajo). El estado «Con correcciones pendientes» es del S2-H3 | `apps/alertas/test_aviso_24h.py` |
 | RF-23 Columnas del Kanban según HU-04 | S2-H1 | Hecho: Por hacer, En proceso, Revisión senior, Aprobado, Entregado; los códigos guardados no cambian | `apps/entregables/test_etiquetas.py` |
 | RF-24 Catálogo de líneas de servicio | S2-H1 | Hecho: las cinco líneas se crean en la migración `clientes/0005` (con reversa); pestaña «Líneas de servicio» de Gestión (`/lineas-servicio/`, gerente y admin; junior y senior: 403) para crear, renombrar y activar o desactivar, sin borrado (baja lógica y `PROTECT`); obligatoria en el formulario de contrato; filtro por línea en tablero y lista | `apps/clientes/test_lineas.py` |
-| RF-25 a RF-38 | S2-H2 a S2-H12 | Pendiente | — |
+| RF-25 a RF-38 | S2-H3 a S2-H12 | Pendiente | — |
+
+### Base común (S2-H2)
+
+No agrega requisitos funcionales: prepara los hitos S2-H3 a S2-H12 (SDD del Sprint 2, §5, §6.1 y §11.3). Criterio del hito:
+las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba del Sprint 1 cambia.
+
+| Elemento | Estado | Dónde se prueba |
+|---|---|---|
+| Avisos sin entregable (§6.1) | Hecho: `Notificacion.entregable` es opcional y se agrega `enlace`, una ruta interna. «Ver» lleva al enlace, si lo tiene; si no, al detalle del entregable (los avisos del Sprint 1 siguen igual); si no tiene ninguno, el aviso se muestra sin «Ver». La lista de avisos, los avisos recientes del inicio, la insignia de no leídos y el marcado (de uno y de todos) funcionan con ellos; cada persona ve y marca solo los suyos (404 si no). Tipos nuevos con etiqueta: Corrección, Acta, Reasignación, Incorporación y Ficha (los generarán los hitos que construyan cada pantalla). Migración `alertas/0004` aditiva y con reversa | `apps/alertas/test_avisos_sin_entregable.py` (ModeloTests, PantallaDeAvisosTests, CuatroRolesTests, PantallasConAvisosSinEntregableTests, MigracionDeAvisosTests) |
+| Enlace solo interno (sin redirecciones abiertas) | Hecho: empieza con una sola «/», sin esquema ni anfitrión, sin «://», barras invertidas, espacios ni caracteres de control. Se valida al guardar (`ValidationError`), en la base de datos (restricción `enlace_es_ruta_interna`, que cubre `bulk_create` y `update`) y otra vez al mostrarlo | `test_avisos_sin_entregable.py` (EnlaceInternoTests, ModeloTests, PantallaDeAvisosTests) |
+| «Una alerta por umbral» conserva su sentido | Hecho: la restricción no cambia y la nueva `vencimiento_con_entregable` impide un aviso de vencimiento sin entregable (con el entregable vacío la base de datos no compararía la fila) | `test_avisos_sin_entregable.py` (UnaAlertaPorUmbralTests); `apps/alertas/tests.py` y `test_aviso_24h.py` sin cambios |
+| Validación común de archivos (§5) | Hecho: `validar_archivo`, `sanear_nombre`, `extensiones_permitidas` y `tamano_maximo_bytes` pasan a `apps/entregables/archivos.py` sin cambiar su comportamiento ni sus mensajes. Como `tipos.py`, no importa modelos ni otras apps, así que la ficha (S2-H5) y el repositorio (S2-H9) pueden usarla sin importaciones circulares. Los adjuntos la usan y `adjuntos.py` sigue ofreciendo esos nombres | `apps/entregables/test_base_comun.py` (ValidarArchivoComunTests, LosAdjuntosUsanLaFuncionComunTests); `test_adjuntos.py` (ValidacionDeArchivosTests) sin cambios |
+| Ayudante de pruebas `entregar(entregable, usuario)` (§11.3) | Hecho en `apps/entregables/testing.py`: por ahora mueve de Aprobado a Entregado con `servicios.mover`; en el S2-H4 creará el cargo de recepción y usará el servicio de entrega. Las pruebas del Sprint 1 todavía no lo usan | `test_base_comun.py` (AyudanteEntregarTests) |
 
 ### Casos clave (§13)
 
@@ -108,7 +121,7 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 | 14 | El calendario filtra por cliente y estado sin ampliar la visibilidad y muestra al responsable | `test_filtros_y_responsable.py` (FiltrosDeEventosTests, EventoConResponsableTests, PaginaConFiltrosTests) |
 | 15 | Con 5,2,1,0 el aviso de 24 h sale una sola vez y «Crítico» sigue empezando a 2 días | `test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests) |
 | 16 | Las columnas muestran las etiquetas de HU-04 y los códigos guardados no cambian | `test_etiquetas.py`, `test_recepcion.py` (MigracionDeRellenoTests) |
-| 29 | Regresión: pasan las pruebas del Sprint 1 y `migrate` funciona sobre una base del Sprint 1 | Suite completa; `migrate` (y su reversa) probado sobre una copia de la base del `seed_demo` del Sprint 1 y sobre una base vacía |
+| 29 | Regresión: pasan las pruebas del Sprint 1 y `migrate` funciona sobre una base del Sprint 1 | Suite completa; `migrate` (y su reversa) probado sobre una copia de la base del `seed_demo` del Sprint 1 y sobre una base vacía (en el S2-H1 y otra vez en el S2-H2, con `alertas/0004`: los 64 avisos de esa base quedan idénticos, y la reversa solo quita los avisos que el esquema del Sprint 1 no admite) |
 
 ### Hitos (§12)
 
@@ -116,7 +129,8 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 |---|---|
 | S2-H0 Wireframes y decisiones | Hecho: wireframes y decisiones aprobados el 2026-11-02 |
 | S2-H1 Cierre del Sprint 1 | Hecho, con las decisiones de compatibilidad de abajo y una decisión pendiente (umbral por defecto) |
-| S2-H2 a S2-H13 | Pendientes |
+| S2-H2 Base común | Hecho, sin cambiar ninguna prueba del Sprint 1 (decisiones abajo) |
+| S2-H3 a S2-H13 | Pendientes |
 
 ### Ajustes a pruebas del Sprint 1 (§11.3)
 
@@ -124,6 +138,8 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 |---|---|
 | `apps/calendario/tests.py` (test_el_estado_va_en_el_titulo), `apps/consolidado/tests.py` (test_los_contadores_por_estado_se_muestran_en_el_orden_del_tablero, test_resumenes_por_cliente_y_por_contrato), `apps/cuentas/test_interfaz.py` (test_las_cuatro_cifras_van_con_su_rotulo), `apps/entregables/test_adjuntos.py` (test_un_cambio_de_estado_sigue_mostrando_el_estado), `apps/entregables/test_interfaz.py` (test_pagina_completa_con_panel_de_filtros_columnas_y_tarjetas), `apps/entregables/test_reglas.py` (test_devolver_deja_el_motivo_en_el_historial, test_la_creacion_queda_en_el_historial_y_avisa_al_junior) | «Etiquetas de estados (RF-23)»: comparan contra `Entregable.Estado.X.label` |
 | `apps/clientes/tests.py` (test_las_tres_pestanas_marcan_la_activa) | «Navegación nueva»: la lista esperada de pestañas de Gestión suma «Líneas de servicio» |
+
+El S2-H2 no cambió ninguna prueba del Sprint 1.
 
 ### Decisiones del S2-H1 (compatibilidad con el Sprint 1)
 
@@ -136,6 +152,26 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
    Sprint 1 con `10,0`); con dos o más, el segundo mayor, como pide el SDD.
 3. **Textos «verificación» que se conservan.** «No se puede enviar a verificación: …» y «… antes de pasar a verificación» no son la
    etiqueta del estado y los comparan pruebas del Sprint 1 que la §11.3 no cubre; el resto de textos fijos ya usa las etiquetas nuevas.
+
+### Decisiones del S2-H2 (base común)
+
+1. **A dónde lleva «Ver».** Al enlace, si el aviso lo tiene; si no, al detalle de su entregable; si no tiene ninguno de los
+   dos, el aviso se muestra sin «Ver». Así un hito posterior puede llevar a una pantalla sin entregable (la ficha que espera
+   confirmación) o a una sección concreta del detalle, y los avisos del Sprint 1, que no tienen enlace, siguen llevando al
+   detalle.
+2. **El enlace se comprueba tres veces.** Al guardar (salvo que solo se actualicen otros campos, para que un dato antiguo no
+   impida marcar el aviso como leído), en la base de datos con una restricción sencilla y portable (vacío, o empieza con
+   «/» y no con «//») y al mostrarlo: un enlace que no sea una ruta interna nunca se ofrece.
+3. **Aviso de vencimiento siempre con entregable** (restricción `vencimiento_con_entregable`). La restricción «una alerta
+   por umbral» no cambia, pero con el entregable vacío la base de datos no compararía la fila; así sigue cubriendo todo
+   aviso de vencimiento, como en el Sprint 1.
+4. **Columna `tipo` de 12 a 20 caracteres:** `INCORPORACION` tiene 13. Etiquetas de una palabra, como las del Sprint 1.
+5. **Reversa de `alertas/0004`:** antes de volver a exigir el entregable borra los avisos que el esquema del Sprint 1 no
+   puede guardar (sin entregable o de un tipo nuevo); los del Sprint 1 quedan intactos.
+6. **`validar_archivo` en `apps/entregables/archivos.py`**, con el mismo criterio que `tipos.py` (módulo compartido sin
+   modelos), en lugar de crear una app nueva que el SDD no prevé.
+7. **El texto de la pantalla de avisos no cambia** («Avisos automáticos de asignaciones, observaciones, …»): los tipos
+   nuevos todavía no se generan; cada hito lo actualizará cuando los use.
 
 ### Decisión pendiente del equipo
 
