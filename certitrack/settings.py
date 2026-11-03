@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "apps.levantamiento",
     "apps.indicadores",
     "apps.repositorio",
+    "apps.busqueda",
 ]
 
 MIDDLEWARE = [
@@ -176,6 +177,14 @@ except ValueError as exc:
     raise ImproperlyConfigured("CARGA_MAXIMA_ACTIVOS debe ser un número entero mayor que cero.") from exc
 if CARGA_MAXIMA_ACTIVOS <= 0:
     raise ImproperlyConfigured("CARGA_MAXIMA_ACTIVOS debe ser mayor que cero.")
+
+# Buscador global (SDD del Sprint 2, RF-36 y §10.1): límite de resultados por grupo.
+try:
+    BUSCADOR_LIMITE = int(os.environ.get("BUSCADOR_LIMITE", "20"))
+except ValueError as exc:
+    raise ImproperlyConfigured("BUSCADOR_LIMITE debe ser un número entero mayor que cero.") from exc
+if BUSCADOR_LIMITE <= 0:
+    raise ImproperlyConfigured("BUSCADOR_LIMITE debe ser mayor que cero.")
 
 # Adjuntos de los entregables: se guardan en disco local y NO se sirven por una URL pública.
 # MEDIA_URL = None impide que Django construya direcciones a los archivos; no hay ruta de medios en urls.py

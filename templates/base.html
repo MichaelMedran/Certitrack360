@@ -29,6 +29,10 @@
     {% if user.rol == 'ADMIN' %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
   </nav>
   <div class="usuario">
+    <form method="get" action="{% url 'buscar' %}" class="buscador-barra" role="search">
+      <label for="q-barra" class="sr-only">Buscar</label>
+      <input id="q-barra" type="search" name="q" value="{{ q|default:'' }}" placeholder="Buscar…" minlength="2">
+    </form>
     <a href="{% url 'notificaciones' %}" class="campana"{% if seccion == 'avisos' %} aria-current="page"{% endif %} title="Notificaciones">Avisos{% if no_leidas %} <span class="insignia" aria-label="{{ no_leidas }} sin leer">{{ no_leidas }}</span>{% endif %}</a>
     <span>{{ user.nombre }} · {{ user.get_rol_display }}</span>
     <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="enlace">Salir</button></form>

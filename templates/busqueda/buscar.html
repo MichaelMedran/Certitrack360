@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block titulo %}{% if q %}Resultados para «{{ q }}»{% else %}Buscador{% endif %}{% endblock %}
+{% block contenido %}
+<h1>{% if q %}Resultados para «{{ q }}»{% else %}Buscador{% endif %}</h1>
+
+<div class="tarjeta">
+  <form method="get" action="{% url 'buscar' %}"
+        hx-get="{% url 'buscar' %}"
+        hx-trigger="input changed delay:300ms from:#f-q-buscar, change, submit"
+        hx-target="#resultados-busqueda"
+        hx-push-url="true">
+    <div class="campo">
+      <label for="f-q-buscar">Buscar en entregables, contratos, clientes, adjuntos y repositorio</label>
+      <input id="f-q-buscar" type="search" name="q" value="{{ q }}" placeholder="Código, título, ID-TDR, contrato, cliente o archivo (mínimo 2 caracteres)…" minlength="2">
+    </div>
+    <details class="filtros"{% if n_filtros %} open{% endif %}>
+      <summary>Filtros {% if n_filtros %}<span class="chip">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}</summary>
+      <div class="filtros-grid">
+        <div>
+          <label for="f-desde">Desde</label>
+          <input id="f-desde" type="date" name="desde" value="{{ filtros_activos.desde|date:'Y-m-d' }}">
+        </div>
+        <div>
+          <label for="f-hasta">Hasta</label>
+          <input id="f-hasta" type="date" name="hasta" value="{{ filtros_activos.hasta|date:'Y-m-d' }}">
+        </div>
+        <div>
+          <label for="f-tipo-documento">Tipo de documento</label>
+          <select id="f-tipo-documento" name="tipo_documento">
+            <option value="">Todos</option>
+            {% for val, etiq in opciones.tipos_documento %}
+            <option value="{{ val }}"{% if filtros_activos.tipo_documento == val %} selected{% endif %}>{{ etiq }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="f-estado">Estado</label>
+          <select id="f-estado" name="estado">
+            <option value="">Todos</option>
+            {% for val, etiq in opciones.estados %}
+            <option value="{{ val }}"{% if filtros_activos.estado == val %} selected{% endif %}>{{ etiq }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="f-cliente">Cliente</label>
+          <select id="f-cliente" name="cliente">
+            <option value="">Todos</option>
+            {% for c in opciones.clientes %}
+            <option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </details>
+    <div class="acciones">
+      <button class="boton" type="submit">Buscar</button>
+      <a class="boton sec" href="{% url 'buscar' %}">Limpiar</a>
+    </div>
+  </form>
+</div>
+
+<div id="resultados-busqueda" style="margin-top:1rem">
+  {% include "busqueda/_resultados.html" %}
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 # Trazabilidad frente al SDD v1.0 y al SDD del Sprint 2
 
-Estado de cada requisito, su hito y lo que lo prueba. Las pruebas se corren con `python manage.py test` (805 hoy: las 445 del
-Sprint 1 y 360 del Sprint 2). El Sprint 2 (`docs/sdd-sprint-2.md`) está más abajo, en [Sprint 2](#sprint-2-docssdd-sprint-2md).
+Estado de cada requisito, su hito y lo que lo prueba. Las pruebas se corren con `python manage.py test` (853 hoy: las 445 del
+Sprint 1 y 408 del Sprint 2). El Sprint 2 (`docs/sdd-sprint-2.md`) está más abajo, en [Sprint 2](#sprint-2-docssdd-sprint-2md).
 
 **Leyenda.** *Hecho*: implementado y probado. *Parcial*: lo esencial está hecho y se indica lo que falta. *Sin probar*: escrito, pero no se pudo ejecutar en este entorno.
 
@@ -44,7 +44,7 @@ editor de plantillas, consolidado, notificaciones, calendario y que ninguna pág
 | RNF-03 Accesibilidad | Parcial | La urgencia va siempre en texto (tablero, lista, detalle y calendario; el consolidado separa «Vencidos» y «Próximos a vencer» con su propio título); etiquetas en todos los campos; foco visible; «Saltar al contenido»; la barra marca la página actual; los mensajes se anuncian con `role` según su gravedad; cada acción del tablero tiene su equivalente con botones en el detalle (se usa con teclado). Falta revisarlo con un lector de pantalla y recorrerlo entero solo con el teclado |
 | RNF-04 Seguridad | Hecho | Permisos en el servidor, CSRF (también en las peticiones HTMX), hash PBKDF2, validadores, descarga solo por vista, archivos validados, y las páginas con sesión no se guardan en la caché del navegador (`Cache-Control: no-store`) (`apps/cuentas/tests.py`, `apps/cuentas/test_interfaz.py`, `test_adjuntos.py`) |
 | RNF-05 Rendimiento | Hecho para el volumen del prototipo | Las tarjetas traen sus adjuntos y observaciones con dos consultas en total, no una por tarjeta |
-| RNF-06 Mantenibilidad | Hecho | Una app por módulo, migraciones versionadas, 805 pruebas (445 del Sprint 1) |
+| RNF-06 Mantenibilidad | Hecho | Una app por módulo, migraciones versionadas, 853 pruebas (445 del Sprint 1) |
 | RNF-07 Portabilidad | Sin probar | `Dockerfile` y `docker-compose.yml` escritos y validados como YAML; no había Docker disponible |
 | RNF-08 Localización | Hecho | `es-pe`, `America/Lima`, fechas en formato local |
 | RNF-09 Degradación controlada | Hecho | `apps/conocimiento/tests.py` (ConsultaTests) |
@@ -109,7 +109,8 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 | RF-33 Panel de indicadores calculados con fórmula visible y visibilidad por rol | S2-H8 | Hecho. Nueva app `apps/indicadores` (sin modelos). Servicio `apps/indicadores/servicios.py` que parte siempre de `entregables_visibles(usuario)` y calcula los cuatro indicadores (% entregados a tiempo, % con reproceso, tiempo promedio de elaboración en días y horas registradas, y observaciones por tipo de error) junto con las tablas de desglose «Tiempo promedio por tipo de entregable», «Observaciones por tipo de error» (barras HTML/CSS) y «Por responsable» (oculta para el junior). Para los entregables cerrados antes del Sprint 2 sin `Entrega`, determina la fecha de entrega a partir del paso a `HECHO` en `HistorialEstado`. Pantalla `/indicadores/` con la fórmula de cada indicador en `<details><summary>¿Cómo se calcula?</summary>...</details>` y filtros por periodo, cliente, plantilla y responsable que nunca amplían la visibilidad | `apps/indicadores/tests.py` (Caso24IndicadoresYVisibilidadTests) |
 | RF-34 Repositorio de plantillas por cliente y ejemplos anonimizados con versión vigente e histórico | S2-H9 | Hecho. Nueva app `apps/repositorio` con `DocumentoRepositorio` y `VersionDocumento` (`repositorio/0001`), más enlace opcional `PlantillaTDR.documento_formato` (`clientes/0006`). Visibilidad `documentos_visibles(usuario)` (§7.9): plantillas genéricas y ejemplos anonimizados visibles para todos; plantillas de cliente acotadas por rol (junior: contratos activos asignados; senior: contratos o entregables a su cargo; gerente y admin: todos; lo ajeno devuelve 404). Versionado con una única versión `vigente=True` por documento (`version_documento_vigente_unica`), subida de nuevas versiones y restauración de versiones históricas creando una versión nueva (`Restaurada desde la vN`) | `apps/repositorio/tests.py` (Caso25RepositorioYPermisosTests) |
 | RF-35 Publicación anonimizada con lista de verificación obligatoria y registro de cargas y descargas | S2-H9 | Hecho. Publicar un ejemplo anonimizado exige marcar los 4 ítems de la política NDA (`nombres`, `montos`, `contratos`, `datos_personales`); sin ellos el servidor rechaza la publicación indicando cuántas confirmaciones faltan («No se puede publicar: falta(n) N confirmación(es) de la lista.»). Los archivos anonimizados se guardan en `repositorio/anonimizados/` separados de `repositorio/clientes/`. Modelo `RegistroAccesoDocumento` que registra cada `CARGA`, `DESCARGA` y `RESTAURACION`, visible en el detalle del documento únicamente para gerente y admin | `apps/repositorio/tests.py` (Caso25RepositorioYPermisosTests) |
-| RF-36 a RF-38 | S2-H10 a S2-H12 | Pendiente | — |
+| RF-36 Buscador global con filtros y resultados en menos de 2 s | S2-H10 | Hecho. Nueva app `apps/busqueda` (sin modelos) y variable `BUSCADOR_LIMITE=20` en `settings.py` y `.env.example`. Caja de búsqueda en la barra superior (`templates/base.html`) y pantalla `/buscar/` con actualización parcial por HTMX (`delay:300ms`). Búsqueda insensible a mayúsculas y tildes (`patron_insensible` con `__iregex`), mínimo 2 caracteres, agrupada en Entregables, Contratos, Clientes, Adjuntos y Repositorio, partiendo cada grupo de su queryset de visibilidad por rol y limitado a `BUSCADOR_LIMITE`. Filtros por fechas (`desde`, `hasta`), `tipo_documento`, `estado` y `cliente` que nunca amplían la visibilidad. Prueba de rendimiento RNF-12 en menos de 2 s con 10 veces el volumen del `seed_demo` | `apps/busqueda/tests.py` (ConfiguracionBuscadorTests, Caso26BuscadorYVisibilidadTests) |
+| RF-37 a RF-38 | S2-H11 a S2-H12 | Pendiente | — |
 
 ### Base común (S2-H2)
 
@@ -141,6 +142,7 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | 23 | Un usuario no puede tener dos registros de tiempo abiertos; el ajuste manual exige motivo; cada rol ve solo lo suyo | `test_tiempos.py` (ModeloRegistroTiempoTests, Caso23CronometroYManualTests, VisibilidadEHistorialDeTiemposTests) |
 | 24 | Los indicadores coinciden con un conjunto de datos conocido y respetan la visibilidad por rol | `apps/indicadores/tests.py` (Caso24IndicadoresYVisibilidadTests) |
 | 25 | Un junior no ve ni descarga plantillas de clientes ajenos; un anonimizado sin verificación se rechaza | `apps/repositorio/tests.py` (Caso25RepositorioYPermisosTests) |
+| 26 | El buscador nunca devuelve resultados fuera de la visibilidad y responde en menos de 2 s | `apps/busqueda/tests.py` (Caso26BuscadorYVisibilidadTests) |
 | 21b | Reabrir un entregado solo es posible con el acta observada, por senior, gerente o admin, y exige observación | `test_entregas.py` (ReaperturaTests) |
 | 29 | Regresión: pasan las pruebas del Sprint 1 y `migrate` funciona sobre una base del Sprint 1 | Suite completa; `migrate` (y su reversa) probado sobre una copia de la base del `seed_demo` del Sprint 1 y sobre una base vacía (en el S2-H1 y otra vez en el S2-H2, con `alertas/0004`: los 64 avisos de esa base quedan idénticos, y la reversa solo quita los avisos que el esquema del Sprint 1 no admite) |
 
@@ -158,7 +160,8 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | S2-H7 Tiempo por etapa | Hecho: un usuario no tiene dos registros abiertos; el ajuste manual exige motivo y valida rango y máximo de 12 h; cada rol ve solo lo suyo en `/tiempos/` |
 | S2-H8 Indicadores | Hecho: las cifras coinciden con datos conocidos en las pruebas; cada indicador muestra su fórmula; el junior ve solo los suyos y sin la tabla «Por responsable» |
 | S2-H9 Repositorio | Hecho: un junior no descarga plantillas de un cliente ajeno (404); sin las 4 confirmaciones NDA no se publica un anonimizado; cargas, descargas y restauraciones quedan registradas |
-| S2-H10 a S2-H13 | Pendientes |
+| S2-H10 Buscador | Hecho: un junior no encuentra entregables, contratos, clientes, adjuntos ni documentos del repositorio ajenos; insensible a mayúsculas y tildes; responde en menos de 2 s con 10 veces el volumen del seed |
+| S2-H11 a S2-H13 | Pendientes |
 
 ### Ajustes a pruebas del Sprint 1 (§11.3)
 

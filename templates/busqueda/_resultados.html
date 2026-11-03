@@ -1,0 +1,164 @@
+{% if chips %}
+<div class="chips" aria-label="Filtros activos">
+  {% for c in chips %}
+  <span class="chip">{{ c.texto }} <a href="{{ c.quitar }}" aria-label="Quitar {{ c.texto }}">×</a></span>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if not busqueda_activa %}
+<div class="tarjeta">
+  {% if q %}
+  <p class="suave">Escriba al menos {{ minimo_caracteres }} caracteres para buscar.</p>
+  {% else %}
+  <p class="suave">Ingrese un término de al menos {{ minimo_caracteres }} caracteres para buscar en sus entregables, contratos, clientes, adjuntos y documentos del repositorio.</p>
+  {% endif %}
+</div>
+{% else %}
+<p class="suave">{{ total_resultados }} resultado{{ total_resultados|pluralize }} en {{ tiempo_texto }} s</p>
+
+{% if total_resultados == 0 %}
+<div class="tarjeta">
+  <p>No se encontraron resultados para «{{ q }}» con los filtros seleccionados.</p>
+</div>
+{% else %}
+
+{% if entregables %}
+<h2>Entregables ({{ entregables_total }})</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Entregable</th>
+        <th>Cliente · Contrato</th>
+        <th>Estado</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in entregables %}
+      <tr>
+        <td><span class="codigo">{{ e.codigo }}</span> · {{ e.titulo }}{% if e.id_tdr %} <span class="suave">({{ e.id_tdr }})</span>{% endif %}</td>
+        <td>{{ e.contrato.cliente.nombre }} · {{ e.contrato.numero_contrato }}</td>
+        <td>{{ e.get_estado_display }}</td>
+        <td><a class="boton chico sec" href="{% url 'entregable_detalle' e.pk %}">Abrir</a></td>
+      </tr>
+      {% endfor %}
+      {% if entregables_total > entregables|length %}
+      <tr>
+        <td colspan="4"><a href="{% url 'entregables' %}">Ver los {{ entregables_total }} entregables en la lista →</a></td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if contratos %}
+<h2>Contratos ({{ contratos|length }})</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Contrato · Cliente</th>
+        <th>Línea de servicio</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in contratos %}
+      <tr>
+        <td>{{ c.numero_contrato }} · {{ c.cliente.nombre }}{% if c.descripcion %} — {{ c.descripcion }}{% endif %}</td>
+        <td>{{ c.linea_servicio.nombre|default:"—" }}</td>
+        <td><a class="boton chico sec" href="{% url 'entregables' %}?contrato={{ c.pk }}">Ver entregables</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if clientes %}
+<h2>Clientes ({{ clientes|length }})</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Sector</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cl in clientes %}
+      <tr>
+        <td>{{ cl.nombre }}</td>
+        <td>{{ cl.get_sector_display }}</td>
+        <td><a class="boton chico sec" href="{% url 'entregables' %}?cliente={{ cl.pk }}">Ver entregables</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if adjuntos %}
+<h2>Adjuntos ({{ adjuntos|length }})</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Archivo · Tipo</th>
+        <th>Entregable</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in adjuntos %}
+      <tr>
+        <td>{{ a.nombre_original }} · {{ a.get_tipo_display }} v{{ a.version }}</td>
+        <td><span class="codigo">{{ a.entregable.codigo }}</span> · {{ a.entregable.titulo }}</td>
+        <td>
+          <a class="boton chico sec" href="{% url 'adjunto_descargar' a.pk %}">Descargar</a>
+          <a class="boton chico sec" href="{% url 'entregable_detalle' a.entregable_id %}">Abrir entregable</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if repositorio %}
+<h2>Repositorio ({{ repositorio|length }})</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Documento</th>
+        <th>Cliente · Tipo</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doc in repositorio %}
+      {% with vig=doc.version_vigente %}
+      <tr>
+        <td><a href="{% url 'repositorio_documento' doc.pk %}">{{ doc.titulo }}</a>{% if vig %} · v{{ vig.numero }}{% endif %}</td>
+        <td>{% if doc.es_anonimizado %}Anonimizado{% elif doc.cliente %}{{ doc.cliente.nombre }}{% else %}Genérica{% endif %} · {{ doc.get_tipo_documento_display }}</td>
+        <td>
+          {% if vig %}
+          <a class="boton chico sec" href="{% url 'repositorio_descargar' vig.pk %}">Descargar</a>
+          {% endif %}
+          <a class="boton chico sec" href="{% url 'repositorio_documento' doc.pk %}">Abrir</a>
+        </td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endif %}
+{% endif %}
