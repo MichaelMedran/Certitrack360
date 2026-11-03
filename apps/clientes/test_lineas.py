@@ -316,8 +316,8 @@ class NavegacionTests(Base):
             self.client.force_login(usuario)
             for nombre in ("inicio", "tablero", "calendario", "entregables"):
                 html = self.client.get(reverse(nombre)).content.decode()
-                # /observaciones/ (S2-H3), /entregas/ (S2-H4), /personal/ (S2-H6), /tiempos/ (S2-H7), /indicadores/ (S2-H8), /repositorio/ (S2-H9), /buscar/ (S2-H10) y /procedimientos/ (S2-H11) ya existen.
-                for ruta in ("/incorporacion/",):
+                # Las 8 rutas nuevas del Sprint 2 ya existen: /observaciones/, /entregas/, /personal/, /tiempos/, /indicadores/, /repositorio/, /buscar/, /procedimientos/ e /incorporacion/.
+                for ruta in ():
                     self.assertNotIn(f'href="{ruta}', html, f"{usuario.username} {nombre} {ruta}")
 
     def test_todas_las_pestanas_de_gestion_abren(self):

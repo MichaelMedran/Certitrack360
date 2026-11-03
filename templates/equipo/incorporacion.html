@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block titulo %}Incorporación{% endblock %}
+{% block contenido %}
+<div class="acciones" style="justify-content:space-between;align-items:center">
+  <h1 style="margin:0">Plan de incorporación</h1>
+  {% if user.es_gerente_o_admin %}
+  <a class="boton" href="{% url 'incorporacion_planes' %}">Gestionar planes de incorporación</a>
+  {% endif %}
+</div>
+<p class="suave">Lista de actividades de la operación diaria con materiales vigentes del repositorio, procedimientos y herramientas reales de la plataforma (HU-15).</p>
+
+{% if mi_incorporacion %}
+  {% include "equipo/_tarjeta_inicio.html" with inc=mi_incorporacion origen_inicio=False %}
+{% elif not incorporaciones_a_cargo %}
+  <p class="tarjeta">No tiene un plan de incorporación asignado en este momento.</p>
+{% endif %}
+
+{% if incorporaciones_a_cargo %}
+<h2>Vista del responsable</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Ingresante</th>
+        <th>Plan</th>
+        <th>Responsable</th>
+        <th>Inicio</th>
+        <th>Avance</th>
+        <th>Estado</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inc in incorporaciones_a_cargo %}
+      <tr>
+        <td>{{ inc.ingresante.nombre }}</td>
+        <td>{{ inc.plan.nombre }}</td>
+        <td>{{ inc.responsable.nombre }}</td>
+        <td>{{ inc.fecha_inicio|date:"d/m/Y" }}</td>
+        <td>{{ inc.completadas_count }} / {{ inc.total_actividades }}</td>
+        <td>
+          {% if inc.confirmada %}
+          Confirmada el {{ inc.confirmada_en|date:"d/m/Y" }} por {{ inc.confirmada_por.nombre }}
+          {% elif inc.todas_completadas %}
+          Lista para confirmar
+          {% else %}
+          En curso
+          {% endif %}
+        </td>
+        <td class="acciones">
+          <a class="boton chico sec" href="{% url 'incorporacion' %}?detalle={{ inc.pk }}">Ver detalle</a>
+          {% if not inc.confirmada and user.pk == inc.responsable_id and inc.todas_completadas %}
+          <form method="post" action="{% url 'incorporacion' %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="confirmar">
+            <input type="hidden" name="incorporacion" value="{{ inc.pk }}">
+            <button type="submit" class="boton chico">Confirmar finalización</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if detalle_incorporacion %}
+<h2 style="margin-top:1.25rem">Detalle de incorporación · {{ detalle_incorporacion.ingresante.nombre }}</h2>
+{% include "equipo/_tarjeta_inicio.html" with inc=detalle_incorporacion origen_inicio=False %}
+{% endif %}
+{% endblock %}

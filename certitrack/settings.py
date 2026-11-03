@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "apps.indicadores",
     "apps.repositorio",
     "apps.busqueda",
+    "apps.equipo",
 ]
 
 MIDDLEWARE = [

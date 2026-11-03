@@ -14,6 +14,10 @@
   <div class="tarjeta"><div class="cifra">{{ en_verificacion }}</div>En {{ etiqueta_revision|lower }}</div>
 </div>
 
+{% if mi_incorporacion %}
+  {% include "equipo/_tarjeta_inicio.html" with inc=mi_incorporacion origen_inicio=True %}
+{% endif %}
+
 {% if user.es_gerente_o_admin %}
 <div class="tarjeta acciones" style="justify-content:space-between">
   <span>Vista general de todos los proyectos:</span>

@@ -14,4 +14,5 @@ urlpatterns = [
     path("", include("apps.indicadores.urls")),
     path("", include("apps.repositorio.urls")),
     path("", include("apps.busqueda.urls")),
+    path("", include("apps.equipo.urls")),
 ]

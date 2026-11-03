@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block titulo %}Planes de incorporación{% endblock %}
+{% block contenido %}
+{% include "clientes/_pestanas.html" with entidad="personal" %}
+
+<div class="acciones" style="justify-content:space-between;align-items:center">
+  <h2 style="margin:0">Gestión › Planes de incorporación</h2>
+  <a class="boton sec" href="{% url 'incorporacion' %}">Ver incorporaciones en curso</a>
+</div>
+<p class="suave">Defina planes de incorporación por rol con actividades semanales y asígnelos a los colaboradores que se integran al área (HU-15).</p>
+
+<div class="acciones" style="margin-bottom:1rem">
+  {% for p in planes %}
+  <a class="boton chico{% if not editando or editando.pk != p.pk %} sec{% endif %}" href="{% url 'incorporacion_planes' %}?plan={{ p.pk }}">{{ p.nombre }} ({{ p.get_rol_display }})</a>
+  {% endfor %}
+</div>
+
+<form method="post" action="{% url 'incorporacion_planes' %}" class="tarjeta" style="margin-bottom:1.25rem">
+  {% csrf_token %}
+  <input type="hidden" name="accion" value="guardar_plan">
+  {% if editando and not request.GET.nuevo %}
+  <input type="hidden" name="plan_id" value="{{ editando.pk }}">
+  <h3 style="margin-top:0">Editar plan «{{ editando.nombre }}»</h3>
+  {% else %}
+  <h3 style="margin-top:0">Nuevo plan de incorporación</h3>
+  {% endif %}
+  <div class="filtros-grid">
+    <div>
+      <label for="id_nombre">Nombre del plan *</label>
+      <input id="id_nombre" type="text" name="nombre" required maxlength="150" value="{% if editando and not request.GET.nuevo %}{{ editando.nombre }}{% endif %}">
+    </div>
+    <div>
+      <label for="id_rol">Rol *</label>
+      <select id="id_rol" name="rol">
+        {% for val, etiq in roles %}
+        <option value="{{ val }}"{% if editando and not request.GET.nuevo and editando.rol == val %} selected{% endif %}>{{ etiq }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_puesto">Puesto (opcional)</label>
+      <input id="id_puesto" type="text" name="puesto" maxlength="100" value="{% if editando and not request.GET.nuevo %}{{ editando.puesto }}{% endif %}">
+    </div>
+  </div>
+  <div class="acciones" style="margin-top:.75rem">
+    <button type="submit" class="boton">Guardar plan</button>
+    {% if editando and not request.GET.nuevo %}
+    <a class="boton sec" href="{% url 'incorporacion_planes' %}?nuevo=1">+ Nuevo plan</a>
+    {% endif %}
+  </div>
+</form>
+
+{% if editando and not request.GET.nuevo %}
+<div class="tarjeta" style="margin-bottom:1.25rem">
+  <h3 style="margin-top:0">Actividades de «{{ editando.nombre }}»</h3>
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Orden</th>
+          <th>Semana</th>
+          <th>Actividad</th>
+          <th>Material</th>
+          <th>Responsable</th>
+          <th>Cómo se comprueba</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for act in editando.actividades.all %}
+        <tr>
+          <td>{{ act.orden }}</td>
+          <td>{{ act.semana }}</td>
+          <td>{{ act.titulo }}</td>
+          <td>
+            {% if act.url_recurso %}
+            <a href="{{ act.url_recurso }}">{{ act.nombre_recurso }}</a>
+            {% else %}
+            {{ act.nombre_recurso }}
+            {% endif %}
+          </td>
+          <td>{{ act.rol_responsable }}</td>
+          <td>{{ act.como_se_comprueba|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Este plan aún no tiene actividades registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <form method="post" action="{% url 'incorporacion_planes' %}" style="margin-top:1rem">
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="agregar_actividad">
+    <input type="hidden" name="plan" value="{{ editando.pk }}">
+    <h4>+ Agregar actividad al plan</h4>
+    <div class="filtros-grid">
+      <div>
+        <label for="id_act_semana">Semana *</label>
+        <input id="id_act_semana" type="number" name="semana" min="1" value="1" required>
+      </div>
+      <div>
+        <label for="id_act_orden">Orden</label>
+        <input id="id_act_orden" type="number" name="orden" min="1" placeholder="Automático">
+      </div>
+      <div>
+        <label for="id_act_titulo">Actividad *</label>
+        <input id="id_act_titulo" type="text" name="titulo" maxlength="200" required>
+      </div>
+      <div>
+        <label for="id_act_proc">Procedimiento (opcional)</label>
+        <select id="id_act_proc" name="procedimiento">
+          <option value="">— Ninguno —</option>
+          {% for pr in procedimientos %}
+          <option value="{{ pr.pk }}">{{ pr.titulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="id_act_doc">Documento del repositorio (opcional)</label>
+        <select id="id_act_doc" name="documento">
+          <option value="">— Ninguno —</option>
+          {% for d in documentos %}
+          <option value="{{ d.pk }}">{{ d.titulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="id_act_enlace">Enlace interno (opcional)</label>
+        <input id="id_act_enlace" type="text" name="enlace_interno" placeholder="/repositorio/">
+      </div>
+      <div>
+        <label for="id_act_resp">Rol responsable</label>
+        <input id="id_act_resp" type="text" name="rol_responsable" value="Senior asignado">
+      </div>
+      <div>
+        <label for="id_act_comp">Cómo se comprueba</label>
+        <input id="id_act_comp" type="text" name="como_se_comprueba" value="Marcada por el ingresante">
+      </div>
+    </div>
+    <div class="acciones" style="margin-top:.75rem">
+      <button type="submit" class="boton">+ Agregar actividad</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<form method="post" action="{% url 'incorporacion_planes' %}" class="tarjeta">
+  {% csrf_token %}
+  <input type="hidden" name="accion" value="asignar">
+  <h3 style="margin-top:0">Asignar plan a un ingresante</h3>
+  <div class="filtros-grid">
+    <div>
+      <label for="id_asig_plan">Plan *</label>
+      <select id="id_asig_plan" name="plan" required>
+        {% for p in planes %}
+        <option value="{{ p.pk }}"{% if editando and editando.pk == p.pk %} selected{% endif %}>{{ p.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_asig_ingresante">Ingresante *</label>
+      <select id="id_asig_ingresante" name="ingresante" required>
+        <option value="">— Elija el colaborador —</option>
+        {% for u in usuarios %}
+        <option value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_asig_responsable">Responsable (senior/gerente) *</label>
+      <select id="id_asig_responsable" name="responsable" required>
+        <option value="">— Elija el responsable —</option>
+        {% for r in responsables %}
+        <option value="{{ r.pk }}">{{ r.nombre }} ({{ r.get_rol_display }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_asig_fecha">Fecha de inicio</label>
+      <input id="id_asig_fecha" type="date" name="fecha_inicio">
+    </div>
+  </div>
+  <div class="acciones" style="margin-top:.75rem">
+    <button type="submit" class="boton">Asignar a un ingresante</button>
+  </div>
+</form>
+{% endblock %}

@@ -2,7 +2,7 @@
 
 # nombre de la URL -> sección de la barra
 SECCIONES = {
-    "inicio": "inicio",
+    "inicio": "inicio", "incorporacion": "inicio",
     "tablero": "tablero",
     "calendario": "calendario",
     "entregables": "entregables", "entregable_nuevo": "entregables", "entregable_detalle": "entregables",
@@ -16,7 +16,7 @@ SECCIONES = {
     "asistente": "asistente",
     "consolidado": "consolidado",
     "gestion": "gestion", "adm_lista": "gestion", "adm_nuevo": "gestion", "adm_editar": "gestion",
-    "lineas_servicio": "gestion", "personal": "gestion",
+    "lineas_servicio": "gestion", "personal": "gestion", "incorporacion_planes": "gestion",
     "fichas": "gestion", "ficha_nueva": "gestion", "ficha_detalle": "gestion",
     "ficha_vista_previa": "gestion", "ficha_confirmar": "gestion",
     "notificaciones": "avisos",

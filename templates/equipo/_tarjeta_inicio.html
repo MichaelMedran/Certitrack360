@@ -1,0 +1,89 @@
+<div class="tarjeta" style="margin-bottom:1.25rem">
+  <div class="acciones" style="justify-content:space-between;align-items:center">
+    <h2 style="margin:0">Mi incorporación · {{ inc.plan.nombre }}</h2>
+    {% if inc.confirmada %}
+    <span class="etiqueta">Confirmada por {{ inc.confirmada_por.nombre }}</span>
+    {% else %}
+    <a class="boton chico sec" href="{% url 'incorporacion' %}">Ver detalle de incorporación</a>
+    {% endif %}
+  </div>
+  <div class="acciones" style="align-items:center;margin:.5rem 0">
+    <div style="flex:1;background:#e5e7eb;height:.65rem;border-radius:4px;overflow:hidden" aria-hidden="true">
+      <div style="width:{{ inc.porcentaje_avance }}%;background:#2563eb;height:100%"></div>
+    </div>
+    <strong>{{ inc.completadas_count }} de {{ inc.total_actividades }} actividades completadas</strong>
+  </div>
+  <p class="suave" style="margin:.25rem 0 .75rem">
+    Responsable: {{ inc.responsable.nombre }} · Inicio: {{ inc.fecha_inicio|date:"d/m/Y" }}
+  </p>
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Semana</th>
+          <th>Actividad</th>
+          <th>Material</th>
+          <th>Estado</th>
+          <th><span class="sr-only">Acción</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for av in inc.lista_avances %}
+        <tr>
+          <td>{{ av.actividad.orden }}</td>
+          <td>{{ av.actividad.semana }}</td>
+          <td>
+            {{ av.actividad.titulo }}
+            {% if av.actividad.como_se_comprueba %}
+            <div class="suave">{{ av.actividad.como_se_comprueba }}</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if av.actividad.url_recurso %}
+            <a href="{{ av.actividad.url_recurso }}">{{ av.actividad.nombre_recurso }}</a>
+            {% if av.actividad.url_detalle_documento %}
+            · <a class="suave" href="{{ av.actividad.url_detalle_documento }}">Ficha</a>
+            {% endif %}
+            {% else %}
+            {{ av.actividad.nombre_recurso }}
+            {% endif %}
+          </td>
+          <td>{{ av.get_estado_display }}</td>
+          <td>
+            {% if not inc.confirmada and user.pk == inc.ingresante_id %}
+              {% if av.estado == 'PENDIENTE' %}
+              <form method="post" action="{% url 'incorporacion' %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="avance">
+                <input type="hidden" name="avance" value="{{ av.pk }}">
+                <input type="hidden" name="estado" value="EN_CURSO">
+                {% if origen_inicio %}<input type="hidden" name="next" value="inicio">{% endif %}
+                <button type="submit" class="boton chico sec">Empezar</button>
+              </form>
+              <form method="post" action="{% url 'incorporacion' %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="avance">
+                <input type="hidden" name="avance" value="{{ av.pk }}">
+                <input type="hidden" name="estado" value="COMPLETADA">
+                {% if origen_inicio %}<input type="hidden" name="next" value="inicio">{% endif %}
+                <button type="submit" class="boton chico">Marcar completada</button>
+              </form>
+              {% elif av.estado == 'EN_CURSO' %}
+              <form method="post" action="{% url 'incorporacion' %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="avance">
+                <input type="hidden" name="avance" value="{{ av.pk }}">
+                <input type="hidden" name="estado" value="COMPLETADA">
+                {% if origen_inicio %}<input type="hidden" name="next" value="inicio">{% endif %}
+                <button type="submit" class="boton chico">Marcar completada</button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
