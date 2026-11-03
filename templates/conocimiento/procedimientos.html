@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block titulo %}Procedimientos{% endblock %}
+{% block contenido %}
+<h1>Procedimientos aprobados del área</h1>
+<p class="suave">Los procedimientos vigentes sirven de fuente para el asistente (HU-10) y se consultan en <a href="{% url 'repositorio' %}?pestana=procedimientos">Repositorio › Procedimientos</a>.</p>
+
+<form method="post" action="{% url 'procedimientos' %}" class="tarjeta" style="margin-bottom:1.25rem">
+  {% csrf_token %}
+  <input type="hidden" name="form_edicion" value="1">
+  {% if editando %}
+  <input type="hidden" name="procedimiento" value="{{ editando.pk }}">
+  <h2 style="margin-top:0">Editar «{{ editando.titulo }}»</h2>
+  {% else %}
+  <h2 style="margin-top:0">Nuevo procedimiento aprobado</h2>
+  {% endif %}
+
+  {% if errores %}
+  <div class="errorlist" role="alert">
+    {% for err in errores %}<div>{{ err }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="filtros-grid">
+    <div>
+      <label for="id_titulo">Título *</label>
+      <input id="id_titulo" type="text" name="titulo" maxlength="200" required value="{{ valores.titulo }}">
+    </div>
+    <div>
+      <label for="id_linea_servicio">Línea de servicio (opcional)</label>
+      <select id="id_linea_servicio" name="linea_servicio">
+        <option value="">Todas las líneas</option>
+        {% for l in lineas %}
+        <option value="{{ l.pk }}"{% if valores.linea_servicio == l.pk %} selected{% endif %}>{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_documento">Documento del repositorio (opcional)</label>
+      <select id="id_documento" name="documento">
+        <option value="">— Ninguno —</option>
+        {% for d in documentos %}
+        <option value="{{ d.pk }}"{% if valores.documento == d.pk %} selected{% endif %}>{{ d.titulo }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div style="margin-top:.75rem">
+    <label for="id_contenido">Contenido del procedimiento *</label>
+    <textarea id="id_contenido" name="contenido" rows="5" required style="width:100%">{{ valores.contenido }}</textarea>
+  </div>
+
+  <div style="margin-top:.75rem">
+    <label style="display:inline-flex;align-items:center;gap:.4rem">
+      <input type="checkbox" name="vigente" value="1"{% if valores.vigente %} checked{% endif %}>
+      Procedimiento vigente (disponible para el asistente y el repositorio)
+    </label>
+  </div>
+
+  <div class="acciones" style="margin-top:.75rem">
+    <button class="boton" type="submit">{% if editando %}Guardar cambios{% else %}Aprobar y guardar{% endif %}</button>
+    {% if editando %}
+    <a class="boton sec" href="{% url 'procedimientos' %}">Cancelar</a>
+    {% endif %}
+    <a class="boton sec" href="{% url 'repositorio' %}?pestana=procedimientos">Ver en Repositorio</a>
+  </div>
+</form>
+
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Procedimiento</th>
+        <th>Línea</th>
+        <th>Documento</th>
+        <th>Aprobado</th>
+        <th>Vigente</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in procedimientos %}
+      <tr>
+        <td>
+          <strong>{{ p.titulo }}</strong>
+          <div class="suave">{{ p.contenido|truncatewords:25 }}</div>
+        </td>
+        <td>{{ p.linea_servicio.nombre|default:"Todas" }}</td>
+        <td>{% if p.documento %}<a href="{% url 'repositorio_documento' p.documento_id %}">{{ p.documento.titulo }}</a>{% else %}—{% endif %}</td>
+        <td>{{ p.aprobado_por.nombre }} · {{ p.aprobado_en|date:"d/m/Y" }}</td>
+        <td>{% if p.vigente %}Sí{% else %}No{% endif %}</td>
+        <td class="acciones">
+          <a class="boton chico sec" href="{% url 'procedimientos' %}?editar={{ p.pk }}">Editar</a>
+          <form method="post" action="{% url 'procedimientos' %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="cambiar_vigencia">
+            <input type="hidden" name="procedimiento" value="{{ p.pk }}">
+            <button type="submit" class="boton chico sec">{% if p.vigente %}Dejar sin efecto{% else %}Reactivar{% endif %}</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6">No hay procedimientos registrados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

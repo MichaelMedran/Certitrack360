@@ -1,23 +1,91 @@
 {% extends "base.html" %}
 {% block titulo %}Asistente{% endblock %}
 {% block contenido %}
-<h1>Asistente de lecciones aprendidas</h1>
-<p class="suave">Pregunte por un error o duda frecuente. La respuesta se basa en casos de proyectos anteriores y se procesa en el servidor local.</p>
-<form method="get" class="acciones">
-  <input type="search" name="q" value="{{ pregunta }}" placeholder="Ej.: ¿Qué hacer si falta la firma en el informe?" aria-label="Pregunta" style="flex:1;max-width:640px">
-  <button class="boton">Consultar</button>
+<h1>Asistente de lecciones aprendidas y procedimientos</h1>
+<p class="suave">Responde con los procedimientos aprobados y las lecciones aprendidas del área. Si no encuentra información suficiente, lo dice y orienta a escalar al senior del contrato.</p>
+<form method="get" action="{% url 'asistente' %}" class="acciones">
+  <input type="search" name="q" value="{{ pregunta }}" placeholder="Ej.: ¿Qué hago si el cliente no firma el acta de conformidad?" aria-label="Pregunta" style="flex:1;max-width:640px">
+  <button class="boton" type="submit">Consultar</button>
 </form>
+
 {% if buscado %}
   {% if aviso %}<div class="aviso aviso-warning">{{ aviso }}</div>{% endif %}
-  {% if respuesta %}<div class="tarjeta" style="margin-bottom:1rem"><h2 style="margin-top:0">Respuesta</h2>{{ respuesta|linebreaks }}</div>{% endif %}
-  {% for c in casos %}
-  <div class="tarjeta" style="margin-bottom:.6rem">
-    <strong>Caso {{ forloop.counter }}</strong> · {{ c.leccion.cliente }} · <span class="etiqueta">{{ c.leccion.get_tipo_error_display }}</span>
-    {% if c.leccion.entregable_origen %}<div class="suave">Contrato {{ c.leccion.entregable_origen.contrato.numero_contrato }} ·
-      {% if c.enlace %}<a href="{% url 'entregable_detalle' c.leccion.entregable_origen_id %}">{{ c.leccion.entregable_origen.titulo }}</a>{% else %}{{ c.leccion.entregable_origen.titulo }} (sin acceso){% endif %}</div>{% endif %}
-    <p><strong>Problema:</strong> {{ c.leccion.problema }}</p>
-    <p><strong>Solución:</strong> {{ c.leccion.solucion }}</p>
+  {% if respuesta %}
+  <div class="tarjeta" style="margin-bottom:1rem">
+    <h2 style="margin-top:0">Respuesta</h2>
+    {{ respuesta|linebreaks }}
   </div>
-  {% empty %}<p class="tarjeta">No encontré casos relacionados con esa consulta.</p>{% endfor %}
+  {% endif %}
+
+  {% if procedimientos or casos %}
+    <h2>Fuentes</h2>
+    {% for p in procedimientos %}
+    <div class="tarjeta" style="margin-bottom:.6rem">
+      <span class="etiqueta">Procedimiento {{ forloop.counter }}</span>
+      <strong><a href="{% url 'repositorio' %}?pestana=procedimientos#proc-{{ p.pk }}">{{ p.titulo }}</a></strong>
+      · Línea: {{ p.linea_servicio.nombre|default:"Todas" }}
+      · aprobado el {{ p.aprobado_en|date:"d/m/Y" }} por {{ p.aprobado_por.nombre }}
+      {% if p.documento_visible and p.documento %}
+      · <a href="{% url 'repositorio_documento' p.documento_id %}">Documento: {{ p.documento.titulo }}</a>
+      {% endif %}
+      <p>{{ p.contenido }}</p>
+    </div>
+    {% endfor %}
+
+    {% for c in casos %}
+    <div class="tarjeta" style="margin-bottom:.6rem">
+      <strong>Caso {{ forloop.counter }}</strong> · {{ c.leccion.cliente }} · <span class="etiqueta">{{ c.leccion.get_tipo_error_display }}</span>
+      {% if c.leccion.entregable_origen %}<div class="suave">Contrato {{ c.leccion.entregable_origen.contrato.numero_contrato }} ·
+        {% if c.enlace %}<a href="{% url 'entregable_detalle' c.leccion.entregable_origen_id %}">{{ c.leccion.entregable_origen.titulo }}</a>{% else %}{{ c.leccion.entregable_origen.titulo }} (sin enlace){% endif %}</div>{% endif %}
+      <p><strong>Problema:</strong> {{ c.leccion.problema }}</p>
+      <p><strong>Solución:</strong> {{ c.leccion.solucion }}</p>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="tarjeta">
+      No encontré casos relacionados ni procedimientos aprobados sobre esta consulta.
+      Consulte con el senior de su contrato{% if senior_escalamiento %} ({{ senior_escalamiento }}){% endif %} por los canales habituales.
+    </p>
+  {% endif %}
+
+  {% if consulta %}
+  <form method="post" action="{% url 'asistente_valorar' consulta.pk %}" class="tarjeta acciones" style="margin-top:.75rem;align-items:center">
+    {% csrf_token %}
+    <strong>¿Le sirvió esta respuesta?</strong>
+    <button type="submit" name="util" value="si" class="boton chico{% if consulta.util is not True %} sec{% endif %}">Sí</button>
+    <button type="submit" name="util" value="no" class="boton chico{% if consulta.util is not False %} sec{% endif %}">No</button>
+    {% if consulta.util is not None %}
+    <span class="suave">Valoración registrada: {% if consulta.util %}Sí{% else %}No{% endif %}</span>
+    {% endif %}
+  </form>
+  {% endif %}
+{% endif %}
+
+<h2 style="margin-top:1.5rem">Mis consultas anteriores</h2>
+{% if historial_consultas %}
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Pregunta</th>
+        <th>¿Le sirvió?</th>
+        <th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in historial_consultas %}
+      <tr>
+        <td>{{ h.creada_en|date:"d/m/Y H:i" }}</td>
+        <td>{{ h.pregunta }}</td>
+        <td>{% if h.util is True %}Sí{% elif h.util is False %}No{% else %}—{% endif %}</td>
+        <td><a class="boton chico sec" href="{% url 'asistente' %}?consulta={{ h.pk }}">Ver de nuevo</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="tarjeta suave">Aún no ha realizado consultas al asistente.</p>
 {% endif %}
 {% endblock %}

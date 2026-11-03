@@ -12,7 +12,10 @@
 {% if pestana == 'procedimientos' %}
 <div class="tarjeta">
   {% if user.es_gerente_o_admin %}
-  <p class="suave">Los procedimientos son texto que el asistente usa para responder (HU-10). Los cargan y aprueban el gerente y el admin.</p>
+  <div class="acciones" style="justify-content:space-between;align-items:center;margin-bottom:.75rem">
+    <p class="suave" style="margin:0">Los procedimientos son texto que el asistente usa para responder (HU-10). Los cargan y aprueban el gerente y el admin.</p>
+    <a class="boton" href="{% url 'procedimientos' %}">Gestionar procedimientos</a>
+  </div>
   {% else %}
   <p class="suave">Los procedimientos son texto aprobado que el asistente usa para responder (HU-10).</p>
   {% endif %}
@@ -28,8 +31,11 @@
       </thead>
       <tbody>
         {% for proc in procedimientos %}
-        <tr>
-          <td>{{ proc.titulo }}</td>
+        <tr id="proc-{{ proc.pk }}">
+          <td>
+            <strong>{{ proc.titulo }}</strong>
+            <div class="suave">{{ proc.contenido }}</div>
+          </td>
           <td>{{ proc.linea_servicio.nombre|default:"Todas" }}</td>
           <td>{{ proc.aprobado_por.nombre }} · {{ proc.aprobado_en|date:"d/m/Y" }}</td>
           <td>{% if proc.vigente %}Sí{% else %}No{% endif %}</td>

@@ -12,6 +12,7 @@ SECCIONES = {
     "entregas": "entregables", "entregable_entregar": "entregables",  # pestaña «Entregas» y formulario de entrega (RF-29)
     "indicadores": "indicadores",
     "repositorio": "repositorio", "repositorio_nuevo": "repositorio", "repositorio_documento": "repositorio",
+    "procedimientos": "repositorio",
     "asistente": "asistente",
     "consolidado": "consolidado",
     "gestion": "gestion", "adm_lista": "gestion", "adm_nuevo": "gestion", "adm_editar": "gestion",
