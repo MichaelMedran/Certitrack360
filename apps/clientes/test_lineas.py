@@ -158,6 +158,15 @@ class PantallaDeLineasTests(Base):
         self.assertEqual(self.ver(self.gerente, {"editar": 99999}).status_code, 404)
         self.assertEqual(self.guardar({"linea": 99999, "nombre": "X"}).status_code, 404)
 
+    def test_un_id_mal_escrito_o_fuera_de_rango_es_404_y_no_crea_otra_linea(self):
+        # Revisión de S2-H1 (S2-H1-H2-ajustes): antes un id no numérico creaba una línea nueva y uno enorme daba error 500.
+        for valor in ("abc", "", "99999999999999999999999", str(2**63)):
+            with self.subTest(valor=valor):
+                self.assertEqual(self.ver(self.gerente, {"editar": valor}).status_code, 404)
+                self.assertEqual(self.guardar({"linea": valor, "nombre": "Fantasma", "activa": "on"}).status_code, 404)
+        self.assertFalse(LineaServicio.objects.filter(nombre="Fantasma").exists())
+        self.assertEqual(LineaServicio.objects.count(), 5)
+
     def test_exige_csrf(self):
         c = Client(enforce_csrf_checks=True)
         c.force_login(self.gerente)
@@ -213,13 +222,27 @@ class ContratoConLineaTests(Base):
         self.assertEqual(self.client.post(url, datos).status_code, 302)
         self.assertEqual(Contrato.objects.get(pk=self.c1.pk).linea_servicio, linea("Custodia"))
 
-    def test_compatibilidad_una_peticion_sin_el_campo_conserva_la_linea(self):
+    def test_una_peticion_sin_la_clave_se_rechaza_en_el_alta_y_en_la_edicion(self):
+        # Obligatoria SIEMPRE en el formulario, aunque la petición no traiga el campo.
+        datos = self.datos()
+        del datos["linea_servicio"]
+        r = self.client.post(reverse("adm_nuevo", args=["contratos"]), datos)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("Falta elegir la línea de servicio.", r.context["form"].errors["linea_servicio"])
+        self.assertFalse(Contrato.objects.filter(numero_contrato="C9").exists())
         self.c1.linea_servicio = linea("Banca")
         self.c1.save()
-        datos = self.datos(numero_contrato="C1", senior_responsable=self.s1.pk)
+        datos = self.datos(numero_contrato="C1", senior_responsable=self.s1.pk, descripcion="Cambiada")
         del datos["linea_servicio"]
-        self.assertEqual(self.client.post(reverse("adm_editar", args=["contratos", self.c1.pk]), datos).status_code, 302)
-        self.assertEqual(Contrato.objects.get(pk=self.c1.pk).linea_servicio, linea("Banca"))
+        r = self.client.post(reverse("adm_editar", args=["contratos", self.c1.pk]), datos)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("Falta elegir la línea de servicio.", r.context["form"].errors["linea_servicio"])
+        c1 = Contrato.objects.get(pk=self.c1.pk)
+        self.assertEqual((c1.linea_servicio, c1.descripcion), (linea("Banca"), self.c1.descripcion))
+
+    def test_en_la_base_de_datos_un_contrato_puede_seguir_sin_linea(self):
+        Contrato.objects.filter(pk=self.c1.pk).update(linea_servicio=None)
+        self.assertIsNone(Contrato.objects.get(pk=self.c1.pk).linea_servicio)
 
     def test_la_lista_de_contratos_muestra_la_linea(self):
         self.c1.linea_servicio = linea("Digitalización")
@@ -271,6 +294,18 @@ class FiltroPorLineaTests(FiltrosBase):
     def test_un_valor_no_valido_se_ignora(self):
         res = filtros.aplicar(entregables_visibles(self.gerente), {"linea": "abc"})
         self.assertEqual(res.activos, {})
+
+    def test_ids_fuera_de_rango_se_ignoran_sin_error_500(self):
+        # Revisión de S2-H1 (S2-H1-H2-ajustes): un id mayor que un entero de 64 bits hacía fallar la consulta.
+        self.client.force_login(self.gerente)
+        for valor in ("99999999999999999999999", str(2**63), str(-(2**63) - 1), "9" * 5000):
+            for clave in ("linea", "cliente", "contrato", "responsable"):
+                self.assertNotIn(clave, filtros.aplicar(entregables_visibles(self.gerente), {clave: valor}).activos)
+                for nombre in ("tablero", "entregables"):
+                    with self.subTest(clave=clave, valor=valor[:30], pantalla=nombre):
+                        self.assertEqual(self.client.get(reverse(nombre), {clave: valor}).status_code, 200)
+        self.assertEqual(filtros.entero(str(2**63 - 1)), 2**63 - 1)
+        self.assertEqual(filtros.entero(" 7 "), 7)
 
 
 class NavegacionTests(Base):

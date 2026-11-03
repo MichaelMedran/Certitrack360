@@ -22,11 +22,18 @@ ORDENES = [valor for valor, _ in ORDEN_CHOICES]
 Resultado = namedtuple("Resultado", "queryset activos orden")
 
 
+# Mayor id que admiten las bases de datos (entero de 64 bits con signo). Un número más grande no corresponde a nada y,
+# pasado a la consulta, haría fallar a SQLite (OverflowError) o a PostgreSQL (DataError) con un error 500.
+MAXIMO_ID = 2**63 - 1
+
+
 def entero(valor):
+    """El número de un parámetro (id), o None si no es un entero válido o está fuera del rango de un id."""
     try:
-        return int(valor)
+        numero = int(valor)
     except (TypeError, ValueError):
         return None
+    return numero if -MAXIMO_ID <= numero <= MAXIMO_ID else None
 
 
 def aplicar(qs, params, hoy=None):

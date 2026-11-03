@@ -1,6 +1,6 @@
 """Urgencia de un entregable: se calcula en el momento y no se almacena (SDD §10.3, RF-15).
 
-Los umbrales salen de la misma configuración que las alertas (`ALERT_THRESHOLDS_DAYS`, p. ej. 5,2,0 o 5,2,1,0):
+Los umbrales salen de la misma configuración que las alertas (`ALERT_THRESHOLDS_DAYS`, por defecto 5,2,1,0):
   - CRITICO: vence en `critico` días o menos: el segundo umbral mayor de los positivos (SDD del Sprint 2, §10.1), así
     que sumar el aviso de 24 h (5,2,1,0) no cambia su significado: sigue empezando a 2 días. Con un solo umbral positivo,
     ese; sin positivos, 0 (solo el día del vencimiento).

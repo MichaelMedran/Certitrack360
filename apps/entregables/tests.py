@@ -101,7 +101,9 @@ class PermisosTests(Base):
 class PokaYokeTests(Base):
     def datos(self, **extra):
         d = {"plantilla": self.plantilla.pk, "contrato": self.c1.pk, "titulo": "Nuevo", "junior_asignado": self.j1.pk,
-             "plazo": (self.hoy + datetime.timedelta(days=5)).isoformat(), "c_periodo": "Ene-2026", "c_nivel": "3"}
+             "plazo": (self.hoy + datetime.timedelta(days=5)).isoformat(), "c_periodo": "Ene-2026", "c_nivel": "3",
+             # Ajuste derivado de RF-20 (ID-TDR y fecha de recepción obligatorios), no previsto en la §11.3.
+             "id_tdr": "TDR-CD-001", "fecha_recepcion": self.hoy.isoformat()}
         d.update(extra)
         return d
 

@@ -51,8 +51,8 @@ class LineaServicioForm(forms.ModelForm):
 
 class ContratoForm(forms.ModelForm):
     """Contrato. La línea de servicio (SDD del Sprint 2, RF-24) es obligatoria aquí aunque en la base de datos sea
-    opcional (los contratos anteriores no la tienen). Compatibilidad (RNF-11): una petición que no trae el campo
-    —un formulario anterior al Sprint 2— no lo toca; la pantalla siempre lo envía."""
+    opcional (los contratos anteriores no la tienen): toda alta o edición por este formulario la exige, aunque la
+    petición no traiga el campo."""
 
     class Meta:
         model = Contrato
@@ -80,9 +80,6 @@ class ContratoForm(forms.ModelForm):
         self._preparar_linea()
 
     def _preparar_linea(self):
-        if self.is_bound and "linea_servicio" not in self.data:
-            del self.fields["linea_servicio"]  # petición anterior al Sprint 2: el contrato conserva la línea que tenga
-            return
         campo = self.fields["linea_servicio"]
         # Igual que con el cliente: las líneas inactivas no se ofrecen, salvo la que el contrato ya tiene.
         condicion = Q(activa=True)

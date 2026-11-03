@@ -93,11 +93,11 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 
 | Id | Hito | Estado | Dónde se prueba |
 |---|---|---|---|
-| RF-20 Código único `CT-AAAA-NNNNN`, ID-TDR, línea de servicio y fecha de recepción | S2-H1 | Hecho: el código se asigna al crear, en la misma transacción, por cualquier camino (formulario, panel técnico, `seed_demo` y, más adelante, la ficha), con prefijo `CODIGO_PREFIJO` y año local de Lima; los existentes se rellenan en la migración `entregables/0003` (con reversa). ID-TDR y fecha de recepción son obligatorios en «Nuevo entregable» (no futura, no posterior al plazo; el mensaje nombra cada dato) y la línea se toma del contrato, de solo lectura. Se ve en tarjeta, lista (columnas Código e ID-TDR), detalle, calendario y avisos | `apps/entregables/test_recepcion.py` (CodigoTests, NuevoEntregableConRecepcionTests, DetalleYListaConRecepcionTests, MigracionDeRellenoTests, SeedConRecepcionTests) |
-| RF-21 Calendario con responsable y filtros por cliente, estado y responsable | S2-H1 | Hecho: cada evento dice estado, código, cliente, responsable (junior asignado), entregable y urgencia; panel «Filtros» que se aplica sin recargar y conserva el mes; los filtros parten de `entregables_visibles` y nunca amplían | `apps/calendario/test_filtros_y_responsable.py` |
-| RF-22 Alertas a 48 y 24 h y aviso con código | S2-H1 / S2-H3 | Parcial: el umbral de 24 h funciona y sale una sola vez (restricción «una alerta por umbral»); «Crítico» = segundo umbral mayor (2 días con 5,2,1,0 y con 5,2,0); los avisos llevan el código. **El valor por defecto sigue en 5,2,0** (decisión pendiente, abajo). El estado «Con correcciones pendientes» es del S2-H3 | `apps/alertas/test_aviso_24h.py` |
+| RF-20 Código único `CT-AAAA-NNNNN`, ID-TDR, línea de servicio y fecha de recepción | S2-H1 | Hecho: el código se asigna al crear, en la misma transacción, por cualquier camino (formulario, panel técnico, `seed_demo` y, más adelante, la ficha), con prefijo `CODIGO_PREFIJO` y año local de Lima; los existentes se rellenan en la migración `entregables/0003` (con reversa). ID-TDR y fecha de recepción son obligatorios siempre en «Nuevo entregable», también si la petición no trae las claves (no futura, no posterior al plazo; el mensaje nombra cada dato; la base de datos los sigue admitiendo vacíos para los anteriores) y la línea se toma del contrato, de solo lectura. Se ve en tarjeta, lista (columnas Código e ID-TDR), detalle, calendario y avisos | `apps/entregables/test_recepcion.py` (CodigoTests, NuevoEntregableConRecepcionTests, DetalleYListaConRecepcionTests, MigracionDeRellenoTests, SeedConRecepcionTests) |
+| RF-21 Calendario con responsable y filtros por cliente, estado y responsable | S2-H1 | Hecho: cada evento dice estado, código, cliente, responsable (junior asignado), entregable y urgencia; panel «Filtros» que se aplica sin recargar y conserva el mes; los filtros parten de `entregables_visibles` y nunca amplían; ids fuera de rango y fechas del rango mal escritas se ignoran (sin error 500); sin consultas por evento | `apps/calendario/test_filtros_y_responsable.py` (incluye DatosLimiteTests) |
+| RF-22 Alertas a 48 y 24 h y aviso con código | S2-H1 / S2-H3 | Parte del S2-H1 hecha: valor por defecto `5,2,1,0` (`settings.py` y `.env.example`); el aviso de 24 h sale una sola vez (restricción «una alerta por umbral»); «Crítico» = segundo umbral mayor (sigue en 2 días); los avisos llevan el código. Solo queda, en el S2-H3, el aviso inmediato al quedar «Con correcciones pendientes» | `apps/alertas/test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests, ConfiguracionDeUmbralesTests, ValorPorDefectoTests) |
 | RF-23 Columnas del Kanban según HU-04 | S2-H1 | Hecho: Por hacer, En proceso, Revisión senior, Aprobado, Entregado; los códigos guardados no cambian | `apps/entregables/test_etiquetas.py` |
-| RF-24 Catálogo de líneas de servicio | S2-H1 | Hecho: las cinco líneas se crean en la migración `clientes/0005` (con reversa); pestaña «Líneas de servicio» de Gestión (`/lineas-servicio/`, gerente y admin; junior y senior: 403) para crear, renombrar y activar o desactivar, sin borrado (baja lógica y `PROTECT`); obligatoria en el formulario de contrato; filtro por línea en tablero y lista | `apps/clientes/test_lineas.py` |
+| RF-24 Catálogo de líneas de servicio | S2-H1 | Hecho: las cinco líneas se crean en la migración `clientes/0005` (con reversa); pestaña «Líneas de servicio» de Gestión (`/lineas-servicio/`, gerente y admin; junior y senior: 403) para crear, renombrar y activar o desactivar, sin borrado (baja lógica y `PROTECT`); un id de edición mal escrito o inexistente es 404; obligatoria siempre en el formulario de contrato (también si la petición no trae el campo; la base de datos la admite vacía); filtro por línea en tablero y lista | `apps/clientes/test_lineas.py` |
 | RF-25 a RF-38 | S2-H3 a S2-H12 | Pendiente | — |
 
 ### Base común (S2-H2)
@@ -119,7 +119,7 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 |---|---|---|
 | 13 | Todo entregable nuevo tiene código único; el formulario rechaza la falta de ID-TDR o una recepción futura | `test_recepcion.py` (CodigoTests, NuevoEntregableConRecepcionTests) |
 | 14 | El calendario filtra por cliente y estado sin ampliar la visibilidad y muestra al responsable | `test_filtros_y_responsable.py` (FiltrosDeEventosTests, EventoConResponsableTests, PaginaConFiltrosTests) |
-| 15 | Con 5,2,1,0 el aviso de 24 h sale una sola vez y «Crítico» sigue empezando a 2 días | `test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests) |
+| 15 | Con 5,2,1,0 el aviso de 24 h sale una sola vez y «Crítico» sigue empezando a 2 días | `test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests y, con el valor por defecto de `settings.py`, ConfiguracionDeUmbralesTests y ValorPorDefectoTests) |
 | 16 | Las columnas muestran las etiquetas de HU-04 y los códigos guardados no cambian | `test_etiquetas.py`, `test_recepcion.py` (MigracionDeRellenoTests) |
 | 29 | Regresión: pasan las pruebas del Sprint 1 y `migrate` funciona sobre una base del Sprint 1 | Suite completa; `migrate` (y su reversa) probado sobre una copia de la base del `seed_demo` del Sprint 1 y sobre una base vacía (en el S2-H1 y otra vez en el S2-H2, con `alertas/0004`: los 64 avisos de esa base quedan idénticos, y la reversa solo quita los avisos que el esquema del Sprint 1 no admite) |
 
@@ -128,8 +128,8 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | Hito | Estado |
 |---|---|
 | S2-H0 Wireframes y decisiones | Hecho: wireframes y decisiones aprobados el 2026-11-02 |
-| S2-H1 Cierre del Sprint 1 | Hecho, con las decisiones de compatibilidad de abajo y una decisión pendiente (umbral por defecto) |
-| S2-H2 Base común | Hecho, sin cambiar ninguna prueba del Sprint 1 (decisiones abajo) |
+| S2-H1 Cierre del Sprint 1 | Hecho; corregido y revisado en S2-H1-H2-ajustes (umbral por defecto 5,2,1,0 y datos de recepción y línea obligatorios siempre) |
+| S2-H2 Base común | Hecho, sin cambiar ninguna prueba del Sprint 1 (decisiones abajo); revisado en S2-H1-H2-ajustes |
 | S2-H3 a S2-H13 | Pendientes |
 
 ### Ajustes a pruebas del Sprint 1 (§11.3)
@@ -141,13 +141,20 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 
 El S2-H2 no cambió ninguna prueba del Sprint 1.
 
+**Ajustes derivados de requisitos explícitos del SDD no previstos en la §11.3** (S2-H1-H2-ajustes; cada uno conserva lo que la
+prueba verifica y lo indica con un comentario en el código):
+
+| Prueba | Requisito | Ajuste |
+|---|---|---|
+| `apps/alertas/tests.py` (test_una_notificacion_por_umbral_a_lo_largo_de_los_dias) | RF-22 y §10.1: valor por defecto `5,2,1,0` | Fija con `override_settings` los umbrales `5,2,0` que verifica (sigue esperando `[0, 2, 5]`); el caso `5,2,1,0` está en `test_aviso_24h.py` |
+| `apps/entregables/tests.py` (PokaYokeTests.datos), `apps/entregables/test_interfaz.py` (NuevoEntregableTests.datos), `apps/entregables/test_reglas.py` (test_la_creacion_queda_en_el_historial_y_avisa_al_junior, CamposDeOpcionTests.crear, ContratosDadosDeBajaTests.datos) | RF-20: ID-TDR y fecha de recepción obligatorios en el formulario | Envían `id_tdr` y `fecha_recepcion` |
+| `apps/clientes/tests.py` (GestionTests.datos_contrato), `apps/entregables/test_reglas.py` (test_se_da_de_baja_desde_el_formulario_de_gestion) | RF-24: línea de servicio obligatoria en el formulario de contrato | Envían `linea_servicio` |
+
 ### Decisiones del S2-H1 (compatibilidad con el Sprint 1)
 
-1. **Datos de recepción y línea del contrato en peticiones anteriores al Sprint 2.** Varias pruebas del Sprint 1 (que la §11.3 no
-   permite cambiar) envían «Nuevo entregable» sin ID-TDR ni fecha de recepción, y el formulario de contrato sin línea de servicio. La
-   pantalla siempre envía esos campos y en ella son obligatorios; una petición que **no los trae en absoluto** se acepta como antes:
-   el entregable queda sin ID-TDR y con la fecha de creación como recepción (igual que los existentes), y el contrato conserva la línea
-   que tenga. La base de datos los admite vacíos, como pide el SDD.
+1. ~~**Datos de recepción y línea del contrato en peticiones anteriores al Sprint 2.**~~ Revertida en S2-H1-H2-ajustes: el S2-H1
+   aceptaba una petición que no traía esas claves, lo que dejaba sin cumplir RF-20 y RF-24. Ahora son obligatorios siempre en los
+   dos formularios (validación del servidor, mensaje del Poka-Yoke); la base de datos los sigue admitiendo vacíos para lo anterior.
 2. **«Crítico» con el segundo umbral mayor de los positivos.** Con un solo umbral positivo se usa ese (así lo fija una prueba del
    Sprint 1 con `10,0`); con dos o más, el segundo mayor, como pide el SDD.
 3. **Textos «verificación» que se conservan.** «No se puede enviar a verificación: …» y «… antes de pasar a verificación» no son la
@@ -173,13 +180,23 @@ El S2-H2 no cambió ninguna prueba del Sprint 1.
 7. **El texto de la pantalla de avisos no cambia** («Avisos automáticos de asignaciones, observaciones, …»): los tipos
    nuevos todavía no se generan; cada hito lo actualizará cuando los use.
 
-### Decisión pendiente del equipo
+### Ajustes y revisión de S2-H1 y S2-H2 (S2-H1-H2-ajustes)
 
-- **Umbrales por defecto `5,2,1,0` (RF-22, §10.1).** Cambiar el valor por defecto hace fallar
-  `apps/alertas/tests.py` · `test_una_notificacion_por_umbral_a_lo_largo_de_los_dias`, que espera `[0, 2, 5]` con los umbrales por
-  defecto y no figura en la §11.3. Por la regla de no regresión se dejó `5,2,0` en `settings.py` y en `.env.example` (que lo explica).
-  El aviso de 24 h ya funciona con `ALERT_THRESHOLDS_DAYS=5,2,1,0`. Para cerrarlo: autorizar que esa prueba espere `[0, 1, 2, 5]` y
-  cambiar el valor por defecto en `certitrack/settings.py` y en `.env.example`.
+1. **Umbrales por defecto `5,2,1,0`** (RF-22, §10.1, aprobado en la §15) en `settings.py`, `.env.example` y el README. La prueba del
+   Sprint 1 que verificaba `5,2,0` los fija con `override_settings` (tabla de ajustes de arriba).
+2. **ID-TDR, fecha de recepción y línea de servicio obligatorios siempre** en sus formularios (RF-20, RF-24), aunque la petición no
+   traiga la clave (antes se aceptaba como «petición anterior al Sprint 2»).
+3. **Datos límite sin error 500:** `filtros.entero` descarta ids fuera del rango de un entero de 64 bits (SQLite lanzaba
+   `OverflowError` en los filtros por cliente, contrato, responsable y línea de tablero, lista, calendario y consolidado); el
+   calendario ignora un `start`/`end` que no es una fecha; «Nuevo entregable» usa `entero` en lugar de `str.isdigit()` para la
+   plantilla («²» pasaba y fallaba la consulta).
+4. **`/lineas-servicio/`:** un id de edición (`?editar=` o `linea` en el POST) mal escrito, fuera de rango o inexistente responde
+   404; antes, en el POST, un id no numérico creaba una línea nueva en lugar de editar.
+5. **Texto del botón** de «Nuevo entregable»: «Crear entregable», como en el wireframe aprobado `s2-nuevo`.
+6. Revisado sin cambios: permisos de `/lineas-servicio/` (sin sesión al ingreso; junior y senior 403, como el resto de Gestión),
+   calendario y avisos (cada persona solo ve y marca los suyos, 404 si no); filtros que parten de `entregables_visibles`; validación
+   de `Notificacion.enlace`; CSRF; migraciones `clientes/0005`, `entregables/0003` y `alertas/0004` (con relleno y reversa, probadas
+   otra vez sobre una copia de la base del Sprint 1 y una vacía); fechas locales de Lima en el código y la recepción.
 
 ## Pendiente para cerrar el SDD
 

@@ -222,14 +222,27 @@ class NuevoEntregableConRecepcionTests(Base):
         self.assertContains(self.client.post(reverse("entregable_nuevo"), datos), "Falta el ID-TDR.")
         self.assertFalse(Entregable.objects.filter(titulo="Nuevo").exists())
 
-    def test_compatibilidad_una_peticion_sin_datos_de_recepcion_se_trata_como_los_entregables_previos(self):
+    def test_una_peticion_sin_las_claves_de_recepcion_se_rechaza(self):
+        # Son obligatorios SIEMPRE (validación del servidor), aunque la petición no traiga las claves.
         datos = self.datos()
         del datos["id_tdr"], datos["fecha_recepcion"]
         self.client.force_login(self.s1)
-        self.assertEqual(self.client.post(reverse("entregable_nuevo"), datos).status_code, 302)
-        e = Entregable.objects.get(titulo="Nuevo")
-        self.assertEqual((e.id_tdr, e.fecha_recepcion), ("", timezone.localdate()))
-        self.assertRegex(e.codigo, FORMATO)
+        r = self.client.post(reverse("entregable_nuevo"), datos)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "No se pudo guardar. Revise lo siguiente:")
+        self.assertContains(r, "Falta el ID-TDR.")
+        self.assertContains(r, "Falta la fecha de recepción.")
+        self.assertFalse(Entregable.objects.filter(titulo="Nuevo").exists())
+
+    def test_en_la_base_de_datos_siguen_admitiendo_vacio(self):
+        # Los entregables anteriores al Sprint 2 no tienen ID-TDR: la base de datos lo admite (solo el formulario lo exige).
+        Entregable.objects.filter(pk=self.e1.pk).update(id_tdr="", fecha_recepcion=None)
+        self.e1.refresh_from_db()
+        self.assertEqual((self.e1.id_tdr, self.e1.fecha_recepcion), ("", None))
+        self.e1.titulo = "E1 editado"
+        self.e1.save()  # editar no exige los datos de recepción
+        self.e1.refresh_from_db()
+        self.assertEqual(self.e1.fecha_recepcion, None)
 
     def test_la_pantalla_pide_los_datos_de_recepcion_como_obligatorios(self):
         html = self.pagina().content.decode()
@@ -260,6 +273,25 @@ class NuevoEntregableConRecepcionTests(Base):
         self.c1.save()
         self.assertContains(self.pagina(), 'data-linea="Sin asignar"')
         self.assertContains(self.post(id_tdr=""), 'Línea de servicio: <strong data-dato="linea">Sin asignar</strong>')
+
+    def test_una_plantilla_mal_escrita_o_enorme_no_da_error_500(self):
+        # Revisión de S2-H1 (S2-H1-H2-ajustes): «²» pasaba str.isdigit() y la consulta fallaba.
+        self.client.force_login(self.s1)
+        for valor in ("²", "abc", "1.5", "99999999999999999999999", "-1"):
+            with self.subTest(valor=valor):
+                r = self.client.get(reverse("entregable_nuevo"), {"plantilla": valor})
+                self.assertEqual(r.status_code, 200)
+                self.assertIsNone(r.context["form"])
+                r = self.client.post(reverse("entregable_nuevo"), self.datos(plantilla=valor))
+                self.assertEqual(r.status_code, 200)
+                self.assertContains(r, "Primero elija una plantilla de TDR.")
+        self.assertFalse(Entregable.objects.filter(titulo="Nuevo").exists())
+
+    def test_un_contrato_o_junior_con_id_enorme_se_rechaza_sin_error_500(self):
+        r = self.post(contrato="99999999999999999999999", junior_asignado=str(2**63))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Elija un contrato vigente de la lista")
+        self.assertFalse(Entregable.objects.filter(titulo="Nuevo").exists())
 
     def test_solo_se_ofrecen_los_contratos_propios(self):
         r = self.pagina()

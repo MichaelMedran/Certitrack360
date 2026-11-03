@@ -4,6 +4,8 @@ y responsable, y la pantalla filtra por cliente, estado y responsable sin amplia
 import datetime
 import itertools
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from apps.clientes.models import Cliente, Contrato
@@ -99,6 +101,49 @@ class FiltrosDeEventosTests(CalendarioBase):
                 params = {k: v for k, v in zip(valores, combinacion) if v is not None}
                 with self.subTest(usuario=usuario.username, **params):
                     self.assertLessEqual(self.ids(usuario, **params), visibles)
+
+
+class DatosLimiteTests(CalendarioBase):
+    """Revisión de S2-H1 (S2-H1-H2-ajustes): un valor extremo o mal escrito en la dirección nunca da un error 500."""
+
+    ENORMES = ("99999999999999999999999", str(2**63), "-99999999999999999999999", "9" * 5000)
+
+    def test_ids_fuera_de_rango_se_ignoran_en_la_api_y_en_la_pantalla(self):
+        todos = self.ids(self.gerente)
+        for valor in self.ENORMES:
+            for clave in ("cliente", "responsable"):
+                with self.subTest(clave=clave, valor=valor[:30]):
+                    self.assertEqual(self.ids(self.gerente, **{clave: valor}), todos)
+                    self.assertEqual(self.client.get(reverse("calendario"), {clave: valor}).status_code, 200)
+
+    def test_un_id_inexistente_no_devuelve_nada(self):
+        self.assertEqual(self.ids(self.gerente, cliente=2**63 - 1, responsable=2**63 - 1), set())
+
+    def test_un_rango_de_fechas_mal_escrito_se_ignora(self):
+        todos = self.ids(self.gerente)
+        for start, end in (("abc", "xyz"), ("2026-13-45", "2026-02-30"), ("", ""), ("2026-11-01T00:00:00-05:00", "zzz")):
+            with self.subTest(start=start, end=end):
+                obtenidos = self.ids(self.gerente, start=start, end=end)
+                self.assertLessEqual(obtenidos, todos)
+        self.assertEqual(self.ids(self.gerente, start="nope", end="nope"), todos)
+        hoy = self.hoy.isoformat()
+        self.assertEqual(self.titulos(self.gerente, estado="EN_PROCESO", start=f"{hoy}T00:00:00-05:00",
+                                      end=f"{hoy}T00:00:00-05:00"), {"b-hoy"})
+
+    def test_la_api_no_hace_una_consulta_por_evento(self):
+        self.client.force_login(self.gerente)
+
+        def medir():
+            with CaptureQueriesContext(connection) as consultas:
+                n = len(self.client.get(reverse("calendario_eventos")).json())
+            return n, len(consultas)
+
+        n_antes, consultas_antes = medir()
+        for i in range(4):
+            self.nuevo(self.c3, self.j2, self.s1, f"extra-{i}")
+        n_despues, consultas_despues = medir()
+        self.assertEqual(n_despues, n_antes + 4)
+        self.assertEqual(consultas_despues, consultas_antes)
 
 
 class PaginaConFiltrosTests(CalendarioBase):

@@ -2,7 +2,10 @@
 sola vez por entregable y destinatario, y la urgencia «Crítico» sigue empezando a 2 días (segundo umbral mayor)."""
 import datetime
 import itertools
+import os
+import runpy
 from pathlib import Path
+from unittest import mock
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
@@ -96,9 +99,45 @@ class TextoDelAvisoTests(Base):
         self.assertEqual(texto_vencimiento(e, 3), f"{e.codigo} «Acta» vence en 3 días, el {e.plazo:%d/%m/%Y}.")
 
 
+def umbrales_por_defecto():
+    """ALERT_THRESHOLDS_DAYS que deja settings.py cuando el entorno (ni un archivo .env) no la define."""
+    original = Path.exists
+
+    def exists(ruta, *args, **kwargs):
+        return False if ruta.name == ".env" else original(ruta, *args, **kwargs)
+
+    entorno = {k: v for k, v in os.environ.items() if k != "ALERT_THRESHOLDS_DAYS"}
+    with mock.patch.dict(os.environ, entorno, clear=True), mock.patch.object(Path, "exists", exists):
+        return runpy.run_path(str(Path(settings.BASE_DIR) / "certitrack" / "settings.py"))["ALERT_THRESHOLDS_DAYS"]
+
+
 class ConfiguracionDeUmbralesTests(SimpleTestCase):
     def test_el_ejemplo_de_entorno_documenta_el_aviso_de_24_horas_y_el_prefijo(self):
         ejemplo = (Path(settings.BASE_DIR) / ".env.example").read_text(encoding="utf-8")
-        self.assertIn("5,2,1,0", ejemplo)
+        self.assertIn("ALERT_THRESHOLDS_DAYS=5,2,1,0\n", ejemplo)
+        self.assertNotIn("ALERT_THRESHOLDS_DAYS=5,2,0\n", ejemplo)
         self.assertIn("CODIGO_PREFIJO=CT", ejemplo)
         self.assertEqual(settings.CODIGO_PREFIJO, "CT")
+
+    def test_el_valor_por_defecto_es_5_2_1_0(self):
+        # SDD del Sprint 2, §10.1 y RF-22 (aprobado en la §15).
+        self.assertEqual(umbrales_por_defecto(), [5, 2, 1, 0])
+
+
+class ValorPorDefectoTests(Base):
+    """Caso 15 con el valor por defecto de settings.py (no con uno fijado a mano)."""
+
+    def test_con_el_valor_por_defecto_critico_empieza_a_2_dias_y_el_aviso_de_24_h_sale_una_vez(self):
+        with override_settings(ALERT_THRESHOLDS_DAYS=umbrales_por_defecto()):
+            self.assertEqual(urgencia.umbrales(), (2, 5))
+            self.assertEqual(urgencia.calcular(self.hoy + datetime.timedelta(days=2), E.EN_PROCESO, self.hoy), "CRITICO")
+            self.assertEqual(urgencia.calcular(self.hoy + datetime.timedelta(days=3), E.EN_PROCESO, self.hoy), "PROXIMO")
+            e = self.nuevo(self.c1, self.j1, self.s1, "Por defecto", dias=6)
+            for avance in range(0, 8):
+                for _ in range(2):  # la tarea puede correr más de una vez al día
+                    generar_alertas(self.hoy + datetime.timedelta(days=avance))
+            for usuario in (self.j1, self.s1):
+                umbrales = list(Notificacion.objects.filter(entregable=e, usuario=usuario, tipo="VENCIMIENTO")
+                                .values_list("umbral", flat=True))
+                self.assertEqual(sorted(umbrales), [0, 1, 2, 5])
+                self.assertEqual(umbrales.count(1), 1)

@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
 
 from apps.alertas.models import Notificacion
-from apps.clientes.models import PlantillaTDR
+from apps.clientes.models import LineaServicio, PlantillaTDR
 from apps.entregables import adjuntos, servicios
 from apps.entregables.models import Entregable, Observacion
 from apps.entregables.tests import Base
@@ -106,7 +106,9 @@ class HistorialTests(Base):
         self.client.force_login(self.s1)
         r = self.client.post(reverse("entregable_nuevo"), {
             "plantilla": self.plantilla.pk, "contrato": self.c1.pk, "titulo": "Nuevo", "junior_asignado": self.j1.pk,
-            "plazo": (self.hoy + datetime.timedelta(days=4)).isoformat(), "c_periodo": "Enero", "c_nivel": "2"})
+            "plazo": (self.hoy + datetime.timedelta(days=4)).isoformat(), "c_periodo": "Enero", "c_nivel": "2",
+            # Ajuste derivado de RF-20 (ID-TDR y fecha de recepción obligatorios), no previsto en la §11.3.
+            "id_tdr": "TDR-CD-001", "fecha_recepcion": self.hoy.isoformat()})
         self.assertEqual(r.status_code, 302)
         e = Entregable.objects.get(titulo="Nuevo")
         h = e.historial.get()
@@ -172,7 +174,9 @@ class CamposDeOpcionTests(Base):
     def crear(self, **extra):
         self.client.force_login(self.s1)
         datos = {"plantilla": self.con_opcion.pk, "contrato": self.c1.pk, "titulo": "Con opción",
-                 "junior_asignado": self.j1.pk, "plazo": (self.hoy + datetime.timedelta(days=3)).isoformat()}
+                 "junior_asignado": self.j1.pk, "plazo": (self.hoy + datetime.timedelta(days=3)).isoformat(),
+                 # Ajuste derivado de RF-20 (ID-TDR y fecha de recepción obligatorios), no previsto en la §11.3.
+                 "id_tdr": "TDR-CD-001", "fecha_recepcion": self.hoy.isoformat()}
         datos.update(extra)
         return self.client.post(reverse("entregable_nuevo"), datos)
 
@@ -200,7 +204,9 @@ class ContratosDadosDeBajaTests(Base):
 
     def datos(self, contrato):
         return {"plantilla": self.plantilla.pk, "contrato": contrato.pk, "titulo": "Nuevo", "junior_asignado": self.j1.pk,
-                "plazo": (self.hoy + datetime.timedelta(days=3)).isoformat(), "c_periodo": "Enero", "c_nivel": "1"}
+                "plazo": (self.hoy + datetime.timedelta(days=3)).isoformat(), "c_periodo": "Enero", "c_nivel": "1",
+                # Ajuste derivado de RF-20 (ID-TDR y fecha de recepción obligatorios), no previsto en la §11.3.
+                "id_tdr": "TDR-CD-001", "fecha_recepcion": self.hoy.isoformat()}
 
     def test_un_contrato_vigente_admite_entregables(self):
         self.client.force_login(self.s1)
@@ -239,7 +245,9 @@ class ContratosDadosDeBajaTests(Base):
         self.client.force_login(self.gerente)
         url = reverse("adm_editar", args=["contratos", self.c1.pk])
         datos = {"cliente": self.cliente.pk, "numero_contrato": "C1", "descripcion": "", "fecha_inicio": "2026-01-01",
-                 "fecha_fin": "2027-01-01", "senior_responsable": self.s1.pk, "juniors": [self.j1.pk]}
+                 "fecha_fin": "2027-01-01", "senior_responsable": self.s1.pk, "juniors": [self.j1.pk],
+                 # Ajuste derivado de RF-24 (línea de servicio obligatoria en el formulario), no previsto en la §11.3.
+                 "linea_servicio": LineaServicio.objects.get(nombre="BPO").pk}
         self.assertEqual(self.client.post(url, datos).status_code, 302)  # sin «activo»: queda dado de baja
         self.c1.refresh_from_db()
         self.assertFalse(self.c1.activo)

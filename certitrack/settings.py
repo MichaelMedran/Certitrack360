@@ -146,9 +146,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Alertas: días antes del vencimiento en que se genera una notificación (una sola por umbral y destinatario).
 # Es la única fuente de verdad de la urgencia: próximo = el mayor umbral; crítico = el segundo mayor de los positivos
-# (con un solo umbral positivo, ese). Con 5,2,1,0 se suma el aviso de 24 h y «crítico» sigue en 2 días (SDD del Sprint 2,
-# RF-22). El valor por defecto sigue en 5,2,0: cambiarlo altera una prueba del Sprint 1 (ver docs/trazabilidad.md).
-ALERT_THRESHOLDS_DAYS = [int(x) for x in _lista("ALERT_THRESHOLDS_DAYS", "5,2,0")]
+# (con un solo umbral positivo, ese). Por defecto 5,2,1,0 (SDD del Sprint 2, §10.1 y RF-22): suma el aviso de 24 h y
+# «crítico» sigue empezando a 2 días.
+ALERT_THRESHOLDS_DAYS = [int(x) for x in _lista("ALERT_THRESHOLDS_DAYS", "5,2,1,0")]
 
 # Código del entregable (SDD del Sprint 2, RF-20): <prefijo>-<año de creación>-<id con 5 dígitos>, p. ej. CT-2026-00031.
 CODIGO_PREFIJO = os.environ.get("CODIGO_PREFIJO", "CT").strip()

@@ -4,7 +4,7 @@ import re
 from django.urls import reverse
 
 from apps.clientes.forms import CLAVE_VALIDA, FILA_VACIA
-from apps.clientes.models import Cliente, Contrato, PlantillaTDR
+from apps.clientes.models import Cliente, Contrato, LineaServicio, PlantillaTDR
 from apps.entregables.tests import Base
 
 
@@ -102,7 +102,9 @@ class GestionTests(Base):
 
     def datos_contrato(self, **extra):
         d = {"cliente": self.cliente.pk, "numero_contrato": "C9", "descripcion": "Nuevo", "fecha_inicio": "2026-03-01",
-             "fecha_fin": "2027-03-01", "senior_responsable": self.s2.pk, "juniors": [self.j1.pk, self.j2.pk], "activo": "on"}
+             "fecha_fin": "2027-03-01", "senior_responsable": self.s2.pk, "juniors": [self.j1.pk, self.j2.pk], "activo": "on",
+             # Ajuste derivado de RF-24 (línea de servicio obligatoria en el formulario), no previsto en la §11.3.
+             "linea_servicio": LineaServicio.objects.get(nombre="BPO").pk}
         d.update(extra)
         return d
 

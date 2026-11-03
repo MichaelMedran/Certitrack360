@@ -57,7 +57,7 @@
 
   <h3>Responsables</h3>
   {% for campo in form.seccion_responsables %}{% include "entregables/_campo.html" %}{% endfor %}
-  <div class="acciones"><button class="boton">Crear y asignar</button><a class="boton sec" href="{% url 'entregables' %}">Cancelar</a></div>
+  <div class="acciones"><button class="boton">Crear entregable</button><a class="boton sec" href="{% url 'entregables' %}">Cancelar</a></div>
 </form>
 {% endif %}
 {% endblock %}

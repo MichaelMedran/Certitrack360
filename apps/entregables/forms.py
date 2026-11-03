@@ -40,9 +40,9 @@ class EntregableForm(forms.Form):
     """Formulario con Poka-Yoke: los campos obligatorios salen de la plantilla TDR.
 
     Desde el Sprint 2 (RF-20) también pide los datos de recepción de HU-01: ID-TDR y fecha de recepción, que no puede
-    ser futura ni posterior al plazo. Compatibilidad (RNF-11): una petición que no trae ninguno de esos dos campos
-    —un cliente anterior al Sprint 2— se acepta como los entregables previos: sin ID-TDR y con la fecha de creación como
-    recepción. La pantalla siempre los envía, así que en ella son obligatorios.
+    ser futura ni posterior al plazo. Son obligatorios SIEMPRE (validación del servidor): una petición a la que le falta
+    alguno, aunque no traiga la clave, se rechaza con el mensaje del Poka-Yoke. En la base de datos siguen admitiendo
+    vacío, porque los entregables anteriores al Sprint 2 no los tienen.
     """
 
     CAMPOS_RECEPCION = ("id_tdr", "fecha_recepcion")
@@ -91,9 +91,6 @@ class EntregableForm(forms.Form):
             self.fields["fecha_recepcion"].initial = timezone.localdate()
             if plantilla:
                 self.fields["plazo"].initial = timezone.localdate() + datetime.timedelta(days=plantilla.plazo_dias_por_defecto)
-        elif not any(nombre in self.data for nombre in self.CAMPOS_RECEPCION):
-            for nombre in self.CAMPOS_RECEPCION:  # petición anterior al Sprint 2: ver la nota de la clase
-                del self.fields[nombre]
         self.campos_dinamicos = []
         for c in (plantilla.campos_requeridos if plantilla else []):
             msg = {"required": f"Falta completar el campo «{c['etiqueta']}»."}
@@ -181,7 +178,7 @@ class EntregableForm(forms.Form):
         return datos
 
     def guardar(self, usuario):
-        """Crea el entregable. El código único y, si no vino, la fecha de recepción los asigna el modelo al guardarlo."""
+        """Crea el entregable con sus datos de recepción. El código único lo asigna el modelo al guardarlo."""
         d = self.cleaned_data
         valores = {}
         for nombre in self.campos_dinamicos:
@@ -191,7 +188,7 @@ class EntregableForm(forms.Form):
             contrato=d["contrato"], plantilla=self.plantilla, titulo=d["titulo"], datos=valores, plazo=d["plazo"],
             junior_asignado=d["junior_asignado"], creado_por=usuario,
             senior_revisor=d["senior_revisor"] or d["contrato"].senior_responsable,
-            id_tdr=d.get("id_tdr", ""), fecha_recepcion=d.get("fecha_recepcion"),
+            id_tdr=d["id_tdr"], fecha_recepcion=d["fecha_recepcion"],
         )
 
 

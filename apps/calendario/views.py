@@ -1,3 +1,4 @@
+import datetime
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
@@ -20,6 +21,14 @@ COLOR_HECHO = "#4b5563"
 
 # Filtros del calendario (SDD del Sprint 2, RF-21; HU-02 criterio 3). La fecha se elige navegando por mes o semana.
 FILTROS = ("cliente", "estado", "responsable")
+
+
+def _fecha(valor):
+    """Los 10 primeros caracteres de `valor` como fecha (AAAA-MM-DD), o None si no lo son."""
+    try:
+        return datetime.date.fromisoformat((valor or "")[:10])
+    except ValueError:
+        return None
 
 
 def _filtros_de(params):
@@ -57,7 +66,8 @@ def eventos(request):
     """Eventos JSON. Parte del mismo queryset de visibilidad que el resto de vistas: los filtros solo pueden reducirlo."""
     qs = entregables_visibles(request.user).select_related("contrato__cliente", "junior_asignado")
     qs = filtros.aplicar(qs, _filtros_de(request.GET)).queryset
-    inicio, fin = request.GET.get("start", "")[:10], request.GET.get("end", "")[:10]
+    # Rango que pide FullCalendar (fecha ISO, a veces con hora). Una fecha no válida se ignora en lugar de dar un error 500.
+    inicio, fin = _fecha(request.GET.get("start")), _fecha(request.GET.get("end"))
     if inicio:
         qs = qs.filter(plazo__gte=inicio)
     if fin:

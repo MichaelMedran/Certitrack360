@@ -405,7 +405,9 @@ class NuevoEntregableTests(Base):
 
     def datos(self, **extra):
         d = {"plantilla": self.plantilla.pk, "contrato": self.c1.pk, "titulo": "Nuevo", "junior_asignado": self.j1.pk,
-             "plazo": (self.hoy + __import__("datetime").timedelta(days=4)).isoformat(), "c_periodo": "Enero", "c_nivel": "2"}
+             "plazo": (self.hoy + __import__("datetime").timedelta(days=4)).isoformat(), "c_periodo": "Enero", "c_nivel": "2",
+             # Ajuste derivado de RF-20 (ID-TDR y fecha de recepción obligatorios), no previsto en la §11.3.
+             "id_tdr": "TDR-CD-001", "fecha_recepcion": self.hoy.isoformat()}
         d.update(extra)
         return d
 

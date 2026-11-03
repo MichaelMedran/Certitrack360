@@ -86,6 +86,9 @@ class AlertasDeVencimientoTests(Base):
         generar_alertas(self.hoy)
         self.assertEqual(Notificacion.objects.get(entregable=e, usuario=self.j1).umbral, 10)
 
+    # Ajuste derivado de RF-22 (SDD del Sprint 2, §10.1): el valor por defecto pasó a 5,2,1,0. La prueba fija los
+    # umbrales del Sprint 1 que verifica; el caso 5,2,1,0 está en apps/alertas/test_aviso_24h.py.
+    @override_settings(ALERT_THRESHOLDS_DAYS=[5, 2, 0])
     def test_una_notificacion_por_umbral_a_lo_largo_de_los_dias(self):
         e = self.nuevo(self.c1, self.j1, self.s1, "Seguimiento", dias=6)
         for avance in range(0, 8):

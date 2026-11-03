@@ -143,8 +143,9 @@ def crear(request):
     usuario = request.user
     plantillas = PlantillaTDR.objects.select_related("cliente")
     plantilla = None
-    pid = request.POST.get("plantilla") or request.GET.get("plantilla")
-    if pid and pid.isdigit():
+    # entero() y no str.isdigit(): «²» o «١» son dígitos para Python pero no un id, y la consulta fallaría con un error 500.
+    pid = filtros.entero(request.POST.get("plantilla") or request.GET.get("plantilla"))
+    if pid is not None:
         plantilla = plantillas.filter(pk=pid).first()
 
     form = None

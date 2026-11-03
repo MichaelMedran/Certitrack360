@@ -60,6 +60,14 @@ def editar(request, entidad, pk=None):
     })
 
 
+def _linea_o_404(valor):
+    """La línea de servicio con ese id, o 404 si el id no es un número válido (o está fuera de rango) o no existe."""
+    pk = entero(valor)
+    if pk is None:
+        raise Http404("No existe esa línea de servicio.")
+    return get_object_or_404(LineaServicio, pk=pk)
+
+
 @solo_gestion  # sin sesión: al ingreso; junior y senior: 403, igual que el resto de Gestión
 def lineas_servicio(request):
     """Pestaña «Líneas de servicio» (SDD del Sprint 2, RF-24; ruta /lineas-servicio/, GET y POST).
@@ -70,9 +78,8 @@ def lineas_servicio(request):
     """
     editando, form = None, None
     if request.method == "POST":
-        pk = entero(request.POST.get("linea"))
-        if pk is not None:
-            editando = get_object_or_404(LineaServicio, pk=pk)
+        if "linea" in request.POST:  # edición: un id mal escrito o inexistente es 404 (nunca crea otra línea)
+            editando = _linea_o_404(request.POST.get("linea"))
         form = LineaServicioForm(request.POST, instance=editando)
         if form.is_valid():
             linea = form.save()
@@ -80,9 +87,8 @@ def lineas_servicio(request):
             messages.success(request, f"{accion} la línea de servicio «{linea.nombre}».")
             return redirect("lineas_servicio")
     else:
-        pk = entero(request.GET.get("editar"))
-        if pk is not None:
-            editando = get_object_or_404(LineaServicio, pk=pk)
+        if "editar" in request.GET:
+            editando = _linea_o_404(request.GET.get("editar"))
             form = LineaServicioForm(instance=editando)
         elif "nueva" in request.GET:
             form = LineaServicioForm()

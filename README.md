@@ -68,7 +68,7 @@ Recorre el flujo con el seed. Cada paso dice con qué usuario hacerlo.
 | `MEDIA_ROOT` | Carpeta de los adjuntos (fuera del código, sin URL pública) | `media/` |
 | `MEDIA_MAX_UPLOAD_MB` | Tamaño máximo de un adjunto | `10` |
 | `ALLOWED_UPLOAD_EXTENSIONS` | Extensiones permitidas | `pdf,docx,xlsx,pptx,png,jpg,txt` |
-| `ALERT_THRESHOLDS_DAYS` | Alertas (una por umbral) y urgencia: mayor = «próximo», segundo mayor = «crítico». `5,2,1,0` suma el aviso de 24 h (SDD del Sprint 2; ver `docs/trazabilidad.md`) | `5,2,0` |
+| `ALERT_THRESHOLDS_DAYS` | Alertas (una por umbral) y urgencia: mayor = «próximo», segundo mayor = «crítico». Avisos a 5 días, 48 h, 24 h y el mismo día; «crítico» empieza a 2 días (SDD del Sprint 2, RF-22) | `5,2,1,0` |
 | `CODIGO_PREFIJO` | Prefijo del código de los entregables (`CT-2026-00031`); de 1 a 10 letras o números | `CT` |
 | `CONSOLIDADO_WINDOW_DAYS` | Ventana de «próximos a vencer» | `7` |
 | `SESSION_IDLE_MINUTES` | Cierre de sesión por inactividad | `60` |
@@ -128,7 +128,7 @@ templates/ static/ docs/ (wireframes, hoja de ruta, trazabilidad)  media/ (adjun
 
 ## Decisiones abiertas del SDD (§23) y el valor usado
 
-SQLite en desarrollo y PostgreSQL con `DATABASE_URL` · umbrales 5, 2 y 0 días · plantillas de ejemplo con 2 o 3 campos y adjuntos distintos ·
+SQLite en desarrollo y PostgreSQL con `DATABASE_URL` · umbrales 5, 2, 1 y 0 días (el de 1 día lo sumó el Sprint 2) · plantillas de ejemplo con 2 o 3 campos y adjuntos distintos ·
 10 MB y los siete formatos del SDD · crean entregables el senior (solo sus contratos), el gerente y el admin · asistente como pantalla aparte ·
 `llama3.2:3b` y `nomic-embed-text` · servidor de desarrollo en Docker hasta confirmar gunicorn y WhiteNoise · sesión de 60 minutos.
 Todo es configurable o fácil de cambiar.
