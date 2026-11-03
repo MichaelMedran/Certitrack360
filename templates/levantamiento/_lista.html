@@ -1,0 +1,22 @@
+{% include "entregables/_chips.html" %}
+{% if fichas %}
+<p class="suave">{{ total }} ficha{{ total|pluralize }}.</p>
+<div class="tabla"><table>
+  <thead><tr><th>Contrato</th><th>Cliente</th><th>ID-TDR</th><th>Ficha</th><th>Estado documental</th><th class="num">Entregables generados</th><th>Responsable</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>{% for f in fichas %}
+  <tr>
+    <td><a href="{% url 'ficha_detalle' f.pk %}">{{ f.contrato.numero_contrato }}</a></td>
+    <td>{{ f.contrato.cliente.nombre }}</td>
+    <td>{{ f.id_tdr }}</td>
+    <td><span class="etiqueta">{{ f.get_estado_display }}</span></td>
+    <td>{{ f.get_estado_documental_display }}</td>
+    <td class="num">{% if f.confirmada %}{{ f.n_entregables }}{% else %}—{% endif %}</td>
+    <td>{{ f.responsable.nombre }}</td>
+    <td><a href="{% url 'ficha_detalle' f.pk %}">{% if f.confirmada %}Ver{% else %}Abrir{% endif %}<span class="sr-only"> ficha {{ f.id_tdr }}</span></a></td>
+  </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}
+<p class="tarjeta">Todavía no hay fichas de levantamiento para mostrar.</p>
+{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}

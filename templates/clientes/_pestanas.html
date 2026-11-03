@@ -3,5 +3,6 @@
   <a href="{% url 'adm_lista' 'clientes' %}"{% if entidad == 'clientes' %} aria-current="page"{% endif %}>Clientes</a>
   <a href="{% url 'adm_lista' 'contratos' %}"{% if entidad == 'contratos' %} aria-current="page"{% endif %}>Contratos</a>
   <a href="{% url 'adm_lista' 'plantillas' %}"{% if entidad == 'plantillas' %} aria-current="page"{% endif %}>Plantillas</a>
+  <a href="{% url 'fichas' %}"{% if entidad == 'fichas' %} aria-current="page"{% endif %}>Fichas</a>
   <a href="{% url 'lineas_servicio' %}"{% if entidad == 'lineas' %} aria-current="page"{% endif %}>Líneas de servicio</a>
 </nav>

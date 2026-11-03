@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "apps.consolidado",
     "apps.conocimiento",
     "apps.reportes",
+    "apps.levantamiento",
 ]
 
 MIDDLEWARE = [
@@ -160,6 +161,11 @@ if not re.fullmatch(r"[A-Za-z0-9]{1,10}", CODIGO_PREFIJO):
 ACTA_DIAS_PENDIENTE = int(os.environ.get("ACTA_DIAS_PENDIENTE", "5"))
 if ACTA_DIAS_PENDIENTE < 0:
     raise ImproperlyConfigured("ACTA_DIAS_PENDIENTE no puede ser negativo.")
+
+# Ficha de levantamiento (SDD del Sprint 2, RF-30 y §7.5): máximo de entregables por confirmación de ficha.
+FICHA_MAX_ENTREGABLES = int(os.environ.get("FICHA_MAX_ENTREGABLES", "60"))
+if FICHA_MAX_ENTREGABLES <= 0:
+    raise ImproperlyConfigured("FICHA_MAX_ENTREGABLES debe ser mayor que cero.")
 
 # Adjuntos de los entregables: se guardan en disco local y NO se sirven por una URL pública.
 # MEDIA_URL = None impide que Django construya direcciones a los archivos; no hay ruta de medios en urls.py

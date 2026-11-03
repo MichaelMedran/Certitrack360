@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Nueva ficha de levantamiento{% endblock %}
+{% block contenido %}
+{% if user.es_gerente_o_admin %}
+{% include "clientes/_pestanas.html" %}
+<h2>Nueva ficha de levantamiento</h2>
+{% else %}
+<h1>Nueva ficha de levantamiento</h1>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {% include "levantamiento/_formulario_borrador.html" %}
+  <div class="acciones">
+    <button type="submit" name="accion" value="guardar" class="boton sec">Guardar borrador</button>
+    <button type="submit" name="accion" value="vista_previa" class="boton">Vista previa de entregables</button>
+    <a class="boton sec" href="{% url 'fichas' %}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/ficha.js' %}"></script>{% endblock %}

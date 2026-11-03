@@ -10,4 +10,5 @@ urlpatterns = [
     path("", include("apps.alertas.urls")),
     path("", include("apps.consolidado.urls")),
     path("", include("apps.conocimiento.urls")),
+    path("", include("apps.levantamiento.urls")),
 ]

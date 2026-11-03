@@ -92,7 +92,7 @@ class PantallaDeLineasTests(Base):
     def test_es_una_pestana_de_gestion_y_la_barra_marca_gestion(self):
         html = self.ver(self.gerente).content.decode()
         self.assertEqual(pestanas(html), [("Clientes", False), ("Contratos", False), ("Plantillas", False),
-                                          ("Líneas de servicio", True)])
+                                          ("Fichas", False), ("Líneas de servicio", True)])
         self.assertEqual(re.findall(r'<nav aria-label="Principal">.*?aria-current="page">([^<]+)</a>', html, flags=re.S),
                          ["Gestión"])
         self.assertEqual(html.count("<h1"), 1)
@@ -317,7 +317,7 @@ class NavegacionTests(Base):
             for nombre in ("inicio", "tablero", "calendario", "entregables"):
                 html = self.client.get(reverse(nombre)).content.decode()
                 # /observaciones/ (S2-H3) y /entregas/ (S2-H4) ya existen: son pestañas de Entregables.
-                for ruta in ("/repositorio/", "/indicadores/", "/buscar/", "/fichas/", "/personal/",
+                for ruta in ("/repositorio/", "/indicadores/", "/buscar/", "/personal/",
                              "/tiempos/", "/incorporacion/", "/procedimientos/"):
                     self.assertNotIn(f'href="{ruta}', html, f"{usuario.username} {nombre} {ruta}")
 

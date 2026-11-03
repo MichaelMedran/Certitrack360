@@ -12,6 +12,8 @@ SECCIONES = {
     "consolidado": "consolidado",
     "gestion": "gestion", "adm_lista": "gestion", "adm_nuevo": "gestion", "adm_editar": "gestion",
     "lineas_servicio": "gestion",
+    "fichas": "gestion", "ficha_nueva": "gestion", "ficha_detalle": "gestion",
+    "ficha_vista_previa": "gestion", "ficha_confirmar": "gestion",
     "notificaciones": "avisos",
 }
 

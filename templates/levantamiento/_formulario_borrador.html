@@ -1,0 +1,60 @@
+{% if form.non_field_errors %}
+<div class="aviso aviso-error" role="alert">
+  {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<section class="tarjeta" style="margin-bottom:1rem">
+  <h2 style="margin-top:0">1. Datos del TDR (HU-14)</h2>
+  <div class="filtros-grid">
+    <div class="campo">{{ form.contrato.label_tag }}{{ form.contrato }}{{ form.contrato.errors }}</div>
+    <div class="campo">{{ form.id_tdr.label_tag }}{{ form.id_tdr }}{{ form.id_tdr.errors }}</div>
+    <div class="campo">
+      {{ form.archivo_tdr.label_tag }}
+      {{ form.archivo_tdr }}
+      {% if ficha and ficha.nombre_archivo_tdr %}
+      <span class="helptext">Archivo actual: <a href="{% url 'ficha_archivo' ficha.pk %}">{{ ficha.nombre_archivo_tdr }}</a> ✓</span>
+      {% else %}
+      <span class="helptext">Formatos permitidos: {{ extensiones }} (máx. {{ tamano_max }} MB).</span>
+      {% endif %}
+      {{ form.archivo_tdr.errors }}
+    </div>
+  </div>
+  <div class="campo">{{ form.requerimientos.label_tag }}{{ form.requerimientos }}{{ form.requerimientos.errors }}</div>
+  <div class="filtros-grid">
+    <div class="campo">{{ form.formatos.label_tag }}{{ form.formatos }}{{ form.formatos.errors }}</div>
+    <div class="campo">{{ form.frecuencia_reportes.label_tag }}{{ form.frecuencia_reportes }}{{ form.frecuencia_reportes.errors }}</div>
+  </div>
+  <div class="filtros-grid">
+    <div class="campo">{{ form.penalidades.label_tag }}{{ form.penalidades }}{{ form.penalidades.errors }}</div>
+    <div class="campo">{{ form.responsable.label_tag }}{{ form.responsable }}{{ form.responsable.errors }}</div>
+  </div>
+</section>
+
+<section class="tarjeta" style="margin-bottom:1rem">
+  <h2 style="margin-top:0">2. Estado documental inicial (HU-06)</h2>
+  <div class="filtros-grid">
+    <div class="campo">{{ form.documentos_disponibles.label_tag }}{{ form.documentos_disponibles }}{{ form.documentos_disponibles.errors }}</div>
+    <div class="campo">{{ form.documentos_faltantes.label_tag }}{{ form.documentos_faltantes }}{{ form.documentos_faltantes.errors }}</div>
+  </div>
+  <div class="filtros-grid">
+    <div class="campo">{{ form.formato_esperado.label_tag }}{{ form.formato_esperado }}{{ form.formato_esperado.errors }}</div>
+    <div class="campo">{{ form.fecha_limite.label_tag }}{{ form.fecha_limite }}{{ form.fecha_limite.errors }}</div>
+    <div class="campo">{{ form.estado_documental.label_tag }}{{ form.estado_documental }}{{ form.estado_documental.errors }}</div>
+  </div>
+</section>
+
+<section class="tarjeta" style="margin-bottom:1rem">
+  <h2 style="margin-top:0">3. Entregables que exige el TDR</h2>
+  <p class="suave">Cada fila define un entregable recurrente (o único). Si deja «Hasta» vacío, se usa la fecha de fin del contrato. Complete los datos obligatorios de la plantilla elegida.</p>
+  <div class="tabla"><table class="editor-campos">
+    <thead>
+      <tr>
+        <th>Nombre *</th><th>Plantilla *</th><th>Frecuencia *</th><th>Primera fecha *</th><th>Hasta</th><th>Junior *</th><th>Senior</th><th>Datos de la plantilla *</th><th><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody id="filas-items">{% for f in form.filas %}{% include "levantamiento/_fila_item.html" %}{% endfor %}</tbody>
+  </table></div>
+  <template id="fila-item-vacia">{% include "levantamiento/_fila_item.html" with f=fila_item_vacia %}</template>
+  <p><button type="button" class="boton sec" id="agregar-item">+ Agregar entregable</button></p>
+</section>

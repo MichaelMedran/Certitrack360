@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Ficha {{ ficha.contrato.numero_contrato }} · {{ ficha.id_tdr }}{% endblock %}
+{% block contenido %}
+<h1>Ficha {{ ficha.contrato.numero_contrato }} · {{ ficha.contrato.cliente.nombre }} <span class="etiqueta">{{ ficha.get_estado_display }}</span></h1>
+<p class="suave"><a href="{% url 'fichas' %}">← Volver a fichas de levantamiento</a></p>
+
+{% if error_previa %}
+<div class="aviso aviso-error" role="alert">No se puede generar la vista previa: {{ error_previa }}</div>
+{% endif %}
+
+{% if not ficha.confirmada %}
+  {% if puede_editar_borrador %}
+  <form method="post" action="{% url 'ficha_detalle' ficha.pk %}" enctype="multipart/form-data">{% csrf_token %}
+    {% include "levantamiento/_formulario_borrador.html" %}
+    <div class="acciones">
+      <button type="submit" name="accion" value="guardar" class="boton sec">Guardar borrador</button>
+      <button type="submit" name="accion" value="vista_previa" class="boton">Vista previa de entregables</button>
+      {% if puede_pedir_confirmacion %}
+      <button type="submit" name="accion" value="pedir_confirmacion" class="boton">Pedir confirmación</button>
+      {% endif %}
+    </div>
+  </form>
+  {% endif %}
+
+  <section class="tarjeta" style="margin-bottom:1rem">
+    <h2 style="margin-top:0">Resumen de ítems guardados</h2>
+    <p><strong>Archivo del TDR:</strong> <a href="{% url 'ficha_archivo' ficha.pk %}">{{ ficha.nombre_archivo_tdr }}</a></p>
+    <div class="tabla"><table>
+      <thead><tr><th>Nombre</th><th>Plantilla</th><th>Frecuencia</th><th>Primera fecha</th><th>Hasta</th><th>Junior</th><th>Senior</th><th>Datos de la plantilla</th></tr></thead>
+      <tbody>{% for it in items %}
+      <tr>
+        <td>{{ it.nombre }}</td>
+        <td>{{ it.plantilla.nombre }}</td>
+        <td>{{ it.get_frecuencia_display }}</td>
+        <td>{{ it.primera_fecha|date:"d/m/Y" }}</td>
+        <td>{% if it.hasta %}{{ it.hasta|date:"d/m/Y" }}{% else %}fin del contrato ({{ ficha.contrato.fecha_fin|date:"d/m/Y" }}){% endif %}</td>
+        <td>{{ it.junior.nombre }}</td>
+        <td>{{ it.senior_efectivo.nombre }}</td>
+        <td>{% if it.faltantes %}<b>Falta {% for flt in it.faltantes %}«{{ flt }}»{% if not forloop.last %}, {% endif %}{% endfor %}</b>{% else %}Completos ✓{% endif %}</td>
+      </tr>
+      {% empty %}<tr><td colspan="8">Sin entregables definidos.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <div class="acciones">
+      <form method="post" action="{% url 'ficha_vista_previa' ficha.pk %}" class="en-linea">{% csrf_token %}
+        <button class="boton">Vista previa de entregables</button>
+      </form>
+      {% if puede_pedir_confirmacion %}
+      <form method="post" action="{% url 'ficha_confirmar' ficha.pk %}" class="en-linea">{% csrf_token %}
+        <input type="hidden" name="accion" value="pedir_confirmacion">
+        <button class="boton sec">Pedir confirmación al senior</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if vista_previa %}
+  <section class="tarjeta" id="vista-previa" style="margin-bottom:1rem">
+    <h2 style="margin-top:0">Vista previa (antes de confirmar)</h2>
+    {% if vista_previa.entregables %}
+    <div class="tabla"><table>
+      <thead><tr><th>Se creará</th><th>Plazo</th><th>Junior</th><th>Senior</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+      <tbody>{% for en in vista_previa.entregables %}
+      <tr>
+        <td>{{ en.titulo }}</td>
+        <td>{{ en.plazo|date:"d/m/Y" }}</td>
+        <td>{{ en.junior.nombre }}</td>
+        <td>{{ en.senior.nombre }}</td>
+        <td>
+          <form method="post" action="{% url 'ficha_vista_previa' ficha.pk %}" class="en-linea">{% csrf_token %}
+            {% for idx in vista_previa.indices_excluidos %}<input type="hidden" name="excluir" value="{{ idx }}">{% endfor %}
+            <button type="submit" name="excluir" value="{{ en.indice }}" class="boton sec chico">Quitar<span class="sr-only"> {{ en.titulo }}</span></button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}
+    <p class="aviso aviso-warning">No quedan entregables por generar.</p>
+    {% endif %}
+    <p class="suave">Se omitieron {{ vista_previa.omitidas }} fecha{{ vista_previa.omitidas|pluralize:"s" }} pasada{{ vista_previa.omitidas|pluralize:"s" }}. Total: {{ vista_previa.total }} entregable{{ vista_previa.total|pluralize }} (máximo {{ vista_previa.maximo }} por confirmación).</p>
+    <div class="acciones">
+      <a class="boton sec" href="{% url 'ficha_detalle' ficha.pk %}">Volver a editar</a>
+      {% if puede_confirmar and vista_previa.entregables and not vista_previa.excede_maximo %}
+      <form method="post" action="{% url 'ficha_confirmar' ficha.pk %}" class="en-linea">{% csrf_token %}
+        {% for idx in vista_previa.indices_excluidos %}<input type="hidden" name="excluir" value="{{ idx }}">{% endfor %}
+        <button class="boton">Confirmar ficha y crear {{ vista_previa.total }} entregable{{ vista_previa.total|pluralize }}</button>
+      </form>
+      {% elif puede_pedir_confirmacion %}
+      <form method="post" action="{% url 'ficha_confirmar' ficha.pk %}" class="en-linea">{% csrf_token %}
+        <input type="hidden" name="accion" value="pedir_confirmacion">
+        <button class="boton">Pedir confirmación</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+{% else %}
+  <section class="tarjeta" style="margin-bottom:1rem">
+    <h2 style="margin-top:0">1. Datos del TDR (HU-14)</h2>
+    <p><strong>Contrato:</strong> {{ ficha.contrato.numero_contrato }} · {{ ficha.contrato.cliente.nombre }} ·
+       <strong>ID-TDR:</strong> {{ ficha.id_tdr }} ·
+       <strong>Archivo del TDR:</strong> <a href="{% url 'ficha_archivo' ficha.pk %}">{{ ficha.nombre_archivo_tdr }}</a> ✓</p>
+    <p><strong>Requerimientos del servicio:</strong> {{ ficha.requerimientos }}</p>
+    <p><strong>Formatos a presentar:</strong> {{ ficha.formatos|default:"—" }} ·
+       <strong>Frecuencia de reportes:</strong> {{ ficha.frecuencia_reportes|default:"—" }}</p>
+    <p><strong>Penalidades por incumplimiento:</strong> {{ ficha.penalidades|default:"—" }} ·
+       <strong>Responsable:</strong> {{ ficha.responsable.nombre }}</p>
+  </section>
+
+  <section class="tarjeta" style="margin-bottom:1rem">
+    <h2 style="margin-top:0">Después de confirmar: estado documental (HU-06)</h2>
+    <div class="dos-columnas">
+      <div class="caja-gris">
+        <h3 style="margin-top:0">Estado inicial (congelado el {{ ficha.confirmada_en|date:"d/m/Y" }} por {{ ficha.confirmada_por.nombre }})</h3>
+        <p><strong>ID-TDR:</strong> {{ ficha.estado_inicial.id_tdr }}</p>
+        <p><strong>Archivo del TDR:</strong> {{ ficha.estado_inicial.nombre_archivo_tdr }}</p>
+        <p><strong>Requerimientos:</strong> {{ ficha.estado_inicial.requerimientos }}</p>
+        <p><strong>Responsable:</strong> {{ ficha.estado_inicial.responsable }}</p>
+        <p><strong>Disponibles:</strong> {{ ficha.estado_inicial.documentos_disponibles|default:"—" }}</p>
+        <p><strong>Faltantes:</strong> {{ ficha.estado_inicial.documentos_faltantes|default:"—" }}</p>
+        <p><strong>Formato esperado:</strong> {{ ficha.estado_inicial.formato_esperado|default:"—" }}</p>
+        <p><strong>Fecha límite:</strong> {{ ficha.estado_inicial.fecha_limite|default:"—" }}</p>
+      </div>
+      <div class="tarjeta">
+        <h3 style="margin-top:0">Estado actual</h3>
+        <p><strong>Disponibles:</strong> {{ ficha.documentos_disponibles|default:"—" }}</p>
+        <p><strong>Faltantes:</strong> {{ ficha.documentos_faltantes|default:"—" }}</p>
+        <p><strong>Formato esperado:</strong> {{ ficha.formato_esperado|default:"—" }} ·
+           <strong>Fecha límite:</strong> {% if ficha.fecha_limite %}{{ ficha.fecha_limite|date:"d/m/Y" }}{% else %}—{% endif %}</p>
+        <p><strong>Estado documental:</strong> <span class="etiqueta">{{ ficha.get_estado_documental_display }}</span></p>
+        {% if puede_actualizar_documental and form_documental %}
+        <form method="post" action="{% url 'ficha_detalle' ficha.pk %}">{% csrf_token %}
+          {{ form_documental.as_p }}
+          <div class="acciones"><button class="boton">Actualizar</button></div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="tarjeta">
+    <h2 style="margin-top:0">Entregables generados ({{ entregables_generados|length }})</h2>
+    <div class="tabla"><table>
+      <thead><tr><th>Código</th><th>Título</th><th>ID-TDR</th><th>Plazo</th><th>Junior</th><th>Senior</th><th>Estado</th></tr></thead>
+      <tbody>{% for e in entregables_generados %}
+      <tr>
+        <td class="codigo"><a href="{% url 'entregable_detalle' e.pk %}">{{ e.codigo }}</a></td>
+        <td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td>
+        <td>{{ e.id_tdr }}</td>
+        <td>{{ e.plazo|date:"d/m/Y" }}</td>
+        <td>{{ e.junior_asignado.nombre }}</td>
+        <td>{{ e.senior_revisor.nombre }}</td>
+        <td><span class="etiqueta">{{ e.get_estado_display }}</span></td>
+      </tr>
+      {% empty %}<tr><td colspan="7">No hay entregables generados.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if not ficha.confirmada and puede_editar_borrador %}<script src="{% static 'js/ficha.js' %}"></script>{% endif %}{% endblock %}

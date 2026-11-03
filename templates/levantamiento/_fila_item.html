@@ -1,0 +1,58 @@
+<tr{% if f.errores %} class="con-error"{% endif %}>
+  <td>
+    <input type="text" name="item_nombre" value="{{ f.nombre }}" aria-label="Nombre del entregable" placeholder="Ej.: Reporte mensual">
+    {% for err in f.errores %}<div class="errorlist" role="alert">{{ err }}</div>{% endfor %}
+  </td>
+  <td>
+    <select name="item_plantilla" aria-label="Plantilla del entregable">
+      <option value="">— Elija la plantilla —</option>
+      {% for p in plantillas %}<option value="{{ p.pk }}"{% if f.plantilla_str == p.pk|stringformat:"s" %} selected{% endif %}>{{ p }}</option>{% endfor %}
+    </select>
+  </td>
+  <td>
+    <select name="item_frecuencia" aria-label="Frecuencia del entregable">
+      {% for val, etq in frecuencias %}<option value="{{ val }}"{% if f.frecuencia == val %} selected{% endif %}>{{ etq }}</option>{% endfor %}
+    </select>
+  </td>
+  <td><input type="date" name="item_primera_fecha" value="{{ f.primera_fecha }}" aria-label="Primera fecha"></td>
+  <td><input type="date" name="item_hasta" value="{{ f.hasta }}" aria-label="Fecha final (hasta)"></td>
+  <td>
+    <select name="item_junior" aria-label="Junior asignado">
+      <option value="">— Elija el junior —</option>
+      {% for j in juniors %}<option value="{{ j.pk }}"{% if f.junior == j.pk|stringformat:"s" %} selected{% endif %}>{{ j.nombre }}</option>{% endfor %}
+    </select>
+  </td>
+  <td>
+    <select name="item_senior" aria-label="Senior revisor">
+      <option value="">— El del contrato —</option>
+      {% for s in seniors %}<option value="{{ s.pk }}"{% if f.senior == s.pk|stringformat:"s" %} selected{% endif %}>{{ s.nombre }}</option>{% endfor %}
+    </select>
+  </td>
+  <td>
+    {% for p in f.plantillas_con_valores %}
+    <div class="campos-plantilla-item{% if not p.Activa %} oculto{% endif %}" data-plantilla-campos="{{ p.pk }}">
+      {% for c in p.campos %}
+      <div class="campo" style="margin-bottom:.4rem">
+        <label>{{ c.etiqueta }}
+          {% if c.tipo == 'opcion' %}
+          <select name="item_dato_{{ p.pk }}_{{ c.nombre }}">
+            <option value="">— Elija —</option>
+            {% for op in c.opciones %}<option value="{{ op }}"{% if c.valor == op %} selected{% endif %}>{{ op }}</option>{% endfor %}
+          </select>
+          {% elif c.tipo == 'fecha' %}
+          <input type="date" name="item_dato_{{ p.pk }}_{{ c.nombre }}" value="{{ c.valor }}">
+          {% elif c.tipo == 'numero' %}
+          <input type="number" step="any" name="item_dato_{{ p.pk }}_{{ c.nombre }}" value="{{ c.valor }}">
+          {% else %}
+          <input type="text" name="item_dato_{{ p.pk }}_{{ c.nombre }}" value="{{ c.valor }}">
+          {% endif %}
+        </label>
+      </div>
+      {% empty %}<span class="suave">Sin campos adicionales</span>{% endfor %}
+    </div>
+    {% endfor %}
+  </td>
+  <td class="acciones-fila">
+    <button type="button" class="boton sec chico" data-accion="quitar-item" aria-label="Quitar el entregable">Quitar</button>
+  </td>
+</tr>
