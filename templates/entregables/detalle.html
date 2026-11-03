@@ -141,7 +141,9 @@
 </div>
 {% empty %}<p class="suave">Sin observaciones.</p>{% endfor %}
 
-{% if es_senior %}
+{% if es_senior and not admite_observaciones %}
+<p class="suave">En «{{ e.get_estado_display }}» no se registran observaciones nuevas: no se aprueba ni se entrega con observaciones abiertas.</p>
+{% elif es_senior %}
 <form method="post" action="{% url 'observacion_nueva' e.pk %}" class="tarjeta">{% csrf_token %}
   <h2 style="margin-top:0">Registrar observaciones <span class="suave">(senior, gerente y admin)</span></h2>
   {% if e.estado == 'VERIFICACION_SENIOR' %}<p class="suave">El entregable está en «Revisión senior»: al registrar, vuelve a «En proceso» con «{{ etiqueta_subestado }}».</p>{% endif %}

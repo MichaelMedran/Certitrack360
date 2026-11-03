@@ -161,12 +161,16 @@ def requisitos_para_verificacion(entregable):
     return f"No se puede enviar a verificación: faltan {' y '.join(partes)}. {' '.join(ayudas)}"
 
 
-def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", observaciones=None):
+def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", observaciones=None, rechazo=None):
     """Cambia el estado y registra el historial. Lanza ValidationError o PermissionDenied.
 
     Es la única puerta para cambiar de estado. Al devolver (Revisión senior → En proceso) exige al menos una observación:
     la del Sprint 1 (`tipo_error` y `descripcion`) o varias a la vez (`observaciones`: lista de dicts con tipo_error,
     descripcion y responsable opcional), que se crean aquí mismo, en la misma transacción, una sola vez.
+
+    `rechazo`: devolución por el rechazo de una corrección (§7.1 y §7.2). La observación rechazada, de este entregable y
+    ya de vuelta en Pendiente, es la observación abierta que justifica la devolución: no se crea otra. Los avisos los da
+    quien rechaza (`observaciones.rechazar`).
     """
     actual = entregable.estado
     clave = (actual, nuevo_estado)
@@ -190,7 +194,11 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
         raise ValidationError(motivos[0] if len(motivos) == 1 else motivos)
 
     devuelve = clave == (E.VERIFICACION_SENIOR, E.EN_PROCESO)
-    if devuelve:
+    if rechazo is not None:
+        if not devuelve or rechazo.entregable_id != entregable.pk or rechazo.estado != Observacion.Estado.PENDIENTE:
+            raise ValidationError("Solo se devuelve por rechazo con una observación de este entregable que volvió a "
+                                  f"«{Observacion.Estado.PENDIENTE.label}».")
+    elif devuelve:
         if observaciones is None:  # devolución del Sprint 1: una observación
             observaciones = [{"tipo_error": tipo_error, "descripcion": descripcion or ""}] if (tipo_error or descripcion) else []
         observaciones = validar_observaciones(entregable, observaciones)
@@ -198,7 +206,9 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
     with transaction.atomic():
         entregable.estado = nuevo_estado
         entregable.save(update_fields=["estado", "actualizado_en"])
-        if devuelve:
+        if rechazo is not None:
+            detalle = f"Devuelto por corrección rechazada ({rechazo.get_tipo_error_display()})"
+        elif devuelve:
             n = len(observaciones)
             detalle = (f"Devuelto con observación ({TipoError(observaciones[0]['tipo_error']).label})" if n == 1
                        else f"Devuelto con {n} observaciones ("
@@ -213,7 +223,7 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
                 usuario=entregable.senior_revisor, entregable=entregable, tipo=Notificacion.Tipo.VERIFICACION,
                 mensaje=texto_en_revision(entregable),
             )
-        if devuelve:
+        if devuelve and rechazo is None:
             # Queda «Con correcciones pendientes»: aviso inmediato al junior con el código (RF-22 y RF-26).
             crear_observaciones(entregable, usuario, observaciones)
             Notificacion.objects.create(

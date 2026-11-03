@@ -228,6 +228,7 @@ def _contexto_detalle(usuario, e):
 
     return {
         "e": e, "es_senior": es_senior, "siguientes": siguientes,
+        "admite_observaciones": obs_servicio.admite_observaciones(e),
         "observaciones": observaciones,
         "con_correcciones": subestado.aplica(e, bool(abiertas)), "etiqueta_subestado": subestado.ETIQUETA,
         "responsables_obs": servicios.responsables_posibles(e) if es_senior else [],
@@ -402,8 +403,10 @@ def revisar_observacion(request, obs_id):
             obs_servicio.confirmar(obs, request.user)
             mensaje = "Corrección confirmada: la observación quedó «Resuelta»."
         elif decision == "rechazar":
-            obs_servicio.rechazar(obs, request.user, request.POST.get("motivo", ""))
+            _, devuelto = obs_servicio.rechazar(obs, request.user, request.POST.get("motivo", ""))
             mensaje = "Corrección rechazada: la observación volvió a «Pendiente» y se avisó al responsable."
+            if devuelto:
+                mensaje += f" El entregable volvió a «{E.EN_PROCESO.label}» con «{subestado.ETIQUETA}»."
         else:
             raise ValidationError("Elija si confirma o rechaza la corrección.")
     except ValidationError as exc:

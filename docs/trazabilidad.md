@@ -223,7 +223,7 @@ prueba verifica y lo indica con un comentario en el código):
    una observación ve el entregable pero no registra su corrección (403).
 5. **Corrección rechazada.** Vuelve a Pendiente conservando el texto, el autor y la fecha de la corrección rechazada (se muestra
    como «Corrección rechazada»); el motivo, opcional, queda en el historial. Los avisos de rechazo usan el tipo Observación.
-6. **`/observaciones/<id>/resolver/` (Sprint 1)** sigue igual para las pendientes (y acepta también una En corrección); ahora
+6. **`/observaciones/<id>/resolver/` (Sprint 1)** sigue igual para las pendientes (una En corrección ya no: ver la revisión de abajo); ahora
    registra quién la resolvió y cuándo, deja constancia en el historial y rechaza resolver otra vez una observación ya resuelta
    (antes sobrescribía la solución). Redirige a la sección Observaciones del detalle (`#observaciones`).
 7. **Pestañas de Entregables con `aria-current="true"`.** La barra principal conserva el único `aria-current="page"` de la
@@ -232,6 +232,28 @@ prueba verifica y lo indica con un comentario en el código):
    y lo que falta para avanzar, que están en otras partes del detalle.
 9. **Sin consultas por fila.** El tablero y la lista calculan el subestado con el conteo de abiertas que ya traían; el calendario
    y el filtro usan EXISTS.
+
+### Correcciones de la revisión de S2-H1-H2-ajustes y S2-H3
+
+Pruebas en `apps/entregables/test_observaciones.py` (CorreccionesDeLaRevisionTests). Ninguna prueba del Sprint 1 cambió.
+
+1. **Rechazar en Revisión senior devuelve el entregable** (§7.1, §7.2, RF-26). Antes la observación volvía a Pendiente con el
+   entregable en revisión. Ahora `observaciones.rechazar` lo pasa a En proceso en la misma transacción con `servicios.mover`, que
+   acepta `rechazo=<observación>`: la rechazada, ya Pendiente y del mismo entregable, es la observación de la devolución (no se crea
+   otra). Historial «Devuelto por corrección rechazada (tipo)»; queda «Con correcciones pendientes»; se avisa al responsable y,
+   si no es él, también al junior asignado.
+2. **La resolución directa solo existe desde Pendiente** (diagrama de la §7.2). Una observación En corrección se confirma o se
+   rechaza; `/observaciones/<id>/resolver/` la rechaza con un mensaje en lugar de sobrescribir la acción correctiva del responsable.
+3. **No se registran observaciones en Aprobado ni en Entregado.** El SDD no fija este caso; como `LISTO_PARA_ENTREGA → HECHO` no
+   comprueba observaciones, registrarlas ahí esquivaba la regla «no se aprueba con observaciones abiertas» (§7.1, caso 18). El
+   servicio lo rechaza con el motivo y el detalle no ofrece el formulario en esos estados. Un entregado con acta observada se
+   reabre con su observación por la transición `HECHO → EN_PROCESO` del S2-H4 (§7.4).
+4. **Desviación registrada: texto del evento del calendario.** El wireframe `s2-calendario` lo escribe «[Estado] CÓDIGO Cliente:
+   Título — Julia J. — Próximo»; el sistema escribe «[Estado] CÓDIGO Cliente (a cargo de Nombre Apellido): Título — Próximo».
+   Contiene lo que exige la anotación 2 (responsable y código en el texto; estado y urgencia en texto). Se conserva porque en el
+   Sprint 1 «—» solo introduce la urgencia: una prueba del Sprint 1 (`apps/calendario/tests.py`,
+   test_lo_normal_y_lo_hecho_no_llevan_etiqueta_de_urgencia) exige que un evento sin urgencia no lo tenga y que termine en el
+   título, y ningún requisito explícito del SDD obliga a cambiarla.
 
 ## Pendiente para cerrar el SDD
 

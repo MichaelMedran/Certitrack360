@@ -10,7 +10,9 @@
 - Corregir: el responsable de la observación o un senior del entregable (incluye gerente y admin); exige texto y admite
   como evidencia una versión de adjunto del mismo entregable.
 - Confirmar o rechazar: senior del entregable, gerente o admin. RESUELTA exige acción correctiva y registra quién la revisó
-  y cuándo.
+  y cuándo. Rechazar con el entregable en Revisión senior lo devuelve a En proceso (`servicios.mover`).
+- Resolver directamente (Sprint 1): solo desde PENDIENTE; una En corrección se confirma o se rechaza.
+- No se registran observaciones en Aprobado ni en Entregado (ver `ESTADOS_SIN_OBSERVACIONES`).
 """
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -36,6 +38,16 @@ def puede_registrar(usuario, entregable):
     return es_senior_del_entregable(usuario, entregable)
 
 
+#: Estados en los que no se registran observaciones nuevas (§7.1: no se aprueba ni se entrega con observaciones
+#: abiertas y `LISTO_PARA_ENTREGA → HECHO` no las comprueba). Un entregado se reabre con observación desde el flujo de
+#: reapertura (§7.4, `HECHO → EN_PROCESO` con `servicios.mover`), no desde aquí.
+ESTADOS_SIN_OBSERVACIONES = (E.LISTO_PARA_ENTREGA, E.HECHO)
+
+
+def admite_observaciones(entregable):
+    return entregable.estado not in ESTADOS_SIN_OBSERVACIONES
+
+
 def puede_corregir(usuario, observacion, entregable=None):
     entregable = entregable or observacion.entregable
     return usuario.pk == observacion.responsable_id or es_senior_del_entregable(usuario, entregable)
@@ -56,7 +68,12 @@ def registrar(entregable, usuario, items):
     """
     if not puede_registrar(usuario, entregable):
         raise PermissionDenied("Solo el senior del entregable, el gerente o el admin registran observaciones.")
-    items = servicios.validar_observaciones(entregable, items, al_devolver=False)
+    if not admite_observaciones(entregable):
+        raise ValidationError(
+            f"No se registran observaciones en un entregable «{entregable.get_estado_display()}»: "
+            f"solo hasta «{E.VERIFICACION_SENIOR.label}», porque no se aprueba ni se entrega con observaciones abiertas."
+        )
+    items =servicios.validar_observaciones(entregable, items, al_devolver=False)
     with transaction.atomic():
         if entregable.estado == E.VERIFICACION_SENIOR:
             antes = set(entregable.observaciones.values_list("pk", flat=True))
@@ -147,8 +164,18 @@ def confirmar(observacion, usuario):
     return observacion
 
 
+def texto_devuelto_por_rechazo(entregable):
+    return (f"{entregable.referencia} volvió a «{E.EN_PROCESO.label}»: se rechazó la corrección de una observación "
+            "durante la revisión senior.")
+
+
 def rechazar(observacion, usuario, motivo=""):
-    """EN_CORRECCION → PENDIENTE. Avisa al responsable. La corrección rechazada (texto, autor y fecha) se conserva."""
+    """EN_CORRECCION → PENDIENTE. Avisa al responsable. La corrección rechazada (texto, autor y fecha) se conserva.
+
+    Si el entregable está en Revisión senior, vuelve a En proceso en la misma transacción con `servicios.mover` (§7.1: en
+    revisión no puede quedar una observación pendiente); queda «Con correcciones pendientes» y también se avisa al junior
+    asignado si no es el responsable. Devuelve (observación, devuelto: bool).
+    """
     entregable = observacion.entregable
     if not puede_revisar(usuario, entregable):
         raise PermissionDenied("Solo el senior del entregable, el gerente o el admin rechazan una corrección.")
@@ -161,25 +188,45 @@ def rechazar(observacion, usuario, motivo=""):
         observacion.save()
         detalle = f"Rechazó la corrección de una observación ({observacion.get_tipo_error_display()})"
         _historial(entregable, usuario, f"{detalle}: {motivo}" if motivo else detalle)
-        if observacion.responsable_id and observacion.responsable_id != usuario.pk:
+        devuelto = entregable.estado == E.VERIFICACION_SENIOR
+        if devuelto:
+            servicios.mover(entregable, E.EN_PROCESO, usuario, rechazo=observacion)
+        avisados = {usuario.pk}
+        if observacion.responsable_id and observacion.responsable_id not in avisados:
+            mensaje = texto_rechazo(observacion, entregable)
+            if devuelto:
+                mensaje += f" El entregable volvió a «{E.EN_PROCESO.label}»."
             Notificacion.objects.create(
                 usuario=observacion.responsable, entregable=entregable, tipo=Notificacion.Tipo.OBSERVACION,
-                mensaje=texto_rechazo(observacion, entregable)[:255], enlace=servicios.enlace_observaciones(entregable),
+                mensaje=mensaje[:255], enlace=servicios.enlace_observaciones(entregable),
             )
-    return observacion
+            avisados.add(observacion.responsable_id)
+        if devuelto and entregable.junior_asignado_id not in avisados:
+            Notificacion.objects.create(
+                usuario=entregable.junior_asignado, entregable=entregable, tipo=Notificacion.Tipo.OBSERVACION,
+                mensaje=texto_devuelto_por_rechazo(entregable)[:255], enlace=servicios.enlace_observaciones(entregable),
+            )
+    return observacion, devuelto
 
 
 def resolver(observacion, usuario, solucion):
-    """Resolución directa del Sprint 1 (`/observaciones/<id>/resolver/`): PENDIENTE o EN_CORRECCION → RESUELTA con la
-    solución escrita (la acción correctiva). Senior del entregable, gerente o admin."""
+    """Resolución directa del Sprint 1 (`/observaciones/<id>/resolver/`): PENDIENTE → RESUELTA con la solución escrita
+    (la acción correctiva). Senior del entregable, gerente o admin.
+
+    Según el diagrama de la §7.2 solo existe desde PENDIENTE: una observación En corrección ya tiene la acción correctiva
+    del responsable y se confirma o se rechaza (`confirmar` / `rechazar`); resolverla aquí sobrescribiría ese texto.
+    """
     entregable = observacion.entregable
     if not puede_revisar(usuario, entregable):
         raise PermissionDenied("No tiene permiso para resolver esta observación.")
+    if observacion.estado == O.RESUELTA:
+        raise ValidationError("Esta observación ya está resuelta.")
+    if observacion.estado == O.EN_CORRECCION:
+        raise ValidationError(f"Esta observación está «{O.EN_CORRECCION.label}»: ya tiene la acción correctiva del "
+                              "responsable. Confirme o rechace la corrección.")
     texto = (solucion or "").strip()
     if not texto:
         raise ValidationError("Escriba la solución aplicada para marcar la observación como resuelta.")
-    if observacion.estado == O.RESUELTA:
-        raise ValidationError("Esta observación ya está resuelta.")
     with transaction.atomic():
         observacion.solucion = texto
         _resolver(observacion, usuario)

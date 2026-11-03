@@ -402,6 +402,93 @@ class RevisarTests(ObsBase):
         self.assertEqual(leccion.solucion, "Títulos corregidos")
 
 
+class CorreccionesDeLaRevisionTests(ObsBase):
+    """Hallazgos de la revisión de S2-H1-H2-ajustes y S2-H3 (R1 a R3)."""
+
+    def en_revision_con_correccion(self, responsable=None):
+        e = self.nuevo(self.c1, self.j1, self.s1, "En revisión", E.VERIFICACION_SENIOR)
+        o = Observacion.objects.create(entregable=e, autor=self.s1, tipo_error="CONTENIDO", descripcion="Cuadro 3",
+                                       responsable=responsable or self.j1)
+        obs_servicio.corregir(o, self.j1 if responsable is None else responsable, "Total corregido")
+        return e, o
+
+    def test_r1_rechazar_en_revision_devuelve_a_en_proceso(self):
+        e, o = self.en_revision_con_correccion()
+        r = self.post(self.s1, "observacion_revisar", [o.pk], {"decision": "rechazar", "motivo": "Sigue mal"})
+        self.assertEqual(r.status_code, 302)
+        self.refrescar(e, o)
+        self.assertEqual((e.estado, o.estado, o.solucion), (E.EN_PROCESO, O.PENDIENTE, "Total corregido"))
+        self.assertTrue(subestado.aplica(e))
+        cambio = e.historial.get(estado_anterior=E.VERIFICACION_SENIOR, estado_nuevo=E.EN_PROCESO)
+        self.assertEqual((cambio.usuario, cambio.detalle), (self.s1, "Devuelto por corrección rechazada (Contenido)"))
+        self.assertEqual(e.observaciones.count(), 1)  # no se crea otra observación
+        avisos = Notificacion.objects.filter(entregable=e, tipo="OBSERVACION")
+        self.assertEqual(avisos.count(), 1)  # el responsable es el junior: un solo aviso
+        self.assertIn("Se rechazó la corrección", avisos.get().mensaje)
+        self.assertIn(f"El entregable volvió a «{E.EN_PROCESO.label}»", avisos.get().mensaje)
+        self.client.force_login(self.s1)
+        self.assertContains(self.client.get(reverse("entregable_detalle", args=[e.pk])),
+                            f'<span class="etiqueta subestado">{ETIQUETA}</span>')
+
+    def test_r1_si_el_responsable_es_un_senior_tambien_avisa_al_junior(self):
+        e, o = self.en_revision_con_correccion(responsable=self.s1)
+        _, devuelto = obs_servicio.rechazar(o, self.gerente)
+        self.assertTrue(devuelto)
+        self.assertEqual(set(Notificacion.objects.filter(entregable=e, tipo="OBSERVACION")
+                             .values_list("usuario", flat=True)), {self.s1.pk, self.j1.pk})
+
+    def test_r1_fuera_de_revision_no_cambia_el_estado(self):
+        obs_servicio.corregir(self.obs, self.j1, "Títulos corregidos")
+        _, devuelto = obs_servicio.rechazar(self.obs, self.s1)
+        self.refrescar(self.proc)
+        self.assertFalse(devuelto)
+        self.assertEqual(self.proc.estado, E.EN_PROCESO)
+        self.assertFalse(self.proc.historial.exclude(estado_nuevo=E.EN_PROCESO).exists())
+        self.assertFalse(self.proc.historial.exclude(estado_anterior=E.EN_PROCESO).exists())
+
+    def test_r1_mover_por_rechazo_exige_una_observacion_pendiente_del_entregable(self):
+        e, o = self.en_revision_con_correccion()
+        with self.assertRaises(ValidationError):
+            servicios.mover(e, E.EN_PROCESO, self.s1, rechazo=o)  # sigue En corrección
+        with self.assertRaises(ValidationError):
+            servicios.mover(e, E.EN_PROCESO, self.s1, rechazo=self.obs)  # de otro entregable
+        self.refrescar(e)
+        self.assertEqual(e.estado, E.VERIFICACION_SENIOR)
+
+    def test_r2_resolver_no_sobrescribe_una_correccion_registrada(self):
+        obs_servicio.corregir(self.obs, self.j1, "Texto del junior")
+        r = self.post(self.s1, "observacion_resolver", [self.obs.pk], {"solucion": "Texto del senior"})
+        self.assertEqual(r.status_code, 302)
+        self.refrescar(self.obs)
+        self.assertEqual((self.obs.estado, self.obs.solucion, self.obs.corregida_por),
+                         (O.EN_CORRECCION, "Texto del junior", self.j1))
+        with self.assertRaises(ValidationError):
+            obs_servicio.resolver(self.obs, self.gerente, "Otro texto")
+        self.client.force_login(self.s1)
+        self.assertContains(self.client.get(reverse("entregable_detalle", args=[self.proc.pk])),
+                            "Confirme o rechace la corrección.")
+
+    def test_r3_no_se_registran_observaciones_en_aprobado_ni_en_entregado(self):
+        datos = {"tipo_error": "FORMATO", "descripcion": "Tarde"}
+        for estado in (E.LISTO_PARA_ENTREGA, E.HECHO):
+            with self.subTest(estado=estado):
+                e = self.nuevo(self.c1, self.j1, self.s1, f"En {estado}", estado)
+                r = self.post(self.s1, "observacion_nueva", [e.pk], datos)
+                self.assertEqual(r.status_code, 302)
+                self.refrescar(e)
+                self.assertEqual(e.estado, estado)
+                self.assertFalse(e.observaciones.exists())
+                self.assertFalse(Notificacion.objects.filter(entregable=e).exists())
+                with self.assertRaises(ValidationError):
+                    obs_servicio.registrar(e, self.gerente, [datos])
+                html = self.client.get(reverse("entregable_detalle", args=[e.pk])).content.decode()
+                self.assertIn("No se registran observaciones en un entregable", html)
+                self.assertNotIn(reverse("observacion_nueva", args=[e.pk]), html)
+                self.assertIn("no se registran observaciones nuevas", html)
+        # Sigue sin cambio el permiso: un junior recibe 403 antes que el motivo del estado.
+        self.assertEqual(self.post(self.j1, "observacion_nueva", [e.pk], datos).status_code, 403)
+
+
 class HtmxYCsrfTests(ObsBase):
     def test_desde_htmx_responde_con_hx_redirect_a_la_seccion(self):
         r = self.post(self.j1, "observacion_corregir", [self.obs.pk], {"accion_correctiva": "ok"}, HTTP_HX_REQUEST="true")
