@@ -133,3 +133,38 @@ class ConfiguracionSeguraTests(SimpleTestCase):
     def test_las_cookies_de_sesion_y_csrf_comparten_la_misma_politica(self):
         self.assertEqual(settings.SESSION_COOKIE_SECURE, settings.CSRF_COOKIE_SECURE)
         self.assertTrue(settings.SESSION_COOKIE_HTTPONLY)
+
+
+class FueraDeAlcanceC1Tests(SimpleTestCase):
+    """Caso 30 (SDD del Sprint 2, §3 C1 y §13): HU-16 (bandeja de mensajes o consultas entre personas) está fuera de
+    alcance. Verifica que no exista ninguna ruta, modelo ni enlace de bandeja de mensajes o chat entre usuarios."""
+
+    def test_no_existe_ningun_modelo_de_mensajeria_o_bandeja_entre_usuarios(self):
+        from django.apps import apps
+
+        nombres_prohibidos = {"mensaje", "bandeja", "chat", "conversacion", "consultasenior", "mensajesenior"}
+        for modelo in apps.get_models():
+            nombre = modelo._meta.model_name.lower()
+            self.assertNotIn(nombre, nombres_prohibidos, f"Modelo fuera de alcance detectado: {modelo._meta.label}")
+
+    def test_no_existe_ninguna_ruta_de_bandeja_de_mensajes_ni_chat(self):
+        from django.urls import URLPattern, URLResolver, get_resolver
+
+        def recolectar(patrones, prefijo=""):
+            for p in patrones:
+                actual = prefijo + str(p.pattern)
+                if isinstance(p, URLResolver):
+                    yield from recolectar(p.url_patterns, actual)
+                elif isinstance(p, URLPattern):
+                    yield actual, (p.name or "")
+
+        terminos_prohibidos = ("bandeja", "mensajes", "chat", "consultas-senior", "pedir-ayuda")
+        for ruta, nombre in recolectar(get_resolver().url_patterns):
+            texto = f"{ruta} {nombre}".lower()
+            for termino in terminos_prohibidos:
+                self.assertNotIn(termino, texto, f"Ruta fuera de alcance C1 detectada: {ruta} ({nombre})")
+
+    def test_la_barra_principal_respeta_el_maximo_de_ocho_entradas_y_no_enlaza_a_bandeja(self):
+        base_html = (RAIZ / "templates" / "base.html").read_text(encoding="utf-8")
+        for prohibido in ('href="/bandeja', 'href="/mensajes', 'href="/chat', "Bandeja de mensajes"):
+            self.assertNotIn(prohibido, base_html)

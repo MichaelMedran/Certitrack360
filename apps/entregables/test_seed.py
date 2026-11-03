@@ -199,6 +199,87 @@ class SeedDemoTests(MediaTemporal, TestCase):
         for senior in Usuario.objects.filter(rol="SENIOR"):
             self.assertTrue(0 < entregables_visibles(senior).count() < total)
 
+    # ---- ampliación del Sprint 2 (SDD §12.1, S2-H13)
+    def test_sprint_2_datos_simulados_completos(self):
+        from apps.conocimiento.models import Procedimiento
+        from apps.cuentas.models import Ausencia
+        from apps.entregables.models import Entrega, RegistroTiempo, ResponsableApoyo
+        from apps.equipo.models import AvanceActividad, Incorporacion, PlanIncorporacion
+        from apps.levantamiento.models import FichaLevantamiento
+        from apps.repositorio.models import DocumentoRepositorio, VersionDocumento
+
+        # Puestos en los usuarios y ausencia registrada
+        self.assertFalse(Usuario.objects.filter(puesto="").exists())
+        self.assertEqual(Ausencia.objects.count(), 1)
+
+        # Observaciones en los tres estados (PENDIENTE, EN_CORRECCION y RESUELTA)
+        self.assertEqual(
+            set(Observacion.objects.values_list("estado", flat=True)),
+            {"PENDIENTE", "EN_CORRECCION", "RESUELTA"},
+        )
+
+        # Acta pendiente vencida (> 5 días) lista para demostrar la alerta
+        pendiente = Entrega.objects.get(acta_estado="PENDIENTE")
+        self.assertGreater((timezone.localdate() - pendiente.fecha_entrega).days, 5)
+
+        # Dos fichas de levantamiento: una en borrador y otra confirmada con foto inicial y entregables vinculados
+        self.assertEqual(FichaLevantamiento.objects.count(), 2)
+        self.assertEqual(
+            set(FichaLevantamiento.objects.values_list("estado", flat=True)),
+            {"BORRADOR", "CONFIRMADA"},
+        )
+        confirmada = FichaLevantamiento.objects.get(estado="CONFIRMADA")
+        self.assertTrue(confirmada.estado_inicial)
+        self.assertTrue(os.path.exists(confirmada.archivo_tdr.path))
+        self.assertGreater(confirmada.items.first().entregables_generados.count(), 0)
+
+        # Responsables de apoyo (activos e histórico) y registros de tiempo de las 3 etapas (alguno manual)
+        self.assertGreaterEqual(ResponsableApoyo.objects.filter(activo=True).count(), 2)
+        self.assertTrue(ResponsableApoyo.objects.filter(activo=False).exists())
+        self.assertEqual(
+            set(RegistroTiempo.objects.values_list("etapa", flat=True)),
+            {"RECOPILACION", "CONSOLIDACION", "REVISION"},
+        )
+        self.assertTrue(RegistroTiempo.objects.filter(manual=True).exclude(motivo="").exists())
+
+        # Repositorio: 8 documentos (plantillas de cliente con dos versiones, genéricas y ejemplos anonimizados)
+        self.assertEqual(DocumentoRepositorio.objects.count(), 8)
+        self.assertTrue(VersionDocumento.objects.filter(numero=2, vigente=True).exists())
+        self.assertTrue(
+            DocumentoRepositorio.objects.filter(
+                categoria=DocumentoRepositorio.Categoria.EJEMPLO_ANONIMIZADO
+            ).exists()
+        )
+        for v in VersionDocumento.objects.all():
+            self.assertTrue(os.path.exists(v.archivo.path), v.archivo.name)
+
+        # 5 procedimientos aprobados (incluidos los 3 citados en §7.12)
+        self.assertEqual(Procedimiento.objects.filter(vigente=True).count(), 5)
+        for titulo in (
+            "Guía rápida de CertiTrack 360",
+            "Confidencialidad y datos de clientes",
+            "Flujo de un entregable",
+        ):
+            self.assertTrue(Procedimiento.objects.filter(titulo=titulo, vigente=True).exists(), titulo)
+
+        # Los dos planes de incorporación (§7.12) y una incorporación en curso con avances en los 3 estados
+        self.assertEqual(PlanIncorporacion.objects.count(), 2)
+        self.assertEqual(
+            PlanIncorporacion.objects.get(nombre="Asistente junior de Proyectos").actividades.count(),
+            12,
+        )
+        self.assertEqual(
+            PlanIncorporacion.objects.get(nombre="Senior de Proyectos").actividades.count(),
+            7,
+        )
+        inc = Incorporacion.objects.get()
+        self.assertFalse(inc.confirmada)
+        self.assertEqual(inc.completadas_count, 5)
+        self.assertEqual(
+            set(inc.avances.values_list("estado", flat=True)),
+            set(AvanceActividad.Estado.values),
+        )
+
 
 class SeedIdempotenciaTests(MediaTemporal, TestCase):
     def sembrar(self, *args):
@@ -224,7 +305,14 @@ class SeedIdempotenciaTests(MediaTemporal, TestCase):
 
     def test_reset_recrea_y_borra_los_archivos_anteriores(self):
         self.sembrar()
-        rutas = {a.archivo.path for a in Adjunto.objects.all()}
+        from apps.levantamiento.models import FichaLevantamiento
+        from apps.repositorio.models import VersionDocumento
+
+        rutas = (
+            {a.archivo.path for a in Adjunto.objects.all()}
+            | {v.archivo.path for v in VersionDocumento.objects.all()}
+            | {f.archivo_tdr.path for f in FichaLevantamiento.objects.all()}
+        )
         self.assertTrue(all(os.path.exists(r) for r in rutas))
         with self.captureOnCommitCallbacks(execute=True):  # en pruebas hay que forzar lo que ocurre al confirmar
             self.sembrar("--reset")

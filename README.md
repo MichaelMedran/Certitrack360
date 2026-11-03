@@ -3,11 +3,11 @@
 Plataforma web local para el seguimiento de los entregables documentales del área de Proyectos. Todo corre en el servidor
 local: sin APIs externas, sin CDNs, sin telemetría. **Solo se usan datos simulados.**
 
-- **Estado frente al SDD v1.0:** [`docs/trazabilidad.md`](docs/trazabilidad.md) (requisito por requisito, con sus pruebas).
+- **Estado frente al SDD v1.0 y al SDD del Sprint 2:** [`docs/trazabilidad.md`](docs/trazabilidad.md) (requisito por requisito, con sus pruebas).
 - **Wireframes (H0.5):** [`docs/wireframes/index.html`](docs/wireframes/index.html), aprobados por el equipo el 2026-10-05. La interfaz se construyó sobre ellos:
   adjuntos en el detalle, filtros y urgencia en tablero y lista, Kanban con HTMX, Consolidado, editor de plantillas y notificaciones.
 - **Sprint 2:** especificación en [`docs/sdd-sprint-2.md`](docs/sdd-sprint-2.md) y wireframes en [`docs/wireframes/sprint-2.html`](docs/wireframes/sprint-2.html)
-  (aprobados el 2026-11-02). Se construye por hitos; el avance está en `docs/trazabilidad.md`.
+  (aprobados el 2026-11-02). Completado en los hitos S2-H1 a S2-H13; la trazabilidad completa está en [`docs/trazabilidad.md`](docs/trazabilidad.md).
 
 ## Puesta en marcha (desarrollo)
 
@@ -16,18 +16,18 @@ python -m venv .venv
 .\.venv\Scripts\pip install -r requirements.txt
 copy .env.example .env                                  # opcional: los valores por defecto sirven para desarrollo
 .\.venv\Scripts\python manage.py migrate
-.\.venv\Scripts\python manage.py seed_demo --reset      # datos simulados
+.\.venv\Scripts\python manage.py seed_demo --reset      # datos simulados (Sprint 1 + Sprint 2)
 .\.venv\Scripts\python manage.py runserver
 ```
 
 Abrir http://127.0.0.1:8000/. Pruebas: `.\.venv\Scripts\python manage.py test` (menos de un minuto).
 
 Si ya tenía datos de una versión anterior, `migrate` los conserva; `seed_demo --reset` los reemplaza por los de demostración
-(**borra todos los clientes, contratos, plantillas, entregables, adjuntos y lecciones**, más los usuarios de demostración).
+(**borra todos los clientes, contratos, plantillas, fichas, entregables, adjuntos, entregas, tiempos, documentos del repositorio, procedimientos, planes de incorporación y lecciones**, más los usuarios de demostración).
 
 ### Tareas programadas
 
-`python manage.py programador` deja corriendo (en otra terminal) las alertas de vencimiento, cada hora, y la indexación de lecciones del
+`python manage.py programador` deja corriendo (en otra terminal) las alertas de vencimiento y de actas pendientes, cada hora, y la indexación de lecciones y procedimientos vigentes del
 asistente, a diario a las 02:00 (hora de Lima). Se pueden lanzar a mano: `generar_alertas` e `indexar_lecciones`. En Docker es el servicio `programador`.
 
 ## Usuarios de prueba (contraseña `demo1234`, solo para este prototipo)
@@ -35,7 +35,7 @@ asistente, a diario a las 02:00 (hora de Lima). Se pueden lanzar a mano: `genera
 | Usuario | Rol | Ve |
 |---|---|---|
 | `admin_demo` | Administrador | Todo, más el panel técnico en `/admin/` |
-| `gerente_demo` | Gerente de Proyectos | Todos los proyectos; gestiona clientes, contratos y plantillas |
+| `gerente_demo` | Gerente de Proyectos | Todos los proyectos; gestiona clientes, contratos, plantillas, personal, procedimientos y planes de incorporación |
 | `senior1`, `senior2` | Senior | Los contratos a su cargo |
 | `junior1`, `junior2`, `junior3` | Junior | Solo lo que tienen asignado |
 
@@ -56,6 +56,21 @@ Recorre el flujo con el seed. Cada paso dice con qué usuario hacerlo.
 11. **Gestión.** Como `gerente_demo`: *Gestión* con las pestañas Clientes, Contratos, Plantillas y Líneas de servicio. En *Plantillas*, crear una con el editor de campos: «Agregar campo», subir o bajar, tipo «Opción» con sus opciones separadas por comas, y los adjuntos obligatorios. Renombrar un campo de una plantilla existente no hace perder los datos de los entregables ya creados. Un cliente o contrato no se borra: se desmarca «Activo». En *Líneas de servicio* (BPO, Custodia, Digitalización, Banca y Estado) se crean, renombran y activan o desactivan líneas; el contrato exige la suya. Un junior o un senior reciben «sin permiso».
 12. **«Atrás» del navegador.** Las páginas con sesión no se guardan en la caché del navegador: al volver con «Atrás» se ve el estado real del tablero, no una copia vieja.
 
+## Guion de demostración del Sprint 2
+
+Recorre las pantallas y reglas nuevas del Sprint 2 sobre los datos de `seed_demo --reset`:
+
+1. **Fichas de levantamiento (`/fichas/`, RF-30).** Entrar como `senior1` o `gerente_demo` y abrir *Fichas*: hay una ficha confirmada («TDR-BAF-LEV-001») con su estado documental inicial congelado y otra en borrador («TDR-FCS-LEV-002») con ítems mensual y quincenal listos para revisar en la vista previa y confirmar. Al confirmar una ficha se crean sus entregables recurrentes con código `CT-AAAA-NNNNN`, ID-TDR heredado y aviso al junior; al actualizar después el estado documental actual, la fotografía inicial congelada no cambia.
+2. **Observaciones por estado y subestado (`/observaciones/`, RF-25, RF-26, RF-27).** En *Entregables → Observaciones*, filtrar por estado (`Pendiente`, `En corrección`, `Resuelta`) y abrir el detalle de un entregable con correcciones: el junior asignado registra su acción correctiva y evidencia (pasa a «En corrección» y avisa al senior); el senior confirma la resolución o la rechaza (si estaba en revisión, lo devuelve a «En proceso · Con correcciones pendientes»). Ningún entregable pasa a «Revisión senior» con observaciones pendientes ni se aprueba con observaciones abiertas.
+3. **Versiones vigentes, entregas con cargo y actas (`/entregas/`, RF-28, RF-29).** En el detalle de un entregable con varias versiones de «Borrador», ver la fila marcada «Vigente · v2» y «Ver versiones anteriores», desde donde el senior puede restaurar la v1 como una nueva v3. En un entregable «Aprobado», usar «Marcar como entregado» (`/entregables/<id>/entregar/`): exige subir el cargo de recepción, bloquea la versión enviada para que nadie pueda eliminarla y registra la entrega en `/entregas/`. En `/entregas/` hay entregas con acta Recibida, Observada y una con acta Pendiente de hace 6 días (al correr `python manage.py generar_alertas` emite el aviso de acta pendiente). Un entregable con acta Observada ofrece «Reabrir para corrección».
+4. **Personal, responsables de apoyo y avisos de conflicto (`/personal/`, RF-31).** Como `gerente_demo`, abrir *Gestión → Personal* (`/personal/`): muestra el puesto, la carga activa, los apoyos y las ausencias registradas (hay una ausencia próxima para `junior2`). En el detalle de un entregable, sección «Responsables», sumar un responsable de apoyo o reasignar el responsable principal: si el candidato tiene ausencia, sobrecarga o un plazo cercano, el sistema muestra la advertencia de conflictos antes de pedir confirmación y deja constancia en el historial.
+5. **Registro de tiempo por etapa (`/tiempos/`, RF-32).** En el detalle de un entregable, sección «Tiempo por etapa», iniciar el cronómetro en Recopilación, Consolidación o Revisión (si el usuario tenía otro cronómetro abierto, se pausa automáticamente) o registrar un bloque manual indicando el motivo obligatorio. En *Entregables → Tiempos* (`/tiempos/`), filtrar por cliente, etapa, responsable y fechas; cada junior ve únicamente sus propios registros.
+6. **Panel de indicadores (`/indicadores/`, RF-33).** Abrir *Indicadores* como `gerente_demo`, `senior1` o `junior1`: las cuatro tarjetas (% entregados a tiempo, % con reproceso, tiempo promedio de elaboración y observaciones por tipo de error) muestran su fórmula exacta al desplegar «¿Cómo se calcula?», junto con las tablas por tipo de entregable, por tipo de error y (para senior, gerente y admin) por responsable.
+7. **Repositorio documental y publicación anonimizada (`/repositorio/`, RF-34, RF-35).** Abrir *Repositorio*: pestañas «Plantillas de clientes», «Plantillas generales», «Ejemplos anonimizados» y «Procedimientos». Entrar como `junior1` y verificar que solo ve las plantillas de los clientes de sus contratos activos, más las genéricas y los ejemplos anonimizados. Como `senior1`, publicar un ejemplo anonimizado en `/repositorio/publicar-anonimizado/`: si falta cualquiera de las 4 confirmaciones de la lista de verificación NDA, el servidor rechaza la publicación indicando cuántas faltan. Como `gerente_demo`, abrir el detalle de un documento para ver el historial de versiones y el registro de cargas y descargas.
+8. **Buscador global (`/buscar/`, RF-36).** Escribir en la caja de búsqueda de la barra superior (por ejemplo `informe`, `banco` o `matriz`, con o sin tildes): muestra resultados agrupados en Entregables, Contratos, Clientes, Adjuntos y Repositorio respetando siempre la visibilidad del rol, con filtros por fechas, tipo de documento, estado y cliente.
+9. **Asistente ampliado con procedimientos y valoración (`/asistente/`, RF-37).** En *Asistente*, preguntar por ejemplo «cómo presentar el cargo de entrega en mesa de partes» o «falta el periodo reportado en el informe»: responde citando tanto `[Procedimiento N]` (procedimientos vigentes aprobados) como `[Caso N]` (lecciones aprendidas; si provienen de un entregable no visible para el usuario, muestran el cliente pero sin enlace). Valorar la respuesta con «¿Le sirvió esta respuesta? Sí / No» y revisar la tabla «Mis consultas anteriores» (exclusiva de cada usuario). Como `gerente_demo`, gestionar el catálogo en `/procedimientos/`.
+10. **Plan de incorporación (`/incorporacion/`, RF-38).** Entrar como `junior3`: en *Inicio* aparece la tarjeta «Mi incorporación» con su barra de progreso (5 de 11 actividades completadas) y enlace a `/incorporacion/`. En `/incorporacion/`, marcar las actividades pendientes como «Completada» y comprobar que los materiales enlazan siempre a la versión vigente del repositorio o al procedimiento aprobado. Entrar luego como `senior1` (su responsable asignado): una vez que todas las actividades están completadas, el botón «Confirmar finalización del plan» cierra la incorporación. Como `gerente_demo`, administrar los planes y asignaciones en `/incorporacion/planes/`.
+
 ## Configuración (`.env`, ver `.env.example`)
 
 | Variable | Uso | Por defecto |
@@ -70,17 +85,22 @@ Recorre el flujo con el seed. Cada paso dice con qué usuario hacerlo.
 | `ALLOWED_UPLOAD_EXTENSIONS` | Extensiones permitidas | `pdf,docx,xlsx,pptx,png,jpg,txt` |
 | `ALERT_THRESHOLDS_DAYS` | Alertas (una por umbral) y urgencia: mayor = «próximo», segundo mayor = «crítico». Avisos a 5 días, 48 h, 24 h y el mismo día; «crítico» empieza a 2 días (SDD del Sprint 2, RF-22) | `5,2,1,0` |
 | `CODIGO_PREFIJO` | Prefijo del código de los entregables (`CT-2026-00031`); de 1 a 10 letras o números | `CT` |
+| `ACTA_DIAS_PENDIENTE` | Días tras la entrega para emitir la alerta de acta de conformidad pendiente (RF-29) | `5` |
+| `CARGA_MAXIMA_ACTIVOS` | Umbral de entregables activos a partir del cual se avisa sobrecarga al asignar (RF-31) | `8` |
+| `FICHA_MAX_ENTREGABLES` | Tope de entregables generados al confirmar una ficha de levantamiento (RF-30) | `60` |
+| `BUSCADOR_LIMITE` | Máximo de resultados por categoría en el buscador global `/buscar/` (RF-36) | `20` |
 | `CONSOLIDADO_WINDOW_DAYS` | Ventana de «próximos a vencer» | `7` |
 | `SESSION_IDLE_MINUTES` | Cierre de sesión por inactividad | `60` |
 | `OLLAMA_URL`, `OLLAMA_MODEL`, `EMBED_MODEL` | Asistente (fase 2) | `http://localhost:11434`, `llama3.2:3b`, `nomic-embed-text` |
-| `ASSISTANT_MIN_SIMILARITY` | Similitud mínima (0 a 1) para dar por relevante una lección | `0.5` |
+| `ASSISTANT_MIN_SIMILARITY` | Similitud mínima (0 a 1) para dar por relevante una lección o procedimiento | `0.5` |
 
-## Asistente de lecciones aprendidas (fase 2)
+## Asistente de lecciones aprendidas y procedimientos (fase 2 y Sprint 2)
 
-1. Al cerrar un entregable (`HECHO`), cada observación resuelta con solución genera una lección. `indexar_lecciones` (y la tarea programada) recoge además las que se resuelvan después.
-2. Con Ollama en el servidor local: `ollama pull llama3.2:3b` y `ollama pull nomic-embed-text`, luego `python manage.py indexar_lecciones`. Los embeddings se guardan en la tabla de lecciones, en la propia base de datos.
-3. La consulta busca por significado, arma el prompt solo con esos casos y cita su origen (con enlace solo si el usuario puede ver ese entregable). Si ninguna lección se parece, lo dice sin inventar.
-4. Sin Ollama, o antes de indexar, busca por coincidencia de palabras y la pantalla lo avisa; el resto de la plataforma no se ve afectado.
+1. Al cerrar un entregable (`HECHO`), cada observación resuelta con solución genera una lección. Además, el gerente y el administrador mantienen el catálogo de procedimientos aprobados en `/procedimientos/`. `indexar_lecciones` (y la tarea programada) indexa tanto las lecciones como los procedimientos vigentes.
+2. Con Ollama en el servidor local: `ollama pull llama3.2:3b` y `ollama pull nomic-embed-text`, luego `python manage.py indexar_lecciones`. Los embeddings se guardan en las tablas de lecciones y procedimientos, en la propia base de datos.
+3. La consulta busca por significado en ambas fuentes, arma el prompt solo con esos procedimientos y casos y cita su origen (`[Procedimiento N]` y `[Caso N]`, con enlace al entregable solo si el usuario puede verlo). Si no hay fuentes relacionadas, lo indica sin inventar y orienta a escalar al senior del contrato.
+4. Cada usuario puede valorar si la respuesta le fue útil («Sí / No») y consultar su historial propio en «Mis consultas anteriores».
+5. Sin Ollama, o antes de indexar, busca por coincidencia de palabras y la pantalla lo avisa; el resto de la plataforma no se ve afectado.
 
 **Decisión a confirmar:** el SDD menciona «ChromaDB (o pgvector)». Se implementó un índice propio en la base de datos (similitud coseno en Python) porque
 ChromaDB arrastra unas 80 dependencias (telemetría, clientes de red) para un corpus de decenas de lecciones, lo contrario de RNF-01. La interfaz es pequeña
@@ -100,8 +120,8 @@ servir en producción con gunicorn y WhiteNoise es la decisión abierta n.º 8 d
 
 ## Seguridad y privacidad
 
-- Todo permiso se verifica en el servidor (vistas, filtros, calendario y descargas); la interfaz solo oculta lo no permitido. Lo que un usuario no puede ver responde 404; lo que ve pero no puede hacer, 403.
-- Los archivos subidos se validan (extensión y tamaño), llevan el nombre saneado, se guardan fuera del código y **no tienen URL pública**: se descargan solo por una vista que comprueba el acceso al entregable.
+- Todo permiso se verifica en el servidor (vistas, filtros, calendario, buscador, indicadores, repositorio y descargas); la interfaz solo oculta lo no permitido. Lo que un usuario no puede ver responde 404; lo que ve pero no puede hacer, 403.
+- Los archivos subidos se validan (extensión y tamaño), llevan el nombre saneado, se guardan fuera del código y **no tienen URL pública**: se descargan solo por una vista que comprueba el acceso al entregable, a la ficha o al documento del repositorio.
 - CSRF activo, contraseñas con hash y validadores de Django, sesión que se cierra por inactividad y cookies seguras fuera de `DEBUG`.
 - Las páginas de quien inició sesión no se guardan en la caché del navegador (`Cache-Control: no-store`), y las peticiones HTMX llevan el token CSRF.
 - Sin llamadas a internet en ejecución: bibliotecas JavaScript copiadas en `static/js/`, sin fuentes ni analíticas externas (una prueba lo verifica).
@@ -111,19 +131,30 @@ servir en producción con gunicorn y WhiteNoise es la decisión abierta n.º 8 d
 ## Rutas principales
 
 `/login/`, `/logout/` · `/` · `/tablero/` · `/entregables/` · `/entregables/nuevo/` · `/entregables/<id>/` · `/entregables/<id>/mover/` · `/entregables/<id>/observaciones/` ·
-`/observaciones/<id>/resolver/` · `/entregables/<id>/adjuntos/` · `/adjuntos/<id>/descargar/` · `/adjuntos/<id>/eliminar/` · `/calendario/` · `/api/calendario/eventos/` ·
-`/notificaciones/` · `/notificaciones/<id>/leer/` · `/consolidado/` (gerente y admin) · `/gestion/` · `/clientes/` · `/contratos/` · `/plantillas/` ·
-`/lineas-servicio/` (gerente y admin) · `/asistente/` · `/admin/` (panel técnico, solo admin).
+`/observaciones/` · `/observaciones/<id>/corregir/` · `/observaciones/<id>/revisar/` · `/observaciones/<id>/resolver/` ·
+`/entregables/<id>/adjuntos/` · `/adjuntos/<id>/descargar/` · `/adjuntos/<id>/restaurar/` · `/adjuntos/<id>/eliminar/` ·
+`/entregables/<id>/entregar/` · `/entregas/` · `/entregas/<id>/acta/` ·
+`/entregables/<id>/responsables/` · `/entregables/<id>/tiempo/` · `/tiempos/` ·
+`/fichas/` · `/fichas/nueva/` · `/fichas/<id>/` · `/fichas/<id>/archivo/` ·
+`/calendario/` · `/api/calendario/eventos/` · `/notificaciones/` · `/notificaciones/<id>/leer/` ·
+`/indicadores/` · `/repositorio/` · `/repositorio/cargar-plantilla/` · `/repositorio/publicar-anonimizado/` · `/repositorio/<id>/` · `/repositorio/version/<id>/descargar/` · `/repositorio/version/<id>/restaurar/` ·
+`/buscar/` · `/asistente/` · `/asistente/valorar/<id>/` · `/procedimientos/` (gerente y admin) ·
+`/incorporacion/` · `/incorporacion/planes/` (gerente y admin) ·
+`/consolidado/` (gerente y admin) · `/gestion/` · `/clientes/` · `/contratos/` · `/plantillas/` · `/lineas-servicio/` · `/personal/` (gerente y admin) ·
+`/admin/` (panel técnico, solo admin).
 
 ## Estructura
 
 ```
-certitrack/      proyecto Django (settings, urls)
-apps/cuentas/    usuarios, roles, permisos, ingreso        apps/clientes/     clientes, contratos, plantillas
-apps/entregables/ entregables, observaciones, historial, adjuntos, urgencia y filtros
-apps/calendario/ apps/alertas/ (notificaciones y tareas programadas)  apps/consolidado/ (consolidado del gerente)
-apps/conocimiento/ lecciones y asistente (fase 2)           apps/reportes/    solo placeholder (fase 3)
-templates/ static/ docs/ (wireframes, hoja de ruta, trazabilidad)  media/ (adjuntos; no se versiona)
+certitrack/         proyecto Django (settings, urls)
+apps/cuentas/       usuarios, roles, permisos, ausencias, ingreso   apps/clientes/      clientes, contratos, plantillas, líneas
+apps/entregables/   entregables, observaciones, entregas, apoyos, tiempos, historial, adjuntos, urgencia y filtros
+apps/levantamiento/ fichas de levantamiento e ítems recurrentes     apps/indicadores/   panel de indicadores calculados
+apps/repositorio/   plantillas, ejemplos anonimizados (NDA), accesos apps/busqueda/      buscador global transversal
+apps/conocimiento/  lecciones, procedimientos y asistente            apps/equipo/        planes y seguimiento de incorporación
+apps/calendario/    apps/alertas/ (notificaciones y programador)    apps/consolidado/   consolidado del gerente
+apps/reportes/      solo placeholder (fase 3)
+templates/ static/ docs/ (wireframes, hoja de ruta, trazabilidad)   media/ (adjuntos; no se versiona)
 ```
 
 ## Decisiones abiertas del SDD (§23) y el valor usado

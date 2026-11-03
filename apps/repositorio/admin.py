@@ -12,8 +12,16 @@ class DocumentoRepositorioAdmin(admin.ModelAdmin):
 
 @admin.register(VersionDocumento)
 class VersionDocumentoAdmin(admin.ModelAdmin):
+    """Los archivos del repositorio no tienen URL pública: se muestra su ruta en texto."""
+
     list_display = ("documento", "numero", "nombre_original", "vigente", "subido_por", "subido_en")
     list_filter = ("vigente",)
+    exclude = ("archivo",)
+    readonly_fields = ("ruta_en_disco",)
+
+    @admin.display(description="Ubicación en el servidor")
+    def ruta_en_disco(self, obj):
+        return obj.archivo.name if obj.archivo else "—"
 
 
 @admin.register(RegistroAccesoDocumento)

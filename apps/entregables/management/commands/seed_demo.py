@@ -1,4 +1,4 @@
-"""Datos simulados para la demostración (SDD §16). Nada de esto corresponde a empresas o personas reales."""
+"""Datos simulados para la demostración (SDD §16 y SDD Sprint 2 §12.1). Nada de esto corresponde a empresas o personas reales."""
 import datetime
 import random
 
@@ -12,24 +12,37 @@ from faker import Faker
 from apps.alertas.models import Notificacion
 from apps.alertas.servicios import generar_alertas
 from apps.clientes.models import LINEAS_INICIALES, Cliente, Contrato, LineaServicio, PlantillaTDR
-from apps.conocimiento.models import LeccionAprendida
+from apps.conocimiento.models import ConsultaAsistente, LeccionAprendida, Procedimiento
 from apps.conocimiento.servicios import generar_lecciones, indexar_embeddings
-from apps.cuentas.models import Usuario
+from apps.cuentas.models import Ausencia, Usuario
 from apps.entregables import adjuntos, servicios
 from apps.entregables.demo_archivos import contenido_demo
-from apps.entregables.models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion
+from apps.entregables.models import (
+    Adjunto,
+    Entrega,
+    Entregable,
+    HistorialEstado,
+    Observacion,
+    RegistroTiempo,
+    ResponsableApoyo,
+)
+from apps.equipo import servicios as equipo_srv
+from apps.equipo.models import ActividadPlan, AvanceActividad, Incorporacion, PlanIncorporacion
+from apps.levantamiento.models import FichaLevantamiento, ItemFicha
+from apps.repositorio import servicios as repo_srv
+from apps.repositorio.models import DocumentoRepositorio, RegistroAccesoDocumento, VersionDocumento
 
 CLAVE = "demo1234"
 E = Entregable.Estado
 
 USUARIOS = [
-    ("admin_demo", "ADMIN", "Alicia", "Administradora"),
-    ("gerente_demo", "GERENTE", "Gabriel", "Gerente"),
-    ("senior1", "SENIOR", "Sofía", "Sánchez"),
-    ("senior2", "SENIOR", "Sergio", "Salazar"),
-    ("junior1", "JUNIOR", "Julia", "Jiménez"),
-    ("junior2", "JUNIOR", "Javier", "Juárez"),
-    ("junior3", "JUNIOR", "Jimena", "Jara"),
+    ("admin_demo", "ADMIN", "Alicia", "Administradora", "Administradora de la plataforma"),
+    ("gerente_demo", "GERENTE", "Gabriel", "Gerente", "Gerente de Proyectos"),
+    ("senior1", "SENIOR", "Sofía", "Sánchez", "Senior de Proyectos"),
+    ("senior2", "SENIOR", "Sergio", "Salazar", "Senior de Proyectos"),
+    ("junior1", "JUNIOR", "Julia", "Jiménez", "Asistente junior de Proyectos"),
+    ("junior2", "JUNIOR", "Javier", "Juárez", "Asistente junior de Proyectos"),
+    ("junior3", "JUNIOR", "Jimena", "Jara", "Asistente junior de Proyectos"),
 ]
 
 CLIENTES = [
@@ -98,12 +111,53 @@ OBSERVACIONES_RESUELTAS = [
     ("PLAZO", "La fecha de entrega estaba mal copiada.", "Se corrigió con el plazo de la ficha del contrato."),
 ]
 
+PROCEDIMIENTOS_DEMO = [
+    (
+        "Guía rápida de CertiTrack 360",
+        None,
+        "Recorrido por las pantallas principales: Inicio muestra sus entregables activos, plazos próximos, avisos y su "
+        "plan de incorporación; Tablero permite mover entregables según el flujo validado por el servidor; Calendario "
+        "muestra los vencimientos con responsable y filtros; Buscador localiza entregables, contratos, adjuntos y "
+        "plantillas respetando la visibilidad de su rol.",
+    ),
+    (
+        "Confidencialidad y datos de clientes",
+        None,
+        "Política NDA del área de Proyectos: las plantillas específicas de un cliente solo las consultan quienes están "
+        "asignados a sus contratos activos. Para compartir un ejemplo aprobado con todo el equipo, publíquelo en el "
+        "repositorio como ejemplo anonimizado tras verificar que se eliminaron nombres de clientes, montos, números de "
+        "contrato y datos personales.",
+    ),
+    (
+        "Flujo de un entregable",
+        None,
+        "Todo entregable pasa por cinco estados: Por hacer, En proceso, Revisión senior, Aprobado y Entregado. El "
+        "Poka-Yoke impide crear entregables sin campos obligatorios o sin ID-TDR, e impide enviar a Revisión senior si "
+        "faltan adjuntos requeridos o si quedan observaciones en estado Pendiente.",
+    ),
+    (
+        "Registro de entregas, cargos de recepción y actas de conformidad",
+        "BPO",
+        "Para cerrar un entregable en estado Entregado es obligatorio registrar la entrega adjuntando el cargo de "
+        "recepción, la fecha y el medio de envío; la versión enviada queda bloqueada contra eliminación. El acta de "
+        "conformidad nace Pendiente y, si supera los 5 días sin recibirse, el sistema alerta al junior y al senior. Si "
+        "el cliente observa el acta, se registra como Observada y se reabre el entregable para una reentrega.",
+    ),
+    (
+        "Levantamiento de TDR y estado documental inicial",
+        "Digitalización",
+        "Al iniciar un contrato, el junior o el senior redactan la ficha de levantamiento con el archivo del TDR, los "
+        "requerimientos, las penalidades y los ítems de entregables recurrentes. Al confirmarla el senior responsable, "
+        "queda congelada la foto del estado documental inicial (HU-06) y se generan los entregables en el tablero.",
+    ),
+]
+
 
 class Command(BaseCommand):
     help = (
         "Carga datos simulados de demostración (idempotente: si ya existen, no duplica). "
-        "Con --reset BORRA todos los clientes, contratos, plantillas, entregables, adjuntos y lecciones, "
-        "más los usuarios de demostración, y los vuelve a crear."
+        "Con --reset BORRA todos los clientes, contratos, plantillas, entregables, adjuntos, repositorio, fichas, "
+        "procedimientos, planes de incorporación y lecciones, más los usuarios de demostración, y los vuelve a crear."
     )
 
     def add_arguments(self, parser):
@@ -135,8 +189,15 @@ class Command(BaseCommand):
         hoy = timezone.localdate()
 
         u = {}
-        for username, rol, nombre, apellido in USUARIOS:
-            obj = Usuario(username=username, rol=rol, first_name=nombre, last_name=apellido, email=f"{username}@demo.invalid")
+        for username, rol, nombre, apellido, puesto in USUARIOS:
+            obj = Usuario(
+                username=username,
+                rol=rol,
+                first_name=nombre,
+                last_name=apellido,
+                puesto=puesto,
+                email=f"{username}@demo.invalid",
+            )
             obj.set_password(CLAVE)
             obj.save()
             u[username] = obj
@@ -183,6 +244,11 @@ class Command(BaseCommand):
         self._observaciones(entregables)
         sin_adjuntos = self._adjuntos(entregables)
         self._entregas(entregables, hoy)
+        self._personal_y_apoyos(u, entregables, hoy)
+        self._tiempos(entregables, hoy)
+        self._fichas(contratos, plantillas, entregables, u, hoy)
+        docs_repo = self._repositorio(clientes, lineas, plantillas, u)
+        self._procedimientos_e_incorporacion(lineas, docs_repo, u, hoy)
         self._notificaciones(entregables)
         generar_alertas(hoy)
 
@@ -191,6 +257,8 @@ class Command(BaseCommand):
             f"Listo: {Usuario.objects.count()} usuarios, {Cliente.objects.count()} clientes, {Contrato.objects.count()} contratos, "
             f"{PlantillaTDR.objects.count()} plantillas, {Entregable.objects.count()} entregables, "
             f"{Adjunto.objects.count()} archivos ficticios, {Observacion.objects.count()} observaciones, "
+            f"{DocumentoRepositorio.objects.count()} documentos en repositorio, {Procedimiento.objects.count()} procedimientos, "
+            f"{PlanIncorporacion.objects.count()} planes de incorporación, "
             f"{Notificacion.objects.count()} notificaciones y {LeccionAprendida.objects.count()} lecciones. "
             f"Contraseña de prueba: {CLAVE}\n"
             f"Para ver el bloqueo por adjuntos faltantes, mueva a «{E.VERIFICACION_SENIOR.label}»: {bloqueados}."
@@ -259,9 +327,22 @@ class Command(BaseCommand):
             generar_lecciones(e)
 
         en_proceso = [e for e in entregables if e.estado == E.EN_PROCESO]
-        for n, e in enumerate(en_proceso):  # abiertas: cubren los cinco tipos
+        ahora = timezone.now()
+        for n, e in enumerate(en_proceso):  # abiertas: cubren los cinco tipos y los estados PENDIENTE y EN_CORRECCION (§12.1)
             tipo = list(OBSERVACIONES_ABIERTAS)[n % len(OBSERVACIONES_ABIERTAS)]
-            Observacion.objects.create(entregable=e, autor=e.senior_revisor, tipo_error=tipo, descripcion=OBSERVACIONES_ABIERTAS[tipo])
+            en_correccion = n >= 5  # las dos últimas quedan «En corrección» con acción correctiva registrada
+            Observacion.objects.create(
+                entregable=e,
+                autor=e.senior_revisor,
+                responsable=e.junior_asignado,
+                tipo_error=tipo,
+                descripcion=OBSERVACIONES_ABIERTAS[tipo],
+                estado=Observacion.Estado.EN_CORRECCION if en_correccion else Observacion.Estado.PENDIENTE,
+                solucion="Se completó el dato observado en la versión corregida." if en_correccion else "",
+                corregida_por=e.junior_asignado if en_correccion else None,
+                corregida_en=ahora if en_correccion else None,
+                resuelta=False,
+            )
         previos = [e for e in entregables if e.estado in (E.VERIFICACION_SENIOR, E.LISTO_PARA_ENTREGA)]
         for n, (tipo, problema, solucion) in enumerate(OBSERVACIONES_RESUELTAS):  # resueltas, aún sin cerrar
             e = previos[n % len(previos)]
@@ -315,16 +396,15 @@ class Command(BaseCommand):
         return adjuntos.crear_adjunto(e, usuario, ContentFile(contenido, name=nombre), tipo, comentario, bloqueado=True)
 
     def _entregas(self, entregables, hoy):
-        """Cargo de recepción, entrega y acta de los entregables cerrados (RF-29), para que sigan siendo coherentes con la
-        regla nueva: no se pasa a «Entregado» sin cargo. Actas variadas: la mayoría recibida, una pendiente y una observada
-        (la ampliación grande del seed es del hito S2-H13)."""
+        """Cargo de recepción, entrega y acta de los entregables cerrados (RF-29 y §12.1).
+        La entrega con acta PENDIENTE lleva 6 días desde la entrega (> ACTA_DIAS_PENDIENTE=5), lista para demostrar la alerta."""
         actas = [Entrega.ActaEstado.RECIBIDA, Entrega.ActaEstado.RECIBIDA, Entrega.ActaEstado.PENDIENTE,
                  Entrega.ActaEstado.RECIBIDA, Entrega.ActaEstado.OBSERVADA, Entrega.ActaEstado.RECIBIDA,
                  Entrega.ActaEstado.RECIBIDA]
         medios = list(Entrega.Medio.values)
         for n, e in enumerate((x for x in entregables if x.estado == E.HECHO)):
             estado_acta = actas[n % len(actas)]
-            fecha = {Entrega.ActaEstado.PENDIENTE: hoy - datetime.timedelta(days=2),
+            fecha = {Entrega.ActaEstado.PENDIENTE: hoy - datetime.timedelta(days=6),
                      Entrega.ActaEstado.OBSERVADA: hoy - datetime.timedelta(days=8)}.get(
                 estado_acta, e.plazo - datetime.timedelta(days=n % 3))
             cargo = self._entrega_ficticia(e, "CARGO_RECEPCION", e.senior_revisor, "Cargo de recepción del cliente (ficticio)")
@@ -339,6 +419,316 @@ class Command(BaseCommand):
                 version_enviada=version, acta_estado=estado_acta, acta=acta,
                 acta_actualizada_en=timezone.now() if acta else None, registrada_por=e.senior_revisor, cierre=cierre,
             )
+
+    @staticmethod
+    def _personal_y_apoyos(u, entregables, hoy):
+        """Ausencia próxima y responsables de apoyo (§12.1, RF-31)."""
+        Ausencia.objects.create(
+            usuario=u["junior2"],
+            desde=hoy + datetime.timedelta(days=1),
+            hasta=hoy + datetime.timedelta(days=5),
+            motivo="Licencia programada (ficticia)",
+        )
+        en_curso = [e for e in entregables if e.estado == E.EN_PROCESO]
+        if len(en_curso) >= 2:
+            ResponsableApoyo.objects.create(
+                entregable=en_curso[0],
+                usuario=u["senior2"],
+                funcion=ResponsableApoyo.Funcion.REVISION,
+                fecha_limite=en_curso[0].plazo,
+                asignado_por=u["gerente_demo"],
+                activo=True,
+            )
+            ResponsableApoyo.objects.create(
+                entregable=en_curso[1],
+                usuario=u["senior1"],
+                funcion=ResponsableApoyo.Funcion.APOYO,
+                fecha_limite=en_curso[1].plazo,
+                asignado_por=u["gerente_demo"],
+                activo=True,
+            )
+            ResponsableApoyo.objects.create(
+                entregable=en_curso[0],
+                usuario=u["junior3"],
+                funcion=ResponsableApoyo.Funcion.ELABORACION,
+                fecha_limite=en_curso[0].plazo,
+                asignado_por=u["gerente_demo"],
+                activo=False,
+            )
+
+    @staticmethod
+    def _tiempos(entregables, hoy):
+        """Registros de tiempo de las tres etapas, incluidos ajustes manuales justificados (§12.1, RF-32)."""
+        base_dt = timezone.make_aware(datetime.datetime.combine(hoy - datetime.timedelta(days=3), datetime.time(9, 0)))
+        candidatos = [e for e in entregables if e.estado in (E.EN_PROCESO, E.VERIFICACION_SENIOR, E.LISTO_PARA_ENTREGA, E.HECHO)][:6]
+        etapas = [
+            RegistroTiempo.Etapa.RECOPILACION,
+            RegistroTiempo.Etapa.CONSOLIDACION,
+            RegistroTiempo.Etapa.REVISION,
+        ]
+        for idx, e in enumerate(candidatos):
+            etapa = etapas[idx % len(etapas)]
+            es_manual = idx in (1, 4)
+            usuario = e.senior_revisor if etapa == RegistroTiempo.Etapa.REVISION else e.junior_asignado
+            inicio = base_dt + datetime.timedelta(hours=idx * 3)
+            fin = inicio + datetime.timedelta(hours=2, minutes=30)
+            RegistroTiempo.objects.create(
+                entregable=e,
+                usuario=usuario,
+                etapa=etapa,
+                inicio=inicio,
+                fin=fin,
+                cierra_etapa=(idx % 2 == 0),
+                manual=es_manual,
+                motivo="Trabajo de revisión de anexos realizado en reunión con el equipo." if es_manual else "",
+            )
+
+    @staticmethod
+    def _fichas(contratos, plantillas, entregables, u, hoy):
+        """Dos fichas de levantamiento: una confirmada con foto inicial congelada y entregables vinculados, y otra en borrador (§12.1, RF-30)."""
+        c0 = contratos[0]
+        pdf_c0 = contenido_demo("pdf", f"TDR {c0.numero_contrato}", f"Cliente: {c0.cliente.nombre}")
+        foto_inicial = {
+            "contrato": c0.numero_contrato,
+            "cliente": c0.cliente.nombre,
+            "id_tdr": "TDR-BAF-2026-001",
+            "nombre_archivo_tdr": "tdr_demo_2026_001.pdf",
+            "requerimientos": "Presentación de informes técnicos mensuales y actas de conformidad firmadas.",
+            "formatos": "PDF con firma digital y anexos en hoja de cálculo",
+            "frecuencia_reportes": "Mensual",
+            "penalidades": "1 UIT por cada día útil de retraso injustificado",
+            "responsable": c0.senior_responsable.nombre,
+            "documentos_disponibles": "TDR firmado, cronograma base y directorio de contactos",
+            "documentos_faltantes": "Matriz de escalamiento actualizada del cliente",
+            "formato_esperado": "Informe PDF (máx. 10 MB)",
+            "fecha_limite": (hoy + datetime.timedelta(days=30)).isoformat(),
+            "estado_documental": FichaLevantamiento.EstadoDocumental.ABIERTO,
+        }
+        ficha_conf = FichaLevantamiento.objects.create(
+            contrato=c0,
+            id_tdr="TDR-BAF-2026-001",
+            archivo_tdr=ContentFile(pdf_c0, name="tdr_demo_2026_001.pdf"),
+            nombre_archivo_tdr="tdr_demo_2026_001.pdf",
+            requerimientos=foto_inicial["requerimientos"],
+            formatos=foto_inicial["formatos"],
+            frecuencia_reportes="Mensual",
+            penalidades=foto_inicial["penalidades"],
+            responsable=c0.senior_responsable,
+            documentos_disponibles="TDR firmado, cronograma base, directorio y matriz de escalamiento recibida",
+            documentos_faltantes="Ninguno",
+            formato_esperado=foto_inicial["formato_esperado"],
+            fecha_limite=hoy + datetime.timedelta(days=30),
+            estado=FichaLevantamiento.Estado.CONFIRMADA,
+            estado_inicial=foto_inicial,
+            estado_documental=FichaLevantamiento.EstadoDocumental.COMPLETO,
+            creada_por=c0.juniors.first() or u["junior1"],
+            confirmada_por=c0.senior_responsable,
+            confirmada_en=timezone.now(),
+        )
+        item_conf = ItemFicha.objects.create(
+            ficha=ficha_conf,
+            nombre="Informe técnico mensual",
+            plantilla=plantillas[0],
+            frecuencia=ItemFicha.Frecuencia.MENSUAL,
+            primera_fecha=hoy + datetime.timedelta(days=15),
+            hasta=hoy + datetime.timedelta(days=75),
+            junior=c0.juniors.first() or u["junior1"],
+            senior=c0.senior_responsable,
+            datos={"c_periodo_reportado": "2026-11", "c_responsable_del_cliente": "Coordinador Ficticio"},
+        )
+        item_conf.entregables_generados.set([e for e in entregables if e.contrato_id == c0.pk])
+
+        c1 = contratos[1]
+        pdf_c1 = contenido_demo("pdf", f"TDR {c1.numero_contrato}", f"Cliente: {c1.cliente.nombre}")
+        ficha_borrador = FichaLevantamiento.objects.create(
+            contrato=c1,
+            id_tdr="TDR-FCS-2026-002",
+            archivo_tdr=ContentFile(pdf_c1, name="tdr_demo_2026_002.pdf"),
+            nombre_archivo_tdr="tdr_demo_2026_002.pdf",
+            requerimientos="Elaboración trimestral de matriz de riesgos operacionales y actas de comité.",
+            formatos="Hoja de cálculo (.xlsx) y acta en PDF",
+            frecuencia_reportes="Trimestral",
+            penalidades="0,5 % del monto mensual por observación reiterada",
+            responsable=c1.senior_responsable,
+            documentos_disponibles="TDR preliminar y catálogo de procesos",
+            documentos_faltantes="Anexo de umbrales de impacto validado por el cliente",
+            formato_esperado="Hoja de cálculo oficial",
+            fecha_limite=hoy + datetime.timedelta(days=20),
+            estado=FichaLevantamiento.Estado.BORRADOR,
+            estado_documental=FichaLevantamiento.EstadoDocumental.EN_CURSO,
+            creada_por=c1.juniors.first() or u["junior2"],
+        )
+        ItemFicha.objects.create(
+            ficha=ficha_borrador,
+            nombre="Matriz de riesgos trimestral",
+            plantilla=plantillas[2],
+            frecuencia=ItemFicha.Frecuencia.MENSUAL,
+            primera_fecha=hoy + datetime.timedelta(days=10),
+            hasta=hoy + datetime.timedelta(days=70),
+            junior=c1.juniors.first() or u["junior2"],
+            senior=c1.senior_responsable,
+            datos={
+                "c_nivel_de_riesgo": "2",
+                "c_impacto": "Medio",
+                "c_descripci_n_del_riesgo": "Riesgo operativo simulado para demostración.",
+            },
+        )
+
+    @staticmethod
+    def _repositorio(clientes, lineas, plantillas, u):
+        """Ocho documentos en el repositorio: plantillas de cliente (dos con v1 y v2), genéricas y ejemplos anonimizados (§12.1)."""
+        gerente = u["gerente_demo"]
+        senior1 = u["senior1"]
+        senior2 = u["senior2"]
+        linea_por_nombre = {l.nombre: l for l in lineas}
+
+        def _pdf_repo(nombre_archivo, titulo, subtitulo):
+            return ContentFile(contenido_demo("pdf", titulo, subtitulo), name=nombre_archivo)
+
+        # 1. Plantilla de Banco Andino con 2 versiones (v1 histórico, v2 vigente)
+        doc_baf, _ = repo_srv.cargar_plantilla(
+            senior1,
+            titulo="Formato de reporte mensual Banco Andino",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.REPORTE,
+            archivo=_pdf_repo("formato_reporte_baf_v1.pdf", "Formato Reporte BAF v1", "Plantilla inicial (ficticia)"),
+            cliente=clientes[0],
+            linea_servicio=linea_por_nombre.get("Banca"),
+            comentario="Versión inicial del formato del cliente",
+        )
+        repo_srv.subir_nueva_version(
+            doc_baf,
+            senior1,
+            archivo=_pdf_repo("formato_reporte_baf_v2.pdf", "Formato Reporte BAF v2", "Incluye código de riesgo operacional"),
+            comentario="Suma cuadro de código de riesgo operacional según adenda",
+        )
+
+        # 2. Plantilla de Telecom Pacífico con 2 versiones (v1 histórico, v2 vigente)
+        doc_tel, _ = repo_srv.cargar_plantilla(
+            senior1,
+            titulo="Plantilla de matriz de riesgos Telecom Pacífico",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.REPORTE,
+            archivo=_pdf_repo("plantilla_matriz_telecom_v1.pdf", "Matriz Telecom v1", "Versión original (ficticia)"),
+            cliente=clientes[2],
+            linea_servicio=linea_por_nombre.get("BPO"),
+            comentario="Versión original del contrato",
+        )
+        repo_srv.subir_nueva_version(
+            doc_tel,
+            senior1,
+            archivo=_pdf_repo("plantilla_matriz_telecom_v2.pdf", "Matriz Telecom v2", "Estilos de título actualizados"),
+            comentario="Ajusta estilos de título exigidos por el TDR",
+        )
+
+        # 3 y 4. Otras dos plantillas específicas de clientes
+        doc_carta_baf, _ = repo_srv.cargar_plantilla(
+            gerente,
+            titulo="Carta de presentación de entregables (Banco Andino)",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.CARTA,
+            archivo=_pdf_repo("carta_presentacion_baf.pdf", "Carta BAF", "Modelo de carta de entrega (ficticio)"),
+            cliente=clientes[0],
+            linea_servicio=linea_por_nombre.get("Digitalización"),
+            comentario="Modelo validado con mesa de partes",
+        )
+        doc_muni, _ = repo_srv.cargar_plantilla(
+            senior2,
+            titulo="Formato de acta de conformidad sector público",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.OTRO,
+            archivo=_pdf_repo("acta_municipalidad.pdf", "Acta Sector Público", "Plantilla para entidades públicas (ficticia)"),
+            cliente=clientes[5],
+            linea_servicio=linea_por_nombre.get("Estado"),
+            comentario="Incluye bloque de firmas y sello de recepción",
+        )
+
+        # 5 y 6. Dos plantillas genéricas (visibles para todos los roles)
+        doc_gen_informe, _ = repo_srv.cargar_plantilla(
+            gerente,
+            titulo="Plantilla general de informe técnico mensual",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.REPORTE,
+            archivo=_pdf_repo("plantilla_general_informe.pdf", "Informe Técnico Estándar", "Plantilla genérica CERTICOM (ficticia)"),
+            cliente=None,
+            linea_servicio=linea_por_nombre.get("BPO"),
+            comentario="Formato estándar del área de Proyectos",
+        )
+        doc_gen_cot, _ = repo_srv.cargar_plantilla(
+            gerente,
+            titulo="Cotización estándar de servicios documentales",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.COTIZACION,
+            archivo=_pdf_repo("cotizacion_estandar.pdf", "Cotización Estándar", "Formato genérico de cotización (ficticio)"),
+            cliente=None,
+            linea_servicio=linea_por_nombre.get("Custodia"),
+            comentario="Plantilla base para propuestas técnicas",
+        )
+
+        # 7 y 8. Dos ejemplos anonimizados con verificación NDA completa
+        confirmaciones_nda = {clave: True for clave in repo_srv.CLAVES_NDA}
+        doc_anon_inf, _ = repo_srv.publicar_anonimizado(
+            senior1,
+            titulo="Ejemplo de informe técnico mensual aprobado (anonimizado)",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.REPORTE,
+            archivo=_pdf_repo("ejemplo_informe_anonimizado.pdf", "Ejemplo Anonimizado de Informe", "Sin datos de clientes reales"),
+            confirmaciones=confirmaciones_nda,
+            linea_servicio=linea_por_nombre.get("BPO"),
+            comentario="Ejemplo de referencia para nuevos ingresos",
+        )
+        doc_anon_mat, _ = repo_srv.publicar_anonimizado(
+            gerente,
+            titulo="Ejemplo de matriz de riesgos operacionales (anonimizado)",
+            tipo_documento=DocumentoRepositorio.TipoDocumento.REPORTE,
+            archivo=_pdf_repo("ejemplo_matriz_anonimizada.pdf", "Ejemplo Anonimizado de Matriz", "Sin montos ni contratos reales"),
+            confirmaciones=confirmaciones_nda,
+            linea_servicio=linea_por_nombre.get("Custodia"),
+            comentario="Referencia de redacción de causas e impactos",
+        )
+
+        # Enlaza las plantillas de TDR con sus formatos del repositorio (§7.9)
+        PlantillaTDR.objects.filter(pk=plantillas[0].pk).update(documento_formato=doc_gen_informe)
+        PlantillaTDR.objects.filter(pk=plantillas[3].pk).update(documento_formato=doc_baf)
+
+        return {
+            "plantilla_cliente": doc_baf,
+            "plantilla_generica": doc_gen_informe,
+            "ejemplo_anonimizado": doc_anon_inf,
+            "todos": [doc_baf, doc_tel, doc_carta_baf, doc_muni, doc_gen_informe, doc_gen_cot, doc_anon_inf, doc_anon_mat],
+        }
+
+    @staticmethod
+    def _procedimientos_e_incorporacion(lineas, docs_repo, u, hoy):
+        """Cinco procedimientos aprobados y los dos planes de incorporación con una incorporación en curso (§7.12, §12.1)."""
+        gerente = u["gerente_demo"]
+        linea_por_nombre = {l.nombre: l for l in lineas}
+        for titulo, nombre_linea, contenido in PROCEDIMIENTOS_DEMO:
+            Procedimiento.objects.create(
+                titulo=titulo,
+                contenido=contenido,
+                linea_servicio=linea_por_nombre.get(nombre_linea) if nombre_linea else None,
+                documento=docs_repo["plantilla_generica"] if "Flujo" in titulo else None,
+                aprobado_por=gerente,
+                vigente=True,
+            )
+
+        plan_junior, _ = equipo_srv.crear_planes_iniciales(
+            autor=gerente,
+            plantilla_doc=docs_repo["plantilla_generica"],
+            ejemplo_anon_doc=docs_repo["ejemplo_anonimizado"],
+        )
+        # Incorporación en curso para junior3 (Jimena), con 5 actividades completadas y 1 en curso (wireframe s2-incorporacion)
+        inc = equipo_srv.asignar_plan(
+            plan_junior,
+            ingresante=u["junior3"],
+            responsable=u["senior1"],
+            fecha_inicio=hoy - datetime.timedelta(days=5),
+            autor=gerente,
+            emitir_notificaciones=False,
+        )
+        ahora = timezone.now()
+        for av in inc.avances.select_related("actividad").order_by("actividad__orden"):
+            if av.actividad.orden <= 5:
+                av.estado = AvanceActividad.Estado.COMPLETADA
+                av.completada_en = ahora
+                av.save(update_fields=["estado", "completada_en", "actualizado_en"])
+            elif av.actividad.orden == 6:
+                av.estado = AvanceActividad.Estado.EN_CURSO
+                av.save(update_fields=["estado", "actualizado_en"])
 
     @staticmethod
     def _notificaciones(entregables):
@@ -362,6 +752,32 @@ class Command(BaseCommand):
 
     @staticmethod
     def _borrar():
-        for modelo in (Notificacion, LeccionAprendida, Entrega, HistorialEstado, Adjunto, Observacion, Entregable, PlantillaTDR, Contrato, Cliente):
-            modelo.objects.all().delete()  # los archivos de los adjuntos se borran del disco al confirmar (ver signals)
+        PlantillaTDR.objects.update(documento_formato=None)
+        for modelo in (
+            AvanceActividad,
+            Incorporacion,
+            ActividadPlan,
+            PlanIncorporacion,
+            ConsultaAsistente,
+            Procedimiento,
+            RegistroAccesoDocumento,
+            VersionDocumento,
+            DocumentoRepositorio,
+            ItemFicha,
+            FichaLevantamiento,
+            RegistroTiempo,
+            ResponsableApoyo,
+            Ausencia,
+            Notificacion,
+            LeccionAprendida,
+            Entrega,
+            HistorialEstado,
+            Adjunto,
+            Observacion,
+            Entregable,
+            PlantillaTDR,
+            Contrato,
+            Cliente,
+        ):
+            modelo.objects.all().delete()  # los archivos en disco se borran al confirmar la transacción (ver signals)
         Usuario.objects.filter(username__in=[x[0] for x in USUARIOS]).delete()
