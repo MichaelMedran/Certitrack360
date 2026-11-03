@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Repositorio</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span class="activo nuevo-inline">Repositorio</span><span>Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (0) · Sofía Sánchez · Senior · Salir</span>
+</div>
+
+<h1>Repositorio de plantillas y ejemplos</h1>
+<div class="pestanas nuevo"><span class="activa">Plantillas de clientes</span><span>Ejemplos anonimizados</span><span>Procedimientos</span></div>
+<div class="panel">
+  <div class="fila">
+    <label>Buscar <span class="campo">título…</span></label>
+    <label>Cliente <span class="campo">Todos los míos ▾</span></label>
+    <label>Tipo de documento <span class="campo">Todos ▾</span></label>
+    <label>Línea de servicio <span class="campo">Todas ▾</span></label>
+    <span class="boton principal">+ Cargar plantilla</span> <span class="marca">1</span>
+  </div>
+  <table>
+    <tr><th>Título</th><th>Cliente</th><th>Tipo</th><th>Línea</th><th>Vigente</th><th>Actualizada</th><th></th></tr>
+    <tr><td><a href="s2-documento.html">Formato de reporte mensual</a></td><td>Banco Andino Ficticio</td><td>Reporte</td><td>Digitalización</td><td>v2</td><td>28/10/2026 · Sofía S.</td><td><span class="boton">Descargar</span></td></tr>
+    <tr><td>Carta de presentación</td><td>Banco Andino Ficticio</td><td>Carta</td><td>Digitalización</td><td>v1</td><td>10/10/2026 · Gabriel</td><td><span class="boton">Descargar</span></td></tr>
+    <tr><td>Cotización estándar</td><td><i>Genérica</i></td><td>Cotización</td><td>—</td><td>v3</td><td>01/10/2026 · Gabriel</td><td><span class="boton">Descargar</span></td></tr>
+  </table>
+  <p class="nota">Descargar con un clic baja siempre la versión vigente. <span class="marca">2</span></p>
+</div>
+
+<div class="pestanas nuevo"><span>Plantillas de clientes</span><span class="activa">Ejemplos anonimizados</span><span>Procedimientos</span></div>
+<div class="panel">
+  <div class="fila"><label>Tipo de documento <span class="campo">Todos ▾</span></label><label>Línea de servicio <span class="campo">Todas ▾</span></label><span class="boton principal">+ Publicar ejemplo anonimizado</span></div>
+  <table>
+    <tr><th>Título</th><th>Tipo</th><th>Línea</th><th>Etiqueta</th><th>Publicado</th><th></th></tr>
+    <tr><td>Ejemplo de informe técnico aprobado</td><td>Reporte</td><td>BPO</td><td><span class="tag">Anonimizado</span></td><td>15/10/2026 · Sofía S.</td><td><span class="boton">Descargar</span></td></tr>
+  </table>
+</div>
+
+<h2>Publicar ejemplo anonimizado</h2>
+<div class="caja nuevo">
+  <div class="fila"><label>Título * <span class="campo ancho">Ejemplo de matriz de riesgos</span></label></div>
+  <div class="fila"><label>Tipo de documento * <span class="campo">Reporte ▾</span></label><label>Línea de servicio * <span class="campo">Custodia ▾</span></label><label>Archivo * <span class="campo">matriz_ejemplo.xlsx</span></label></div>
+  <div class="caja gris">
+    <h3>Confirme que eliminó la información confidencial (política NDA) <span class="marca">3</span></h3>
+    <p>☑ Nombres de clientes y de personas de contacto</p>
+    <p>☑ Montos y valores económicos</p>
+    <p>☐ Números de contrato, de TDR y de factura</p>
+    <p>☐ Datos personales (documentos de identidad, direcciones, teléfonos, correos)</p>
+  </div>
+  <div class="aviso">No se puede publicar: faltan 2 confirmaciones de la lista.</div>
+  <div class="fila"><span class="boton principal">Publicar</span></div>
+</div>
+
+<div class="pestanas nuevo"><span>Plantillas de clientes</span><span>Ejemplos anonimizados</span><span class="activa">Procedimientos</span></div>
+<div class="panel">
+  <table>
+    <tr><th>Procedimiento</th><th>Línea</th><th>Aprobado</th><th>Vigente</th></tr>
+    <tr><td>Flujo de un entregable</td><td>Todas</td><td>Gabriel · 20/10/2026</td><td>Sí</td></tr>
+    <tr><td>Confidencialidad y datos de clientes</td><td>Todas</td><td>Gabriel · 20/10/2026</td><td>Sí</td></tr>
+  </table>
+  <p class="nota">Los procedimientos son texto que el asistente usa para responder (HU-10). Los cargan y aprueban el gerente y el admin. <span class="marca">4</span></p>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Permisos</b> (HU-07, criterio 4): el junior ve las plantillas de los clientes de sus contratos más las genéricas; el senior, las de sus clientes; gerente y admin, todas. Cargan plantillas de cliente el senior de ese cliente, el gerente y el admin. El junior no ve el botón «Cargar».</li>
+  <li>Cargar una plantilla nueva del mismo título crea una versión vigente y deja la anterior como histórico (HU-07, criterio 3). Ver <a href="s2-documento.html">documento</a>.</li>
+  <li><b>HU-20</b>: sin las cuatro confirmaciones el servidor no publica. Solo publican senior, gerente y admin; los juniors descargan pero no modifican. Los anonimizados se guardan separados de los documentos con datos de clientes.</li>
+  <li>La pestaña Procedimientos es de solo lectura para juniors y seniors.</li>
+</ol>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Nuevo entregable</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span class="activo">Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (0) · Sofía Sánchez · Senior · Salir</span>
+</div>
+
+<h1>Nuevo entregable</h1>
+<p class="nota">Igual que en el Sprint 1, con los datos de recepción que pide HU-01.</p>
+
+<div class="caja">
+  <h3>1. Contrato y plantilla</h3>
+  <div class="fila"><label>Contrato * <span class="campo">DEMO-2026-001 · Banco Andino Ficticio ▾</span></label><label>Plantilla * <span class="campo">Informe técnico mensual ▾</span></label></div>
+  <div class="fila nuevo"><label>Cliente <span class="campo">Banco Andino Ficticio</span></label><label>Línea de servicio <span class="campo">Digitalización</span></label> <span class="nota">(se toman del contrato, solo lectura)</span> <span class="marca">1</span></div>
+</div>
+
+<div class="caja nuevo">
+  <h3>2. Recepción de la solicitud</h3>
+  <div class="fila">
+    <label>ID-TDR * <span class="campo">TDR-BAF-014</span></label>
+    <label>Fecha de recepción * <span class="campo">01/11/2026</span></label>
+    <label>Plazo de entrega * <span class="campo">12/11/2026</span></label>
+    <span class="marca">2</span>
+  </div>
+  <p class="nota">Código del ticket: se asigna al guardar (p. ej. CT-2026-00031).</p>
+</div>
+
+<div class="caja">
+  <h3>3. Datos que exige la plantilla</h3>
+  <div class="fila"><label>Periodo reportado * <span class="campo">Octubre 2026</span></label><label>Responsable del cliente * <span class="campo">&nbsp;</span></label></div>
+  <p class="nota">Adjuntos que exigirá para pasar a revisión: Borrador.</p>
+</div>
+
+<div class="caja">
+  <h3>4. Responsables</h3>
+  <div class="fila"><label>Junior asignado * <span class="campo">Julia Jiménez ▾</span></label><label>Senior revisor * <span class="campo">Sofía Sánchez ▾</span></label></div>
+  <div class="aviso nuevo">Julia Jiménez tiene 7 entregables activos y otro plazo el 12/11/2026. Puede continuar. <span class="marca">3</span></div>
+</div>
+
+<div class="aviso">No se puede guardar: falta «ID-TDR» y «Responsable del cliente»; la fecha de recepción no puede ser posterior al plazo.</div>
+<div class="fila"><span class="boton principal">Crear entregable</span> <span class="boton">Cancelar</span></div>
+
+<ol class="anotaciones">
+  <li>La línea de servicio (BPO, Custodia, Digitalización, Banca, Estado) se configura en el contrato desde Gestión. Es el mismo catálogo que usarán las etiquetas del Sprint 3.</li>
+  <li>Poka-Yoke ampliado: ID-TDR y fecha de recepción son obligatorios; la recepción no puede ser futura ni posterior al plazo. El mensaje nombra cada dato que falta.</li>
+  <li>El mismo aviso de conflictos de la asignación (HU-08). No bloquea.</li>
+</ol>
+
+</div>
+</body>
+</html>

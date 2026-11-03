@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Calendario</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span class="activo">Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (0) · Sofía Sánchez · Senior · Salir</span>
+</div>
+
+<h1>Calendario de plazos</h1>
+
+<div class="caja nuevo">
+  <details open>
+    <summary>Filtros <span class="chip">1 activo</span> <span class="marca">1</span></summary>
+    <div class="fila" style="margin-top:8px">
+      <label>Cliente <span class="campo">Banco Andino Ficticio ▾</span></label>
+      <label>Estado <span class="campo">Todos ▾</span></label>
+      <label>Responsable <span class="campo">Todos ▾</span></label>
+      <span class="boton">Limpiar</span>
+    </div>
+  </details>
+</div>
+
+<div class="fila"><span class="boton">‹</span><span class="boton">›</span><span class="boton">Hoy</span> <b style="margin:0 auto">noviembre de 2026</b> <span class="boton">Mes</span><span class="boton">Semana</span><span class="boton">Lista</span></div>
+<div class="mes">
+  <div class="dia">lun</div><div class="dia">mar</div><div class="dia">mié</div><div class="dia">jue</div><div class="dia">vie</div><div class="dia">sáb</div><div class="dia">dom</div>
+  <div>9</div><div>10</div><div>11</div>
+  <div>12<div class="evento nuevo">[En proceso · Con correcciones pendientes] CT-2026-00031 Banco Andino Ficticio: Informe técnico 03 — <b>Julia J.</b> — Próximo <span class="marca">2</span></div></div>
+  <div>13</div><div>14</div><div>15</div>
+  <div>16</div><div>17</div><div>18</div><div>19</div>
+  <div>20<div class="evento">[Aprobado] CT-2026-00027 Banco Andino Ficticio: Matriz de riesgos Q3 — Julia J.</div></div>
+  <div>21</div><div>22</div>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Filtros</b> (HU-02, criterio 3): cliente, estado y responsable. La fecha se elige navegando por mes o semana. Los filtros se aplican sobre lo que el usuario ya puede ver; un junior solo ve sus plazos.</li>
+  <li><b>Responsable y código</b> en el texto de cada evento (HU-02, criterio 2). El estado y la urgencia siguen en texto, no solo en color.</li>
+</ol>
+
+</div>
+</body>
+</html>

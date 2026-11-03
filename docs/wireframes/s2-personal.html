@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Personal y líneas de servicio</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span><span>Consolidado</span><span class="activo">Gestión</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (0) · Gabriel · Gerente · Salir</span>
+</div>
+
+<div class="pestanas"><span>Clientes</span><span>Contratos</span><span>Plantillas</span><span>Fichas</span><span class="activa nuevo-inline">Personal</span><span class="nuevo-inline">Líneas de servicio</span></div>
+<div class="panel nuevo">
+  <h1>Personal</h1>
+  <div class="fila"><label>Rol <span class="campo">Todos ▾</span></label><label>Buscar <span class="campo">nombre…</span></label> <span class="marca">1</span></div>
+  <table>
+    <tr><th>Colaborador</th><th>Rol</th><th>Puesto</th><th class="num">Activos</th><th class="num">Vencen en 7 días</th><th>Ausencias próximas</th><th>Carga</th></tr>
+    <tr><td>Julia Jiménez</td><td>Junior</td><td>Asistente de Proyectos</td><td class="num">7</td><td class="num">2</td><td>—</td><td><div class="barra-g"><i style="width:88%"></i></div> 7 / 8</td></tr>
+    <tr><td>Javier Jara</td><td>Junior</td><td>Asistente de Proyectos</td><td class="num">9</td><td class="num">3</td><td>14/11 a 15/11 · Permiso</td><td><div class="barra-g"><i style="width:100%"></i></div> 9 / 8 <b>Sobrecarga</b></td></tr>
+    <tr><td>Jimena Jáuregui</td><td>Junior</td><td>Asistente de Proyectos</td><td class="num">4</td><td class="num">1</td><td>—</td><td><div class="barra-g"><i style="width:50%"></i></div> 4 / 8</td></tr>
+    <tr><td>Sofía Sánchez</td><td>Senior</td><td>Senior de Proyectos</td><td class="num">12</td><td class="num">4</td><td>—</td><td>Revisa 12</td></tr>
+  </table>
+  <p class="nota">La carga lleva el número en texto; la barra solo lo refuerza. «Sobrecarga» aparece desde el máximo configurado (8).</p>
+
+  <h2>Registrar ausencia <span class="marca">2</span></h2>
+  <div class="fila"><label>Colaborador <span class="campo">Javier Jara ▾</span></label><label>Desde <span class="campo">14/11/2026</span></label><label>Hasta <span class="campo">15/11/2026</span></label><label>Motivo <span class="campo">Permiso</span></label><span class="boton">Guardar</span></div>
+
+  <h2>Asignaciones de Javier Jara</h2>
+  <table>
+    <tr><th>Entregable</th><th>Función</th><th>Plazo</th><th>Estado</th><th></th></tr>
+    <tr><td>CT-2026-00019 · Acta de reunión</td><td>Junior principal</td><td>30/10/2026</td><td>En proceso · Vencido</td><td><span class="boton">Reasignar</span> <span class="marca">3</span></td></tr>
+    <tr><td>CT-2026-00031 · Informe técnico 03</td><td>Apoyo (elaboración)</td><td>10/11/2026</td><td>En proceso</td><td><span class="boton">Quitar</span></td></tr>
+  </table>
+
+  <div class="caja gris">
+    <h3>Reasignar CT-2026-00019 · Acta de reunión</h3>
+    <div class="fila"><label>Junior principal <span class="campo">Jimena Jáuregui ▾</span></label><label>Motivo <span class="campo ancho">Javier Jara con sobrecarga</span></label></div>
+    <div class="aviso">Sin conflictos: Jimena Jáuregui tiene 4 activos y ningún plazo cercano.</div>
+    <div class="fila"><span class="boton principal">Confirmar reasignación</span></div>
+  </div>
+</div>
+
+<div class="pestanas"><span>Clientes</span><span>Contratos</span><span>Plantillas</span><span>Fichas</span><span>Personal</span><span class="activa nuevo-inline">Líneas de servicio</span></div>
+<div class="panel nuevo">
+  <h1>Líneas de servicio <span class="marca">4</span></h1>
+  <table>
+    <tr><th>Nombre</th><th class="num">Contratos</th><th>Estado</th><th></th></tr>
+    <tr><td>BPO</td><td class="num">3</td><td>Activa</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Custodia</td><td class="num">2</td><td>Activa</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Digitalización</td><td class="num">4</td><td>Activa</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Banca</td><td class="num">1</td><td>Activa</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Estado</td><td class="num">0</td><td>Activa</td><td><span class="boton">Editar</span></td></tr>
+  </table>
+  <div class="fila"><span class="boton">+ Nueva línea</span></div>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Personal</b> (HU-08): solo gerente y admin ven esta pestaña. Un senior ve la carga de su equipo desde los entregables de sus contratos, sin esta pestaña. Los usuarios se siguen creando en el panel técnico (admin); aquí se consultan y se asignan.</li>
+  <li>Las ausencias solo sirven para avisar conflictos al asignar; no bloquean nada.</li>
+  <li>Reasignar avisa a quien entra y a quien sale, y queda en el historial del entregable con quién lo hizo y cuándo (HU-08, criterio 4).</li>
+  <li><b>Líneas de servicio</b> (HU-01): catálogo único que usan el contrato, el entregable, el repositorio y el buscador. La baja es lógica.</li>
+</ol>
+
+</div>
+</body>
+</html>

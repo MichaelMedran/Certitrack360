@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Asistente</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span class="activo">Asistente</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (0) · Julia Jiménez · Junior · Salir</span>
+</div>
+
+<h1>Asistente</h1>
+<p class="nota">Responde con los procedimientos aprobados y las lecciones aprendidas del área. Si no encuentra información, lo dice.</p>
+
+<div class="caja">
+  <div class="fila"><label>Su pregunta <span class="campo ancho">¿Qué hago si el cliente no firma el acta de conformidad?</span></label><span class="boton principal">Preguntar</span></div>
+</div>
+
+<div class="caja">
+  <h3>Respuesta</h3>
+  <p>Registre el acta como «Pendiente» y, si pasan más de 5 días, el sistema avisará a usted y al senior. Según el procedimiento, el senior contacta al cliente y, si el acta llega con observaciones, se registra como «Observada» y se prepara una nueva entrega…</p>
+  <h3>Fuentes <span class="marca">1</span></h3>
+  <p><span class="tag nuevo-inline">Procedimiento</span> <a href="#">Flujo de un entregable</a> · aprobado el 20/10/2026</p>
+  <p><span class="tag">Caso</span> <a href="#">Banco Andino Ficticio · CT-2026-00011</a> — Plazo: el acta tardó 3 semanas; se acordó un correo de recordatorio semanal.</p>
+  <p><span class="tag">Caso</span> Telecom Sur Ficticia (sin enlace) — Formato: acta devuelta por falta de firma del responsable. <span class="marca">2</span></p>
+  <div class="fila nuevo"><b>¿Le sirvió esta respuesta?</b> <span class="boton">Sí</span> <span class="boton">No</span> <span class="marca">3</span></div>
+</div>
+
+<div class="aviso">Ejemplo sin información: «No encontré procedimientos ni casos sobre esto. Consulte con el senior de su contrato (Sofía Sánchez).» <span class="marca">4</span></div>
+
+<h2>Mis consultas anteriores</h2>
+<div class="caja nuevo">
+  <table>
+    <tr><th>Fecha</th><th>Pregunta</th><th>¿Le sirvió?</th><th></th></tr>
+    <tr><td>04/11/2026 10:20</td><td>¿Qué formato usa el Banco Andino para el reporte mensual?</td><td>Sí</td><td><span class="boton">Ver de nuevo</span></td></tr>
+    <tr><td>02/11/2026 15:05</td><td>¿Cuándo se puede enviar a revisión?</td><td>—</td><td><span class="boton">Ver de nuevo</span></td></tr>
+  </table>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Fuentes</b> (HU-10, criterio 2): cada respuesta cita el procedimiento o el caso. Los procedimientos se ven en Repositorio › Procedimientos.</li>
+  <li><b>Casos de otros clientes</b> (decisión C6, 2026-11-02): las lecciones aprendidas no se consideran confidenciales y se muestran con su cliente, como en el Sprint 1. Si el caso viene de un entregable que el usuario no puede ver, se muestra sin enlace.</li>
+  <li><b>Valoración</b> (criterio 5): se guarda con la consulta; cada persona ve solo su propio historial.</li>
+  <li>Sin información suficiente no inventa (criterio 3) y orienta a escalar al senior del contrato. No hay bandeja de mensajes (HU-16 quedó fuera de alcance). Si el modelo local no está disponible, se muestra el aviso del Sprint 1.</li>
+</ol>
+
+</div>
+</body>
+</html>

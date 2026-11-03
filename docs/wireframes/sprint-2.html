@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CertiTrack 360 · Wireframes del Sprint 2</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="index.html">← Wireframes del Sprint 1</a></div>
+<div class="pantalla">
+
+<h1>CertiTrack 360 — Wireframes del Sprint 2 (hito S2-H0)</h1>
+<p>Pantallas nuevas y modificadas del Sprint 2, según <code>docs/sdd-sprint-2.md</code>. Se abren con doble clic, sin servidor. Igual que en el Sprint 1,
+   <b>la interfaz se construye siguiendo estos wireframes</b> (aprobados; registro al pie).</p>
+
+<div class="aviso"><b>Aprobados por el equipo el 2026-11-02.</b> Decisiones del 2026-11-02 ya aplicadas: HU-16 (bandeja de mensajes para seniors) queda <b>fuera de alcance</b>;
+   HU-15 (incorporación) se <b>aprobó</b> como lista de actividades. Las demás respuestas están al pie.</div>
+
+<h2>Cómo leerlos</h2>
+<div class="caja">
+  <p>Borde sólido = existe desde el Sprint 1. <span class="nuevo-inline">NUEVO</span> o borde punteado = lo que agrega o cambia el Sprint 2.</p>
+  <p>Los círculos numerados <span class="marca">1</span> remiten a las anotaciones al pie (reglas, permisos y comportamiento). Nombres, clientes y contratos son ficticios.</p>
+</div>
+
+<h2>Navegación propuesta</h2>
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span class="nuevo-inline">Repositorio</span><span class="nuevo-inline">Indicadores</span><span>Asistente</span><span>Consolidado*</span><span>Gestión*</span>
+  <span class="der"><span class="campo nuevo-inline">Buscar…</span> · Avisos · Usuario · Salir</span>
+</div>
+<p class="nota">* Solo gerente y admin. Siete entradas para junior y senior, nueve para gerente y admin. Lo demás vive en pestañas: Entregables › Observaciones · Entregas · Tiempos;
+   Gestión › Fichas · Personal · Líneas de servicio; Repositorio › Procedimientos.</p>
+
+<h2>Pantallas</h2>
+<table>
+  <tr><th>Pantalla</th><th>Historias</th><th>Quién la ve</th><th>Tipo</th></tr>
+  <tr><td><a href="s2-entregable.html">Detalle del entregable</a></td><td>HU-01, 08, 11, 12, 17, 18, 19</td><td>Quien tenga acceso al entregable</td><td>Modificada</td></tr>
+  <tr><td><a href="s2-entregar.html">Marcar como entregado y acta</a></td><td>HU-19</td><td>Senior del entregable, gerente, admin</td><td>Nueva</td></tr>
+  <tr><td><a href="s2-nuevo.html">Nuevo entregable</a></td><td>HU-01 (brecha del Sprint 1)</td><td>Senior, gerente, admin</td><td>Modificada</td></tr>
+  <tr><td><a href="s2-tablero.html">Tablero y lista</a></td><td>HU-04 (brecha), HU-01, HU-17</td><td>Todos, cada rol con lo suyo</td><td>Modificada</td></tr>
+  <tr><td><a href="s2-calendario.html">Calendario</a></td><td>HU-02 (brecha)</td><td>Todos, cada rol con lo suyo</td><td>Modificada</td></tr>
+  <tr><td><a href="s2-historiales.html">Historiales: observaciones, entregas y tiempos</a></td><td>HU-12, 19, 11</td><td>Todos, según visibilidad</td><td>Nueva (pestañas)</td></tr>
+  <tr><td><a href="s2-ficha.html">Fichas de levantamiento</a></td><td>HU-14, HU-06 (brecha)</td><td>Junior redacta; senior, gerente y admin confirman</td><td>Nueva</td></tr>
+  <tr><td><a href="s2-personal.html">Gestión › Personal y líneas de servicio</a></td><td>HU-08, HU-01</td><td>Gerente y admin</td><td>Nueva (pestañas)</td></tr>
+  <tr><td><a href="s2-indicadores.html">Indicadores</a></td><td>HU-13</td><td>Todos, cada rol con lo suyo</td><td>Nueva</td></tr>
+  <tr><td><a href="s2-repositorio.html">Repositorio (plantillas, anonimizados, procedimientos)</a></td><td>HU-07, HU-20, HU-10</td><td>Todos, según permisos</td><td>Nueva</td></tr>
+  <tr><td><a href="s2-documento.html">Documento del repositorio</a></td><td>HU-07, HU-20</td><td>Todos, según permisos</td><td>Nueva</td></tr>
+  <tr><td><a href="s2-buscar.html">Buscador</a></td><td>HU-21</td><td>Todos, según visibilidad</td><td>Nueva</td></tr>
+  <tr><td><a href="s2-asistente.html">Asistente</a></td><td>HU-10</td><td>Todos</td><td>Modificada</td></tr>
+  <tr><td><a href="s2-incorporacion.html">Incorporación</a></td><td>HU-15</td><td>Ingresante, responsable, gerente</td><td>Nueva</td></tr>
+</table>
+
+<h2>Flujos principales</h2>
+<div class="caja">
+  <div class="fila"><span class="boton">Gestión › Fichas</span> → <span class="boton">Vista previa</span> → <span class="boton principal">Confirmar</span> → entregables en <span class="boton">Tablero</span> y <span class="boton">Calendario</span></div>
+  <div class="fila"><span class="boton">Detalle</span> (Revisión senior) → <span class="boton">Registrar observaciones</span> → En proceso · Con correcciones pendientes → junior <span class="boton">Envía corrección</span> → senior <span class="boton">Confirma</span> → <span class="boton">Revisión senior</span> → <span class="boton">Aprobado</span></div>
+  <div class="fila"><span class="boton">Aprobado</span> → <span class="boton principal">Marcar como entregado</span> (cargo) → <span class="boton">Entregado</span> → <span class="boton">Registrar acta</span></div>
+  <div class="fila"><span class="boton">Buscar</span> → <span class="boton">Detalle</span> / <span class="boton">Descargar</span> &nbsp;·&nbsp; <span class="boton">Repositorio</span> → <span class="boton">Descargar vigente</span> &nbsp;·&nbsp; <span class="boton">Asistente</span> → <span class="boton">Fuente citada</span></div>
+  <p class="nota">No hay bandeja de mensajes ni chat entre personas (HU-16 fuera de alcance): los avisos siguen siendo notificaciones automáticas.</p>
+</div>
+
+<h2>Decisiones del equipo (2026-11-02)</h2>
+<table>
+  <tr><th>Pregunta</th><th>Respuesta</th></tr>
+  <tr><td>1. «Con correcciones pendientes» como etiqueta dentro de «En proceso», sin sexta columna (C3)</td><td>Sí</td></tr>
+  <tr><td>2. El junior redacta la ficha; el senior del contrato, el gerente o el admin la confirman (C7)</td><td>Sí</td></tr>
+  <tr><td>3. Anonimizar las lecciones de otros clientes en el asistente (C6)</td><td>No: se muestran con su cliente; sin enlace si el usuario no ve el entregable</td></tr>
+  <tr><td>4. Reabrir un entregado cuando el acta queda observada</td><td>Se permite (senior, gerente o admin, con observación)</td></tr>
+  <tr><td>5. Código del ticket <code>CT-2026-00031</code></td><td>Sí</td></tr>
+  <tr><td>6. Acta: aviso a los 5 días · Sobrecarga: más de 8 activos · Máximo 60 entregables por ficha</td><td>Sí</td></tr>
+  <tr><td>7. Plan de incorporación (HU-15)</td><td>Aprobado; las actividades las marca el ingresante</td></tr>
+</table>
+
+<h2>Registro de aprobación</h2>
+<table>
+  <tr><th>Pantalla</th><th style="width:150px">¿Aprobada?</th><th>Observaciones del equipo</th></tr>
+  <tr><td>Detalle del entregable</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Marcar como entregado y acta</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Nuevo entregable</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Tablero y lista</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Calendario</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Historiales</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Fichas de levantamiento</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Personal y líneas de servicio</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Indicadores</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Repositorio y documento</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Buscador</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Asistente</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+  <tr><td>Incorporación</td><td>Sí · 2026-11-02</td><td>Sin observaciones</td></tr>
+</table>
+
+</div>
+</body>
+</html>

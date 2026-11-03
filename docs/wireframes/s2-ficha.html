@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Ficha de levantamiento</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span><span>Consolidado</span><span class="activo">Gestión</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (0) · Gabriel · Gerente · Salir</span>
+</div>
+
+<div class="pestanas"><span>Clientes</span><span>Contratos</span><span>Plantillas</span><span class="activa nuevo-inline">Fichas</span><span class="nuevo-inline">Personal</span><span class="nuevo-inline">Líneas de servicio</span></div>
+<div class="panel">
+
+<h1>Fichas de levantamiento</h1>
+<div class="fila"><label>Cliente <span class="campo">Todos ▾</span></label><label>Contrato <span class="campo">Todos ▾</span></label><label>Estado <span class="campo">Todos ▾</span></label><span class="boton principal">+ Nueva ficha</span> <span class="marca">1</span></div>
+<table>
+  <tr><th>Contrato</th><th>Cliente</th><th>ID-TDR</th><th>Ficha</th><th>Estado documental</th><th>Entregables generados</th><th>Responsable</th></tr>
+  <tr><td>DEMO-2026-011</td><td>Banco Andino Ficticio</td><td>TDR-BAF-020</td><td><span class="tag">Borrador</span></td><td>Abierto</td><td>—</td><td>Julia J.</td></tr>
+  <tr><td>DEMO-2026-001</td><td>Banco Andino Ficticio</td><td>TDR-BAF-014</td><td><span class="tag suave">Confirmada</span></td><td>En curso</td><td>6</td><td>Julia J.</td></tr>
+</table>
+</div>
+
+<h1>Ficha DEMO-2026-011 · Banco Andino Ficticio <span class="tag">Borrador</span></h1>
+
+<div class="caja nuevo">
+  <h3>1. Datos del TDR (HU-14)</h3>
+  <div class="fila"><label>Contrato * <span class="campo">DEMO-2026-011 ▾</span></label><label>ID-TDR * <span class="campo">TDR-BAF-020</span></label><label>Archivo del TDR * <span class="campo">tdr_baf_020.pdf ✓</span></label></div>
+  <div class="fila"><label>Requerimientos del servicio * <span class="campo ancho">Digitalizar y reportar avance de expedientes…</span></label></div>
+  <div class="fila"><label>Formatos a presentar <span class="campo ancho">Reporte mensual en PDF, matriz en Excel</span></label><label>Frecuencia de reportes <span class="campo">Mensual</span></label></div>
+  <div class="fila"><label>Penalidades por incumplimiento <span class="campo ancho">1 % del monto mensual por día de retraso</span></label><label>Responsable * <span class="campo">Julia Jiménez ▾</span></label></div>
+</div>
+
+<div class="caja nuevo">
+  <h3>2. Estado documental inicial (HU-06)</h3>
+  <div class="fila"><label>Documentos disponibles <span class="campo ancho">Contrato firmado, TDR, cronograma</span></label></div>
+  <div class="fila"><label>Documentos faltantes <span class="campo ancho">Carta de designación del cliente</span></label></div>
+  <div class="fila"><label>Formato esperado <span class="campo">PDF firmado</span></label><label>Fecha límite <span class="campo">30/11/2026</span></label></div>
+</div>
+
+<div class="caja nuevo">
+  <h3>3. Entregables que exige el TDR <span class="marca">2</span></h3>
+  <table>
+    <tr><th>Nombre</th><th>Plantilla</th><th>Frecuencia</th><th>Primera fecha</th><th>Hasta</th><th>Junior</th><th>Senior</th><th>Datos de la plantilla</th></tr>
+    <tr><td>Reporte mensual</td><td>Informe técnico mensual</td><td>Mensual</td><td>05/12/2026</td><td>05/02/2027</td><td>Julia J.</td><td>Sofía S.</td><td>Completos ✓</td></tr>
+    <tr><td>Matriz de avance</td><td>Matriz de riesgos</td><td>Trimestral</td><td>15/01/2027</td><td>fin del contrato</td><td>Javier J.</td><td>Sofía S.</td><td><b>Falta «Responsable del cliente»</b></td></tr>
+  </table>
+  <div class="fila"><span class="boton">+ Agregar entregable</span></div>
+</div>
+
+<div class="aviso">No se puede generar la vista previa: en «Matriz de avance» falta «Responsable del cliente». <span class="marca">3</span></div>
+<div class="fila"><span class="boton">Guardar borrador</span> <span class="boton principal">Vista previa de entregables</span></div>
+
+<h2>Vista previa (antes de confirmar)</h2>
+<div class="caja nuevo">
+  <table>
+    <tr><th>Se creará</th><th>Plazo</th><th>Junior</th><th>Senior</th><th></th></tr>
+    <tr><td>Reporte mensual — 2026-12</td><td>05/12/2026</td><td>Julia J.</td><td>Sofía S.</td><td><span class="boton">Quitar</span></td></tr>
+    <tr><td>Reporte mensual — 2027-01</td><td>05/01/2027</td><td>Julia J.</td><td>Sofía S.</td><td><span class="boton">Quitar</span></td></tr>
+    <tr><td>Reporte mensual — 2027-02</td><td>05/02/2027</td><td>Julia J.</td><td>Sofía S.</td><td><span class="boton">Quitar</span></td></tr>
+    <tr><td>Matriz de avance — 2027-T1</td><td>15/01/2027</td><td>Javier J.</td><td>Sofía S.</td><td><span class="boton">Quitar</span></td></tr>
+  </table>
+  <p class="nota">Se omitieron 0 fechas pasadas. Total: 4 entregables (máximo 60 por confirmación).</p>
+  <div class="fila"><span class="boton">Volver a editar</span> <span class="boton principal">Confirmar ficha y crear 4 entregables</span> <span class="marca">4</span></div>
+</div>
+
+<h2>Después de confirmar: estado documental</h2>
+<div class="caja nuevo">
+  <div class="fila" style="align-items:flex-start">
+    <div class="caja gris" style="flex:1"><h3>Estado inicial (congelado el 02/11/2026 por Sofía S.) <span class="marca">5</span></h3>
+      <p>Disponibles: Contrato firmado, TDR, cronograma</p><p>Faltantes: Carta de designación del cliente</p></div>
+    <div class="caja" style="flex:1"><h3>Estado actual</h3>
+      <p>Disponibles: Contrato firmado, TDR, cronograma, carta de designación</p><p>Faltantes: —</p>
+      <div class="fila"><label>Estado documental <span class="campo">Completo ▾</span></label><span class="boton">Actualizar</span></div></div>
+  </div>
+</div>
+
+<ol class="anotaciones">
+  <li>La ficha también se abre desde el contrato. El junior ve y redacta solo las fichas de sus contratos; senior, gerente y admin ven las de los contratos a su cargo o todas.</li>
+  <li>Cada fila define un entregable recurrente. Los datos obligatorios de la plantilla se completan una vez por fila: así cada entregable generado pasa el mismo Poka-Yoke que «Nuevo entregable».</li>
+  <li>Los mensajes dicen exactamente qué falta y dónde.</li>
+  <li><b>Confirmar</b> solo lo pueden hacer el senior del contrato, el gerente y el admin (decisión C7). Para el junior el botón dice «Guardar borrador» y «Pedir confirmación» (aviso al senior). Los entregables creados aparecen en tablero y calendario con su código y heredan el ID-TDR.</li>
+  <li><b>HU-06</b>: la foto inicial nunca cambia; solo se actualiza el estado actual. Listado filtrable por cliente, contrato y estado.</li>
+</ol>
+
+</div>
+</body>
+</html>

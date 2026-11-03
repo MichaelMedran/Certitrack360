@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S2 · Tablero y lista</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 2 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Índice del Sprint 2</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span class="activo">Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span class="nuevo-inline">Repositorio</span><span class="nuevo-inline">Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo nuevo-inline">Buscar código, contrato, cliente…</span> · Avisos (2) · Sofía Sánchez · Senior · Salir</span>
+</div>
+
+<h1>Tablero</h1>
+<p class="nota">Los filtros plegables, el orden y el arrastre funcionan igual que en el Sprint 1. Cambian los nombres de las columnas y lo que muestra cada tarjeta.</p>
+
+<div class="caja">
+  <details>
+    <summary>Filtros <span class="chip">0 activos</span></summary>
+    <div class="fila nuevo" style="margin-top:12px"><label>Estado <span class="campo">Con correcciones pendientes ▾</span></label><label>Línea de servicio <span class="campo">Todas ▾</span></label> <span class="marca">1</span></div>
+  </details>
+</div>
+
+<div class="tablero nuevo">
+  <div class="columna"><h3>Por hacer (6)</h3>
+    <div class="ficha"><b>CT-2026-00035</b> · Reporte mensual — 2026-12<br>Banco Andino Ficticio · DEMO-2026-001<br>Plazo 05/12 · Julia J.<br><span class="tag suave">Normal</span></div>
+  </div>
+  <div class="columna"><h3>En proceso (5)</h3>
+    <div class="ficha"><b>CT-2026-00031</b> · Informe técnico 03<br>Banco Andino Ficticio · DEMO-2026-001<br>Plazo 12/11 · Julia J. (+1 apoyo)<br><span class="tag">Próximo</span> <span class="tag">Con correcciones pendientes</span> <span class="marca">2</span></div>
+    <div class="ficha vencida"><b>CT-2026-00019</b> · Acta de reunión<br>Telecom Sur Ficticia · DEMO-2026-004<br>Plazo 30/10 · Javier J.<br><span class="tag">Vencido</span></div>
+  </div>
+  <div class="columna"><h3>Revisión senior (3)</h3>
+    <div class="ficha"><b>CT-2026-00024</b> · Matriz de riesgos<br>Municipalidad Ficticia · DEMO-2026-006<br>Plazo 08/11 · Jimena J.<br><span class="tag">Crítico</span></div>
+  </div>
+  <div class="columna"><h3>Aprobado (2)</h3>
+    <div class="ficha"><b>CT-2026-00027</b> · Matriz de riesgos Q3<br>Banco Andino Ficticio · DEMO-2026-002<br>Plazo 20/11 · Julia J.<br><span class="tag suave">Normal</span></div>
+  </div>
+  <div class="columna"><h3>Entregado (7)</h3>
+    <div class="ficha"><b>CT-2026-00011</b> · Informe técnico 02<br>Banco Andino Ficticio · DEMO-2026-001<br>Entregado 20/10 · <span class="tag">Acta pendiente</span> <span class="marca">3</span></div>
+  </div>
+</div>
+<p class="nota">Arrastrar una tarjeta de «Aprobado» a «Entregado» abre el <a href="s2-entregar.html">formulario de entrega</a> en lugar de moverla directamente. <span class="marca">4</span></p>
+
+<h2>Lista de entregables (mismos cambios)</h2>
+<div class="pestanas nuevo"><span class="activa">Entregables</span><span>Observaciones</span><span>Entregas</span><span>Tiempos</span></div>
+<div class="panel">
+  <table>
+    <tr><th>Código</th><th>Título</th><th>Cliente · contrato</th><th>ID-TDR</th><th>Plazo</th><th>Estado</th><th>Urgencia</th><th>Responsable</th></tr>
+    <tr><td>CT-2026-00031</td><td>Informe técnico 03</td><td>Banco Andino Ficticio · DEMO-2026-001</td><td>TDR-BAF-014</td><td>12/11/2026</td><td>En proceso · Con correcciones pendientes</td><td>Próximo</td><td>Julia J.</td></tr>
+    <tr><td>CT-2026-00024</td><td>Matriz de riesgos</td><td>Municipalidad Ficticia · DEMO-2026-006</td><td>TDR-MUN-003</td><td>08/11/2026</td><td>Revisión senior</td><td>Crítico</td><td>Jimena J.</td></tr>
+  </table>
+  <p class="nota">Las pestañas Observaciones, Entregas y Tiempos están en <a href="s2-historiales.html">Historiales</a>. <span class="marca">5</span></p>
+</div>
+
+<ol class="anotaciones">
+  <li>El filtro de estado suma la opción «Con correcciones pendientes». Se agrega el filtro por línea de servicio.</li>
+  <li><b>Columnas</b> (HU-04): Por hacer, En proceso, Revisión senior, Aprobado y Entregado. Solo cambia el texto; en la base de datos los estados siguen siendo los mismos del Sprint 1. La tarjeta suma el código y, si corresponde, «Con correcciones pendientes» y la cantidad de personas de apoyo.</li>
+  <li>En «Entregado», la tarjeta muestra la fecha de entrega y el estado del acta en texto.</li>
+  <li>El paso a Entregado exige el cargo de recepción (HU-19), así que no puede hacerse solo arrastrando.</li>
+  <li>La lista suma las columnas Código e ID-TDR y tres pestañas nuevas.</li>
+</ol>
+
+</div>
+</body>
+</html>
