@@ -17,6 +17,8 @@ class Usuario(AbstractUser):
         ADMIN = "ADMIN", "Administrador"
 
     rol = models.CharField("rol", max_length=10, choices=Rol.choices, default=Rol.JUNIOR)
+    # Sprint 2 (RF-31 y RF-38): puesto opcional del colaborador (p. ej. «Asistente de Proyectos»).
+    puesto = models.CharField("puesto", max_length=100, blank=True, default="")
 
     objects = UsuarioManager()
 
@@ -48,3 +50,34 @@ class Usuario(AbstractUser):
 
     def __str__(self):
         return self.nombre
+
+
+class Ausencia(models.Model):
+    """Ausencia registrada por gerente o admin (SDD del Sprint 2, RF-31, §6.2 y §7.6).
+
+    Solo se usa para avisar conflictos al asignar o reasignar responsables; no bloquea nada.
+    """
+
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="ausencias", verbose_name="colaborador")
+    desde = models.DateField("desde")
+    hasta = models.DateField("hasta")
+    motivo = models.CharField("motivo", max_length=200)
+    registrada_por = models.ForeignKey(
+        Usuario, on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name="registrada por"
+    )
+    creada_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["desde", "hasta", "id"]
+        verbose_name = "ausencia"
+        verbose_name_plural = "ausencias"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(hasta__gte=models.F("desde")),
+                name="ausencia_rango_valido",
+                violation_error_message="La fecha de fin no puede ser anterior a la fecha de inicio.",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario.nombre}: {self.desde:%d/%m/%Y} a {self.hasta:%d/%m/%Y} · {self.motivo}"

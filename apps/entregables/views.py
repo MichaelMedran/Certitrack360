@@ -5,9 +5,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count
-from django.core.paginator import Paginator
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -15,16 +15,17 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.clientes.models import PlantillaTDR
+from apps.cuentas.models import Usuario
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import adjuntos, entregas, filtros, servicios, subestado
+from . import adjuntos, entregas, filtros, personal, servicios, subestado
 from . import filtros_entregas, filtros_observaciones
 from . import observaciones as obs_servicio
 from .forms import ActaForm, AdjuntoForm, EntregaForm, EntregableForm, ObservacionForm, contratos_para
 from .htmx import con_vary, es_htmx, pide_parcial
-from .models import Adjunto, Entrega, Entregable, Observacion, TipoError
+from .models import Adjunto, Entrega, Entregable, Observacion, ResponsableApoyo, TipoError
 from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
-from .visibilidad import entregables_visibles, es_senior_del_entregable
+from .visibilidad import entregables_visibles, es_elaborador_del_entregable, es_senior_del_entregable
 
 E = Entregable.Estado
 
@@ -202,11 +203,12 @@ def detalle(request, pk):
 
 def _contexto_detalle(usuario, e):
     es_senior = es_senior_del_entregable(usuario, e)
+    es_elaborador = es_elaborador_del_entregable(usuario, e)
     siguientes = [
         (dest, E(dest).label)
         for (orig, dest), quien in servicios.TRANSICIONES.items()
         if orig == e.estado and (orig, dest) != servicios.REAPERTURA  # la reapertura tiene su propio formulario (Entregas)
-        and (es_senior or (quien == "junior" and usuario.pk == e.junior_asignado_id))
+        and (es_senior or (quien == "junior" and es_elaborador))
     ]
 
     # Adjuntos: la versión vigente de cada tipo (la de número más alto) y, plegadas, las anteriores (de la más nueva a la
@@ -239,6 +241,23 @@ def _contexto_detalle(usuario, e):
     ]
     puede_subir = adjuntos.puede_subir(usuario, e)
 
+    # Responsables de apoyo activos (RF-31)
+    apoyos_activos = list(
+        e.responsables_apoyo.filter(activo=True).select_related("usuario", "asignado_por").order_by("asignado_en", "id")
+    )
+    puede_gestionar_resp = personal.puede_gestionar_responsables(usuario, e)
+    colaboradores_apoyo = (
+        list(
+            Usuario.objects.filter(
+                rol__in=(Usuario.Rol.JUNIOR, Usuario.Rol.SENIOR), is_active=True
+            ).order_by("first_name", "last_name", "username")
+        )
+        if puede_gestionar_resp
+        else []
+    )
+    juniors_disponibles = [u for u in colaboradores_apoyo if u.rol == Usuario.Rol.JUNIOR]
+    seniors_disponibles = [u for u in colaboradores_apoyo if u.rol == Usuario.Rol.SENIOR]
+
     # Observaciones con sus estados (RF-25): cada una sabe si el usuario puede registrar su corrección o revisarla.
     observaciones = list(e.observaciones.select_related(
         "autor", "responsable", "corregida_por", "revisada_por", "evidencia"
@@ -261,6 +280,12 @@ def _contexto_detalle(usuario, e):
 
     return {
         "e": e, "es_senior": es_senior, "siguientes": siguientes,
+        "apoyos_activos": apoyos_activos,
+        "puede_gestionar_responsables": puede_gestionar_resp,
+        "juniors_disponibles": juniors_disponibles,
+        "seniors_disponibles": seniors_disponibles,
+        "colaboradores_apoyo": colaboradores_apoyo,
+        "funciones_apoyo": ResponsableApoyo.Funcion.choices,
         "admite_observaciones": obs_servicio.admite_observaciones(e),
         "observaciones": observaciones,
         "con_correcciones": subestado.aplica(e, bool(abiertas)), "etiqueta_subestado": subestado.ETIQUETA,
@@ -271,7 +296,7 @@ def _contexto_detalle(usuario, e):
         "form_obs": ObservacionForm(auto_id="ob_%s"), "form_devolver": ObservacionForm(auto_id="dv_%s"),
         "grupos_adjuntos": grupos, "requeridos": requeridos,
         "puede_subir": puede_subir, "puede_eliminar": adjuntos.puede_eliminar(usuario),
-        "junior_sin_subida": usuario.pk == e.junior_asignado_id and not puede_subir,
+        "junior_sin_subida": es_elaborador and not es_senior and not puede_subir,
         "estados_de_subida": " o ".join(f"«{E(estado).label}»" for estado in adjuntos.ESTADOS_INICIALES),
         "form_adjunto": AdjuntoForm(), "puede_restaurar": puede_restaurar,
         "entregas": lista_entregas, "ultima_entrega": ultima_entrega, "puede_entregar": puede_entregar,
@@ -281,6 +306,90 @@ def _contexto_detalle(usuario, e):
         "extensiones": ", ".join(adjuntos.extensiones_permitidas()), "tamano_max": f"{settings.MEDIA_MAX_UPLOAD_MB:g}",
         "falta_para_verificar": falta_para_verificar, "falta_para_aprobar": falta_para_aprobar,
     }
+
+
+# ------------------------------------------------------------------ responsables (RF-31)
+
+def _volver_a_responsables(request, e):
+    destino = personal.enlace_responsables(e)
+    if es_htmx(request):
+        respuesta = HttpResponse("")
+        respuesta["HX-Redirect"] = destino
+        return con_vary(respuesta)
+    return redirect(destino)
+
+
+@login_required
+@require_POST
+def gestionar_responsables(request, pk):
+    """POST /entregables/<pk>/responsables/: reasignar junior/senior principal, sumar apoyo o quitar apoyo (RF-31)."""
+    e = get_object_or_404(_base(request.user), pk=pk)  # 404 si no lo ve
+    if not personal.puede_gestionar_responsables(request.user, e):
+        raise PermissionDenied("Solo el senior del entregable, el gerente y el admin gestionan responsables.")
+
+    accion = (request.POST.get("accion") or "").strip()
+    confirmar = request.POST.get("confirmar") in ("1", "true", "si", "on")
+
+    try:
+        if accion in ("reasignar", "reasignar_junior", "reasignar_senior"):
+            rol = request.POST.get("rol") or ("senior" if accion == "reasignar_senior" else "junior")
+            usuario_id = (
+                request.POST.get("usuario")
+                or request.POST.get("nuevo_usuario")
+                or request.POST.get("junior_asignado")
+                or request.POST.get("senior_revisor")
+            )
+            motivo = request.POST.get("motivo", "")
+            res = personal.reasignar_principal(e, rol, usuario_id, request.user, motivo=motivo, confirmar=confirmar)
+            if not res.confirmado:
+                ctx = _contexto_detalle(request.user, e)
+                ctx["conflicto_responsables"] = {
+                    "accion": "reasignar",
+                    "rol": rol,
+                    "usuario": usuario_id,
+                    "motivo": motivo,
+                    "conflictos": res.conflictos,
+                }
+                return con_vary(render(request, "entregables/detalle.html", ctx))
+            messages.success(request, "Se reasignó el responsable del entregable.")
+            return _volver_a_responsables(request, e)
+
+        if accion in ("sumar_apoyo", "apoyo"):
+            usuario_id = request.POST.get("usuario")
+            funcion = request.POST.get("funcion") or ResponsableApoyo.Funcion.ELABORACION
+            fecha_limite = request.POST.get("fecha_limite") or None
+            res = personal.sumar_apoyo(
+                e, usuario_id, funcion=funcion, autor=request.user, fecha_limite=fecha_limite, confirmar=confirmar
+            )
+            if not res.confirmado:
+                ctx = _contexto_detalle(request.user, e)
+                ctx["conflicto_responsables"] = {
+                    "accion": "sumar_apoyo",
+                    "usuario": usuario_id,
+                    "funcion": funcion,
+                    "fecha_limite": fecha_limite or "",
+                    "conflictos": res.conflictos,
+                }
+                return con_vary(render(request, "entregables/detalle.html", ctx))
+            ap = res.objeto
+            messages.success(
+                request, f"Se sumó a {ap.usuario.nombre} como apoyo ({ap.get_funcion_display().lower()})."
+            )
+            return _volver_a_responsables(request, e)
+
+        if accion in ("quitar_apoyo", "quitar"):
+            apoyo_id = filtros.entero(request.POST.get("apoyo_id") or request.POST.get("apoyo"))
+            if apoyo_id is None:
+                raise Http404("No existe ese responsable de apoyo.")
+            apoyo = get_object_or_404(ResponsableApoyo.objects.select_related("usuario"), pk=apoyo_id, entregable=e)
+            personal.quitar_apoyo(apoyo, request.user)
+            messages.success(request, f"Se quitó a {apoyo.usuario.nombre} como apoyo.")
+            return _volver_a_responsables(request, e)
+
+        raise ValidationError("Elija una acción válida sobre los responsables del entregable.")
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+        return _volver_a_responsables(request, e)
 
 
 # ------------------------------------------------------------------ adjuntos

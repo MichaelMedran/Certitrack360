@@ -57,7 +57,11 @@ def aplicar(qs, params, hoy=None):
 
     responsable = entero(params.get("responsable"))
     if responsable is not None:
-        qs = qs.filter(Q(junior_asignado_id=responsable) | Q(senior_revisor_id=responsable))
+        qs = qs.filter(
+            Q(junior_asignado_id=responsable)
+            | Q(senior_revisor_id=responsable)
+            | Q(responsables_apoyo__usuario_id=responsable, responsables_apoyo__activo=True)
+        ).distinct()
         activos["responsable"] = responsable
 
     estado = params.get("estado")
@@ -131,7 +135,9 @@ def opciones(usuario):
         "clientes": Cliente.objects.filter(contratos__entregables__in=visibles).distinct(),
         "contratos": Contrato.objects.filter(entregables__in=visibles).select_related("cliente").distinct(),
         "responsables": Usuario.objects.filter(
-            Q(entregables_asignados__in=visibles) | Q(entregables_a_revisar__in=visibles)
+            Q(entregables_asignados__in=visibles)
+            | Q(entregables_a_revisar__in=visibles)
+            | Q(apoyos_asignados__entregable__in=visibles, apoyos_asignados__activo=True)
         ).distinct().order_by("first_name", "last_name", "username"),
         "estados": subestado.estados_con_subestado(),
         "lineas": LineaServicio.objects.filter(contratos__entregables__in=visibles).distinct(),

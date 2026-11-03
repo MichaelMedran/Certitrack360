@@ -9,9 +9,9 @@ from django.db.models import Max, Q
 from .archivos import NOMBRE_MAX, extensiones_permitidas, sanear_nombre, tamano_maximo_bytes, validar_archivo  # noqa: F401
 from .models import Adjunto, Entregable, HistorialEstado
 from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
-from .visibilidad import es_senior_del_entregable
+from .visibilidad import es_elaborador_del_entregable, es_senior_del_entregable
 
-# El junior solo puede subir mientras el entregable está en estas columnas.
+# El junior o responsable de apoyo solo puede subir mientras el entregable está en estas columnas.
 ESTADOS_INICIALES = (Entregable.Estado.A_REALIZAR, Entregable.Estado.EN_PROCESO)
 
 
@@ -20,12 +20,10 @@ def etiqueta_tipo(codigo):
 
 
 def puede_subir(usuario, entregable):
-    """Junior asignado (solo en estados iniciales), senior del entregable, gerente y admin."""
-    if usuario.es_gerente_o_admin:
+    """Junior asignado o apoyo activo (solo en estados iniciales), senior del entregable, gerente y admin."""
+    if usuario.es_gerente_o_admin or es_senior_del_entregable(usuario, entregable):
         return True
-    if usuario.es_senior:
-        return es_senior_del_entregable(usuario, entregable)
-    return usuario.pk == entregable.junior_asignado_id and entregable.estado in ESTADOS_INICIALES
+    return es_elaborador_del_entregable(usuario, entregable) and entregable.estado in ESTADOS_INICIALES
 
 
 def puede_eliminar(usuario):

@@ -167,6 +167,14 @@ FICHA_MAX_ENTREGABLES = int(os.environ.get("FICHA_MAX_ENTREGABLES", "60"))
 if FICHA_MAX_ENTREGABLES <= 0:
     raise ImproperlyConfigured("FICHA_MAX_ENTREGABLES debe ser mayor que cero.")
 
+# Personal y asignación (SDD del Sprint 2, RF-31 y §7.6): umbral de sobrecarga de entregables activos.
+try:
+    CARGA_MAXIMA_ACTIVOS = int(os.environ.get("CARGA_MAXIMA_ACTIVOS", "8"))
+except ValueError as exc:
+    raise ImproperlyConfigured("CARGA_MAXIMA_ACTIVOS debe ser un número entero mayor que cero.") from exc
+if CARGA_MAXIMA_ACTIVOS <= 0:
+    raise ImproperlyConfigured("CARGA_MAXIMA_ACTIVOS debe ser mayor que cero.")
+
 # Adjuntos de los entregables: se guardan en disco local y NO se sirven por una URL pública.
 # MEDIA_URL = None impide que Django construya direcciones a los archivos; no hay ruta de medios en urls.py
 # y toda descarga pasa por una vista que verifica los permisos del entregable.

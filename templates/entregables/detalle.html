@@ -46,6 +46,131 @@
 </div>
 {% endif %}
 
+<h2 id="responsables">Responsables</h2>
+<div class="tarjeta">
+  <div class="tabla"><table>
+    <thead><tr><th>Persona</th><th>Función</th><th>Fecha límite</th><th>Desde</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+    <tbody>
+      <tr>
+        <td>{{ e.junior_asignado.nombre }}</td>
+        <td>Junior principal (elaboración)</td>
+        <td>{{ e.plazo|date:"d/m/Y" }}</td>
+        <td>{{ e.fecha_recepcion|date:"d/m/Y"|default:"—" }}</td>
+        <td>{% if puede_gestionar_responsables %}<span class="suave">Principal</span>{% endif %}</td>
+      </tr>
+      <tr>
+        <td>{{ e.senior_revisor.nombre }}</td>
+        <td>Senior revisor</td>
+        <td>—</td>
+        <td>{{ e.fecha_recepcion|date:"d/m/Y"|default:"—" }}</td>
+        <td>{% if puede_gestionar_responsables %}<span class="suave">Principal</span>{% endif %}</td>
+      </tr>
+      {% for ap in apoyos_activos %}
+      <tr>
+        <td>{{ ap.usuario.nombre }}</td>
+        <td>Apoyo ({{ ap.get_funcion_display|lower }})</td>
+        <td>{{ ap.fecha_limite|date:"d/m/Y"|default:"—" }}</td>
+        <td>{{ ap.asignado_en|date:"d/m/Y" }}</td>
+        <td>
+          {% if puede_gestionar_responsables %}
+          <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="en-linea">{% csrf_token %}
+            <input type="hidden" name="accion" value="quitar_apoyo">
+            <input type="hidden" name="apoyo_id" value="{{ ap.pk }}">
+            <button class="boton sec chico">Quitar<span class="sr-only"> a {{ ap.usuario.nombre }}</span></button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+
+  {% if conflicto_responsables %}
+  <div class="aviso aviso-warning" role="alert">
+    <strong>Antes de confirmar:</strong>
+    <ul>
+      {% for c in conflicto_responsables.conflictos %}<li>{{ c }}</li>{% endfor %}
+    </ul>
+    <form method="post" action="{% url 'entregable_responsables' e.pk %}" style="margin-top:.5rem">{% csrf_token %}
+      <input type="hidden" name="accion" value="{{ conflicto_responsables.accion }}">
+      {% if conflicto_responsables.rol %}<input type="hidden" name="rol" value="{{ conflicto_responsables.rol }}">{% endif %}
+      <input type="hidden" name="usuario" value="{{ conflicto_responsables.usuario }}">
+      {% if conflicto_responsables.motivo %}<input type="hidden" name="motivo" value="{{ conflicto_responsables.motivo }}">{% endif %}
+      {% if conflicto_responsables.funcion %}<input type="hidden" name="funcion" value="{{ conflicto_responsables.funcion }}">{% endif %}
+      {% if conflicto_responsables.fecha_limite %}<input type="hidden" name="fecha_limite" value="{{ conflicto_responsables.fecha_limite }}">{% endif %}
+      <input type="hidden" name="confirmar" value="1">
+      <div class="acciones">
+        <button class="boton">Confirmar de todos modos</button>
+        <a class="boton sec" href="{% url 'entregable_detalle' e.pk %}#responsables">Cancelar</a>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if puede_gestionar_responsables %}
+  <details style="margin-bottom:.6rem"{% if conflicto_responsables.accion == 'reasignar' %} open{% endif %}>
+    <summary><strong>Reasignar responsable principal</strong></summary>
+    <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="caja-gris">{% csrf_token %}
+      <input type="hidden" name="accion" value="reasignar">
+      <div class="filtros-grid">
+        <div>
+          <label for="resp-rol">Función principal</label>
+          <select id="resp-rol" name="rol">
+            <option value="junior"{% if conflicto_responsables.rol != 'senior' %} selected{% endif %}>Junior principal (elaboración)</option>
+            <option value="senior"{% if conflicto_responsables.rol == 'senior' %} selected{% endif %}>Senior revisor</option>
+          </select>
+        </div>
+        <div>
+          <label for="resp-usuario">Nuevo responsable</label>
+          <select id="resp-usuario" name="usuario" required>
+            <option value="">— Elija la persona —</option>
+            {% for u in colaboradores_apoyo %}
+            <option data-rol="{{ u.rol }}" value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="resp-motivo">Motivo (opcional)</label>
+          <input id="resp-motivo" name="motivo" type="text" maxlength="200" placeholder="Motivo de la reasignación…">
+        </div>
+      </div>
+      <button class="boton">Reasignar</button>
+    </form>
+  </details>
+
+  <details{% if conflicto_responsables.accion == 'sumar_apoyo' %} open{% endif %}>
+    <summary><strong>+ Sumar responsable de apoyo</strong></summary>
+    <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="caja-gris">{% csrf_token %}
+      <input type="hidden" name="accion" value="sumar_apoyo">
+      <div class="filtros-grid">
+        <div>
+          <label for="apoyo-usuario">Persona</label>
+          <select id="apoyo-usuario" name="usuario" required>
+            <option value="">— Elija la persona —</option>
+            {% for u in colaboradores_apoyo %}
+            <option data-rol="{{ u.rol }}" value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="apoyo-funcion">Función</label>
+          <select id="apoyo-funcion" name="funcion">
+            {% for valor, etiqueta in funciones_apoyo %}
+            <option value="{{ valor }}">{{ etiqueta }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="apoyo-fecha-limite">Fecha límite (opcional)</label>
+          <input id="apoyo-fecha-limite" name="fecha_limite" type="date">
+        </div>
+      </div>
+      <button class="boton">Sumar responsable de apoyo</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
 <h2>Datos del entregable ({{ e.plantilla.nombre }})</h2>
 <div class="tabla"><table>{% for etiqueta, valor in e.datos_etiquetados %}<tr><th style="width:30%">{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table></div>
 

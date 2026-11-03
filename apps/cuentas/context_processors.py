@@ -6,12 +6,13 @@ SECCIONES = {
     "tablero": "tablero",
     "calendario": "calendario",
     "entregables": "entregables", "entregable_nuevo": "entregables", "entregable_detalle": "entregables",
+    "entregable_responsables": "entregables",
     "observaciones": "entregables",  # pestaña «Observaciones» de Entregables (SDD del Sprint 2, §9.2)
     "entregas": "entregables", "entregable_entregar": "entregables",  # pestaña «Entregas» y formulario de entrega (RF-29)
     "asistente": "asistente",
     "consolidado": "consolidado",
     "gestion": "gestion", "adm_lista": "gestion", "adm_nuevo": "gestion", "adm_editar": "gestion",
-    "lineas_servicio": "gestion",
+    "lineas_servicio": "gestion", "personal": "gestion",
     "fichas": "gestion", "ficha_nueva": "gestion", "ficha_detalle": "gestion",
     "ficha_vista_previa": "gestion", "ficha_confirmar": "gestion",
     "notificaciones": "avisos",

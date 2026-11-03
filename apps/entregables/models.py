@@ -345,3 +345,42 @@ class Entrega(models.Model):
         if self.acta_estado != self.ActaEstado.PENDIENTE:
             return None
         return ((hoy or timezone.localdate()) - self.fecha_entrega).days
+
+
+class ResponsableApoyo(models.Model):
+    """Responsable de apoyo de un entregable (SDD del Sprint 2, RF-31, §6.2 y §7.6).
+
+    Se conservan `junior_asignado` y `senior_revisor` como responsables principales y se suman responsables de apoyo.
+    Un responsable de apoyo activo ve el entregable como si fuera su junior, pero no puede aprobarlo ni devolverlo
+    salvo que sea senior del entregable. Un usuario no repite función activa en el mismo entregable.
+    """
+
+    class Funcion(models.TextChoices):
+        ELABORACION = "ELABORACION", "Elaboración"
+        REVISION = "REVISION", "Revisión"
+        APOYO = "APOYO", "Apoyo"
+
+    entregable = models.ForeignKey(Entregable, on_delete=models.CASCADE, related_name="responsables_apoyo")
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="apoyos_asignados", verbose_name="persona"
+    )
+    funcion = models.CharField("función", max_length=15, choices=Funcion.choices, default=Funcion.ELABORACION)
+    fecha_limite = models.DateField("fecha límite", null=True, blank=True)
+    asignado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    asignado_en = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["asignado_en", "id"]
+        verbose_name = "responsable de apoyo"
+        verbose_name_plural = "responsables de apoyo"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["entregable", "usuario", "funcion"],
+                condition=models.Q(activo=True),
+                name="responsable_apoyo_activo_unico",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario.nombre} · Apoyo ({self.get_funcion_display().lower()}) en {self.entregable}"

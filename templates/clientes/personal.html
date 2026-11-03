@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block titulo %}Gestión · Personal{% endblock %}
+{% block contenido %}
+{% include "clientes/_pestanas.html" %}
+<h2>Personal</h2>
+
+<form method="get" action="{% url 'personal' %}" class="tarjeta" style="margin-bottom:1rem">
+  <div class="filtros-grid">
+    <div>
+      <label for="f-rol">Rol</label>
+      <select id="f-rol" name="rol">
+        <option value="">Todos</option>
+        {% for valor, etiqueta in roles %}
+        <option value="{{ valor }}"{% if filtro_rol == valor %} selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="f-q">Buscar</label>
+      <input id="f-q" name="q" type="search" maxlength="100" placeholder="nombre o puesto…" value="{{ filtro_q }}">
+    </div>
+  </div>
+  <div class="acciones">
+    <button class="boton">Filtrar</button>
+    {% if filtro_rol or filtro_q %}<a class="boton sec" href="{% url 'personal' %}">Limpiar</a>{% endif %}
+  </div>
+</form>
+
+<div class="tabla"><table>
+  <thead>
+    <tr>
+      <th>Colaborador</th>
+      <th>Rol</th>
+      <th>Puesto</th>
+      <th class="num">Activos</th>
+      <th class="num">Vencen en 7 días</th>
+      <th>Ausencias próximas</th>
+      <th>Carga</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in colaboradores %}
+    <tr>
+      <td><a href="{% url 'personal' %}?colaborador={{ f.usuario.pk }}">{{ f.usuario.nombre }}</a></td>
+      <td>{{ f.usuario.get_rol_display }}</td>
+      <td>{{ f.usuario.puesto|default:"—" }}</td>
+      <td class="num">{{ f.activos }}</td>
+      <td class="num">{{ f.vencen_7 }}</td>
+      <td>
+        {% if f.ausencias %}
+          {% for a in f.ausencias %}
+            <div>
+              {{ a.desde|date:"d/m/Y" }} a {{ a.hasta|date:"d/m/Y" }} · {{ a.motivo }}
+              <form method="post" action="{% url 'personal' %}" class="en-linea">{% csrf_token %}
+                <input type="hidden" name="accion" value="eliminar_ausencia">
+                <input type="hidden" name="ausencia_id" value="{{ a.pk }}">
+                <button class="boton sec chico">Quitar<span class="sr-only"> ausencia de {{ f.usuario.nombre }}</span></button>
+              </form>
+            </div>
+          {% endfor %}
+        {% else %}—{% endif %}
+      </td>
+      <td>
+        {% if f.usuario.es_senior %}
+          Revisa {{ f.revisa }}{% if f.elabora %} · Elabora {{ f.elabora }} / {{ carga_maxima }}{% if f.sobrecarga %} <strong>Sobrecarga</strong>{% endif %}{% endif %}
+        {% else %}
+          <div class="carga">
+            <div class="barra-carga" aria-hidden="true"><i style="width:{{ f.porcentaje }}%"></i></div>
+            <span>{{ f.activos }} / {{ carga_maxima }}{% if f.sobrecarga %} <strong>Sobrecarga</strong>{% endif %}</span>
+          </div>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7">No hay colaboradores para mostrar con estos filtros.</td></tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+<p class="suave">La carga lleva el número en texto; la barra solo lo refuerza. «Sobrecarga» aparece cuando se supera el máximo configurado ({{ carga_maxima }}).</p>
+
+<div class="tarjeta" style="margin-bottom:1rem">
+  <h3 style="margin-top:0">Registrar ausencia</h3>
+  <form method="post" action="{% url 'personal' %}">{% csrf_token %}
+    <input type="hidden" name="accion" value="ausencia">
+    <div class="filtros-grid">
+      <div>
+        <label for="aus-usuario">Colaborador</label>
+        <select id="aus-usuario" name="usuario" required>
+          <option value="">— Elija el colaborador —</option>
+          {% for u in todos_usuarios %}
+          <option value="{{ u.pk }}"{% if seleccionado and seleccionado.pk == u.pk %} selected{% endif %}>{{ u.nombre }} ({{ u.get_rol_display }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="aus-desde">Desde</label>
+        <input id="aus-desde" name="desde" type="date" required>
+      </div>
+      <div>
+        <label for="aus-hasta">Hasta</label>
+        <input id="aus-hasta" name="hasta" type="date" required>
+      </div>
+      <div>
+        <label for="aus-motivo">Motivo</label>
+        <input id="aus-motivo" name="motivo" type="text" maxlength="200" required placeholder="Permiso, vacaciones…">
+      </div>
+    </div>
+    <div class="acciones"><button class="boton">Guardar</button></div>
+    <p class="suave">Las ausencias solo sirven para avisar conflictos al asignar; no bloquean nada.</p>
+  </form>
+</div>
+
+{% if seleccionado %}
+<h3>Asignaciones de {{ seleccionado.nombre }}</h3>
+<form method="post" action="{% url 'personal' %}" class="caja-gris" style="margin-bottom:1rem">{% csrf_token %}
+  <input type="hidden" name="accion" value="puesto">
+  <input type="hidden" name="usuario" value="{{ seleccionado.pk }}">
+  <div class="filtros-grid">
+    <div>
+      <label for="puesto-texto">Puesto de {{ seleccionado.nombre }}</label>
+      <input id="puesto-texto" name="puesto" type="text" maxlength="100" value="{{ seleccionado.puesto }}" placeholder="p. ej. Asistente de Proyectos">
+    </div>
+  </div>
+  <button class="boton sec chico">Guardar puesto</button>
+</form>
+
+<div class="tabla"><table>
+  <thead>
+    <tr><th>Entregable</th><th>Función</th><th>Plazo</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr>
+  </thead>
+  <tbody>
+    {% for asig in asignaciones %}
+    <tr>
+      <td><a href="{% url 'entregable_detalle' asig.entregable.pk %}"><span class="codigo">{{ asig.entregable.codigo }}</span> · {{ asig.entregable.titulo }}</a></td>
+      <td>{{ asig.funcion }}</td>
+      <td>{{ asig.plazo|date:"d/m/Y" }}</td>
+      <td>{{ asig.entregable.get_estado_display }} · <span class="urgencia urgencia-{{ asig.entregable.urgencia|lower }}">{{ asig.entregable.urgencia_etiqueta }}</span></td>
+      <td>
+        {% if asig.tipo == 'apoyo' %}
+        <form method="post" action="{% url 'personal' %}" class="en-linea">{% csrf_token %}
+          <input type="hidden" name="accion" value="quitar_apoyo">
+          <input type="hidden" name="apoyo_id" value="{{ asig.apoyo.pk }}">
+          <button class="boton sec chico">Quitar</button>
+        </form>
+        {% else %}
+        <a class="boton sec chico" href="{% url 'personal' %}?colaborador={{ seleccionado.pk }}&amp;reasignar={{ asig.entregable.pk }}&amp;rol={{ asig.tipo }}">Reasignar</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">{{ seleccionado.nombre }} no tiene entregables activos asignados.</td></tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
+
+{% if conflicto_personal %}
+<div class="aviso aviso-warning" role="alert">
+  <strong>Antes de confirmar la reasignación de {{ conflicto_personal.entregable.referencia }}:</strong>
+  <ul>
+    {% for c in conflicto_personal.conflictos %}<li>{{ c }}</li>{% endfor %}
+  </ul>
+  <form method="post" action="{% url 'personal' %}" style="margin-top:.5rem">{% csrf_token %}
+    <input type="hidden" name="accion" value="reasignar">
+    <input type="hidden" name="entregable" value="{{ conflicto_personal.entregable.pk }}">
+    <input type="hidden" name="rol" value="{{ conflicto_personal.rol }}">
+    <input type="hidden" name="usuario" value="{{ conflicto_personal.usuario }}">
+    <input type="hidden" name="motivo" value="{{ conflicto_personal.motivo }}">
+    <input type="hidden" name="confirmar" value="1">
+    <div class="acciones">
+      <button class="boton">Confirmar de todos modos</button>
+      <a class="boton sec" href="{% url 'personal' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if entregable_reasignar %}
+<div class="tarjeta" id="caja-reasignar">
+  <h3 style="margin-top:0">Reasignar {{ entregable_reasignar.codigo }} · {{ entregable_reasignar.titulo }}</h3>
+  <form method="post" action="{% url 'personal' %}">{% csrf_token %}
+    <input type="hidden" name="accion" value="reasignar">
+    <input type="hidden" name="entregable" value="{{ entregable_reasignar.pk }}">
+    <input type="hidden" name="rol" value="{{ rol_reasignar }}">
+    <div class="filtros-grid">
+      <div>
+        <label for="reasig-usuario">{% if rol_reasignar == 'senior' %}Senior revisor{% else %}Junior principal{% endif %}</label>
+        <select id="reasig-usuario" name="usuario" required>
+          {% if rol_reasignar == 'senior' %}
+            {% for u in seniors_activos %}
+            <option value="{{ u.pk }}"{% if conflicto_personal.usuario == u.pk %} selected{% endif %}>{{ u.nombre }}</option>
+            {% endfor %}
+          {% else %}
+            {% for u in juniors_activos %}
+            <option value="{{ u.pk }}"{% if conflicto_personal.usuario == u.pk %} selected{% endif %}>{{ u.nombre }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div>
+        <label for="reasig-motivo">Motivo</label>
+        <input id="reasig-motivo" name="motivo" type="text" maxlength="200" value="{{ conflicto_personal.motivo|default:'' }}" placeholder="Motivo de la reasignación…">
+      </div>
+    </div>
+    <div class="acciones">
+      <button class="boton">Confirmar reasignación</button>
+      <a class="boton sec" href="{% url 'personal' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

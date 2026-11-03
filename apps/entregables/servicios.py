@@ -7,7 +7,7 @@ from apps.alertas.models import Notificacion
 
 from . import adjuntos
 from .models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion, TipoError
-from .visibilidad import es_senior_del_entregable
+from .visibilidad import es_elaborador_del_entregable, es_senior_del_entregable
 
 E = Entregable.Estado
 
@@ -134,8 +134,11 @@ def puede_reabrir(entregable):
 
 
 def responsables_posibles(entregable):
-    """Quién puede ser responsable de una observación: el junior asignado (por defecto) o un senior del entregable."""
-    ids = [entregable.junior_asignado_id, entregable.senior_revisor_id, entregable.contrato.senior_responsable_id]
+    """Quién puede ser responsable de una observación: el junior asignado (por defecto), los apoyos activos o un senior del entregable."""
+    apoyos = list(
+        entregable.responsables_apoyo.filter(activo=True).order_by("asignado_en", "id").values_list("usuario_id", flat=True)
+    )
+    ids = [entregable.junior_asignado_id, *apoyos, entregable.senior_revisor_id, entregable.contrato.senior_responsable_id]
     from apps.cuentas.models import Usuario
 
     por_id = Usuario.objects.in_bulk([i for i in ids if i])
@@ -225,7 +228,7 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
 
     exigido = TRANSICIONES[clave]
     if exigido == "junior":
-        autorizado = usuario.pk == entregable.junior_asignado_id or es_senior_del_entregable(usuario, entregable)
+        autorizado = es_elaborador_del_entregable(usuario, entregable) or es_senior_del_entregable(usuario, entregable)
     else:
         autorizado = es_senior_del_entregable(usuario, entregable)
     if not autorizado:
