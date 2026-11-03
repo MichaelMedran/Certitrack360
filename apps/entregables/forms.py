@@ -13,23 +13,56 @@ from .tipos import TipoAdjunto
 
 def contratos_para(usuario):
     """Contratos en los que el usuario puede crear entregables: vigentes (baja lógica) y, si es senior, a su cargo."""
-    qs = Contrato.objects.select_related("cliente").filter(activo=True, cliente__activo=True)
+    qs = Contrato.objects.select_related("cliente", "linea_servicio").filter(activo=True, cliente__activo=True)
     if usuario.es_gerente_o_admin:
         return qs
     return qs.filter(senior_responsable=usuario)
 
 
+class SelectorDeContrato(forms.Select):
+    """Cada opción lleva el cliente y la línea de servicio del contrato: el formulario los muestra en solo lectura
+    y `certitrack.js` los actualiza al cambiar de contrato (atributo data-reflejar)."""
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        opcion = super().create_option(name, value, label, selected, index, subindex, attrs)
+        contrato = getattr(value, "instance", None)
+        if contrato is not None:
+            opcion["attrs"]["data-cliente"] = contrato.cliente.nombre
+            opcion["attrs"]["data-linea"] = linea_de(contrato)
+        return opcion
+
+
+def linea_de(contrato):
+    return contrato.linea_servicio.nombre if contrato.linea_servicio_id else "Sin asignar"
+
+
 class EntregableForm(forms.Form):
-    """Formulario con Poka-Yoke: los campos obligatorios salen de la plantilla TDR."""
+    """Formulario con Poka-Yoke: los campos obligatorios salen de la plantilla TDR.
+
+    Desde el Sprint 2 (RF-20) también pide los datos de recepción de HU-01: ID-TDR y fecha de recepción, que no puede
+    ser futura ni posterior al plazo. Compatibilidad (RNF-11): una petición que no trae ninguno de esos dos campos
+    —un cliente anterior al Sprint 2— se acepta como los entregables previos: sin ID-TDR y con la fecha de creación como
+    recepción. La pantalla siempre los envía, así que en ella son obligatorios.
+    """
+
+    CAMPOS_RECEPCION = ("id_tdr", "fecha_recepcion")
 
     contrato = forms.ModelChoiceField(
-        queryset=Contrato.objects.none(), label="Contrato",
+        queryset=Contrato.objects.none(), label="Contrato", widget=SelectorDeContrato(attrs={"data-reflejar": True}),
         error_messages={
             "required": "Falta elegir el contrato.",
             "invalid_choice": "Elija un contrato vigente de la lista (los contratos dados de baja no admiten entregables).",
         },
     )
     titulo = forms.CharField(label="Título", max_length=200, error_messages={"required": "Falta el título."})
+    id_tdr = forms.CharField(
+        label="ID-TDR", max_length=50, help_text="Identificador del TDR o de la solicitud del cliente.",
+        error_messages={"required": "Falta el ID-TDR.", "max_length": "El ID-TDR no puede superar los 50 caracteres."},
+    )
+    fecha_recepcion = forms.DateField(
+        label="Fecha de recepción", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        error_messages={"required": "Falta la fecha de recepción.", "invalid": "La fecha de recepción no es una fecha válida."},
+    )
     plazo = forms.DateField(
         label="Plazo de entrega", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         error_messages={"required": "Falta el plazo de entrega.", "invalid": "El plazo no es una fecha válida."},
@@ -54,8 +87,13 @@ class EntregableForm(forms.Form):
         self.fields["contrato"].queryset = contratos_para(usuario)
         self.fields["junior_asignado"].queryset = Usuario.objects.filter(rol=Usuario.Rol.JUNIOR, is_active=True)
         self.fields["senior_revisor"].queryset = Usuario.objects.filter(rol=Usuario.Rol.SENIOR, is_active=True)
-        if not self.is_bound and plantilla:
-            self.fields["plazo"].initial = timezone.localdate() + datetime.timedelta(days=plantilla.plazo_dias_por_defecto)
+        if not self.is_bound:
+            self.fields["fecha_recepcion"].initial = timezone.localdate()
+            if plantilla:
+                self.fields["plazo"].initial = timezone.localdate() + datetime.timedelta(days=plantilla.plazo_dias_por_defecto)
+        elif not any(nombre in self.data for nombre in self.CAMPOS_RECEPCION):
+            for nombre in self.CAMPOS_RECEPCION:  # petición anterior al Sprint 2: ver la nota de la clase
+                del self.fields[nombre]
         self.campos_dinamicos = []
         for c in (plantilla.campos_requeridos if plantilla else []):
             msg = {"required": f"Falta completar el campo «{c['etiqueta']}»."}
@@ -80,14 +118,47 @@ class EntregableForm(forms.Form):
                 campo = forms.CharField(label=c["etiqueta"], max_length=255, error_messages=msg)
             self.fields[c["nombre"]] = campo
             self.campos_dinamicos.append(c["nombre"])
+        # Los errores se listan en el mismo orden en que se ven las secciones de la pantalla.
+        self.order_fields(["contrato", "titulo", *self.CAMPOS_RECEPCION, "plazo", *self.campos_dinamicos,
+                           "junior_asignado", "senior_revisor"])
+
+    def _seccion(self, nombres):
+        return [self[n] for n in nombres if n in self.fields]
 
     @property
     def campos_base(self):
+        """Los campos del Sprint 1 que no dependen de la plantilla (se conservan para compatibilidad)."""
         return [self[n] for n in ("contrato", "titulo", "plazo", "junior_asignado", "senior_revisor")]
+
+    @property
+    def seccion_contrato(self):
+        return self._seccion(("contrato", "titulo"))
+
+    @property
+    def seccion_recepcion(self):
+        """«Recepción de la solicitud» del wireframe: ID-TDR, fecha de recepción y plazo de entrega."""
+        return self._seccion((*self.CAMPOS_RECEPCION, "plazo"))
+
+    @property
+    def seccion_responsables(self):
+        return self._seccion(("junior_asignado", "senior_revisor"))
 
     @property
     def campos_plantilla(self):
         return [self[n] for n in self.campos_dinamicos]
+
+    def contrato_elegido(self):
+        """El contrato elegido (o None), para mostrar su cliente y su línea de servicio en solo lectura.
+
+        Sale del mismo queryset del campo, así que nunca revela un contrato que el usuario no puede elegir.
+        """
+        valor = self["contrato"].value()
+        if not valor:
+            return None
+        try:
+            return self.fields["contrato"].queryset.get(pk=valor)
+        except (ValueError, TypeError, Contrato.DoesNotExist):
+            return None
 
     def clean_plazo(self):
         plazo = self.cleaned_data["plazo"]
@@ -100,9 +171,17 @@ class EntregableForm(forms.Form):
         contrato, junior = datos.get("contrato"), datos.get("junior_asignado")
         if contrato and junior and not contrato.juniors.filter(pk=junior.pk).exists():
             self.add_error("junior_asignado", "Ese junior no está asignado al contrato elegido.")
+        # Las dos reglas de la recepción se revisan juntas para nombrar todo lo que está mal (p. ej. fechas invertidas).
+        recepcion, plazo = datos.get("fecha_recepcion"), datos.get("plazo")
+        if recepcion:
+            if recepcion > timezone.localdate():
+                self.add_error("fecha_recepcion", "La fecha de recepción no puede ser futura.")
+            if plazo and recepcion > plazo:
+                self.add_error("fecha_recepcion", "La fecha de recepción no puede ser posterior al plazo.")
         return datos
 
     def guardar(self, usuario):
+        """Crea el entregable. El código único y, si no vino, la fecha de recepción los asigna el modelo al guardarlo."""
         d = self.cleaned_data
         valores = {}
         for nombre in self.campos_dinamicos:
@@ -112,6 +191,7 @@ class EntregableForm(forms.Form):
             contrato=d["contrato"], plantilla=self.plantilla, titulo=d["titulo"], datos=valores, plazo=d["plazo"],
             junior_asignado=d["junior_asignado"], creado_por=usuario,
             senior_revisor=d["senior_revisor"] or d["contrato"].senior_responsable,
+            id_tdr=d.get("id_tdr", ""), fecha_recepcion=d.get("fecha_recepcion"),
         )
 
 

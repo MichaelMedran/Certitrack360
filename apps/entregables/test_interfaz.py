@@ -39,7 +39,7 @@ class TableroTests(FiltrosBase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "<summary>Filtros")
         self.assertContains(r, "0 activos")
-        for etiqueta in ("A realizar", "En proceso", "Verificación senior", "Listo para entrega", "Hecho"):
+        for etiqueta in E.labels:
             self.assertContains(r, etiqueta)
         self.assertEqual(len(tarjetas(html)), 9)
         self.assertEqual(html.count("<html"), 1)

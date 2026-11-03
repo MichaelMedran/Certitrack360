@@ -49,4 +49,15 @@
     const mensaje = evento.target.dataset ? evento.target.dataset.confirmar : null;
     if (mensaje && !window.confirm(mensaje)) evento.preventDefault();
   });
+
+  // Datos de solo lectura que dependen de la opción elegida (p. ej., cliente y línea de servicio del contrato en
+  // «Nuevo entregable»): <select id="x" data-reflejar> con opciones data-*, y <div data-reflejo-de="x"> con [data-dato].
+  document.addEventListener("change", function (evento) {
+    const control = evento.target;
+    if (!control.matches || !control.matches("select[data-reflejar]")) return;
+    const opcion = control.options[control.selectedIndex];
+    document.querySelectorAll('[data-reflejo-de="' + control.id + '"] [data-dato]').forEach(function (salida) {
+      salida.textContent = (opcion && opcion.dataset[salida.dataset.dato]) || "—";
+    });
+  });
 })();

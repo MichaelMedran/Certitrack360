@@ -1,10 +1,12 @@
 {% include "entregables/_chips.html" %}
 {% if entregables %}
 <div class="tabla"><table>
-  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Urgencia</th><th>Estado</th><th>Junior</th></tr></thead>
+  <thead><tr><th>Código</th><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>ID-TDR</th><th>Plazo</th><th>Urgencia</th><th>Estado</th><th>Junior</th></tr></thead>
   <tbody>{% for e in entregables %}
   <tr>
+    <td class="codigo">{{ e.codigo }}</td>
     <td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
+    <td>{% if e.id_tdr %}{{ e.id_tdr }}{% else %}<span aria-hidden="true">—</span><span class="sr-only">Sin ID-TDR</span>{% endif %}</td>
     <td>{{ e.plazo|date:"d/m/Y" }}</td>
     <td>{% if e.estado == 'HECHO' %}<span aria-hidden="true">—</span><span class="sr-only">No aplica</span>{% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</td>
     <td>{{ e.get_estado_display }}</td><td>{{ e.junior_asignado.nombre }}</td>

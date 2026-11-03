@@ -11,7 +11,7 @@
   <div class="tarjeta"><div class="cifra">{{ total_activos }}</div>Entregables activos</div>
   <div class="tarjeta"><div class="cifra rojo">{{ vencidos }}</div>Vencidos</div>
   <div class="tarjeta"><div class="cifra ambar">{{ por_vencer }}</div>Vencen en {{ dias_proximo }} días</div>
-  <div class="tarjeta"><div class="cifra">{{ en_verificacion }}</div>En verificación senior</div>
+  <div class="tarjeta"><div class="cifra">{{ en_verificacion }}</div>En {{ etiqueta_revision|lower }}</div>
 </div>
 
 {% if user.es_gerente_o_admin %}

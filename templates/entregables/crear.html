@@ -33,17 +33,30 @@
   <div class="aviso aviso-error" role="alert"><strong>No se pudo guardar. Revise lo siguiente:</strong>
     <ul>{% for campo, errs in form.errors.items %}{% for e in errs %}<li>{{ e }}</li>{% endfor %}{% endfor %}</ul></div>
   {% endif %}
-  {% for campo in form.campos_base %}
-  <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
-    {% if campo.help_text %}<span class="helptext">{{ campo.help_text }}</span>{% endif %}</div>
+
+  <h3>Contrato</h3>
+  {% for campo in form.seccion_contrato %}
+  {% include "entregables/_campo.html" %}
+  {% if campo.name == "contrato" %}{% with elegido=form.contrato_elegido %}
+  <div class="solo-lectura" data-reflejo-de="{{ campo.id_for_label }}" aria-live="polite">
+    <span>Cliente: <strong data-dato="cliente">{{ elegido.cliente.nombre|default:"—" }}</strong></span>
+    <span>Línea de servicio: <strong data-dato="linea">{% if elegido %}{{ elegido.linea_servicio.nombre|default:"Sin asignar" }}{% else %}—{% endif %}</strong></span>
+    <span class="suave">(se toman del contrato, solo lectura)</span>
+  </div>
+  {% endwith %}{% endif %}
   {% endfor %}
+
+  <h3>Recepción de la solicitud</h3>
+  {% for campo in form.seccion_recepcion %}{% include "entregables/_campo.html" %}{% endfor %}
+  <p class="suave">Código del ticket: se asigna al guardar (p. ej. {{ ejemplo_codigo }}).</p>
+
   {% if form.campos_plantilla %}
   <h3>Campos de la plantilla</h3>
-  {% for campo in form.campos_plantilla %}
-  <div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
-    {% if campo.help_text %}<span class="helptext">{{ campo.help_text }}</span>{% endif %}</div>
-  {% endfor %}
+  {% for campo in form.campos_plantilla %}{% include "entregables/_campo.html" %}{% endfor %}
   {% endif %}
+
+  <h3>Responsables</h3>
+  {% for campo in form.seccion_responsables %}{% include "entregables/_campo.html" %}{% endfor %}
   <div class="acciones"><button class="boton">Crear y asignar</button><a class="boton sec" href="{% url 'entregables' %}">Cancelar</a></div>
 </form>
 {% endif %}

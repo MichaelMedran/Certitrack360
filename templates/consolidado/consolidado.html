@@ -30,7 +30,7 @@
 <div class="contadores">
   {% for c in por_estado %}<div class="contador"><b>{{ c.total }}</b>{{ c.etiqueta }}</div>{% endfor %}
 </div>
-<p class="suave">{{ total }} entregable{{ total|pluralize }} en total · {{ activos }} activo{{ activos|pluralize }} (todo lo que no está en «Hecho»).</p>
+<p class="suave">{{ total }} entregable{{ total|pluralize }} en total · {{ activos }} activo{{ activos|pluralize }} (todo lo que no está en «{{ etiqueta_cerrado }}»).</p>
 
 <h2>Vencidos ({{ vencidos|length }})</h2>
 {% if vencidos %}

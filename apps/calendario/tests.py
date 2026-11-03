@@ -53,8 +53,8 @@ class CalendarioTests(FiltrosBase):
 
     def test_el_estado_va_en_el_titulo(self):
         titulos = [ev["title"] for ev in self.eventos(self.gerente)]
-        self.assertTrue(any(t.startswith("[Verificación senior]") for t in titulos))
-        self.assertTrue(any(t.startswith("[Hecho]") for t in titulos))
+        self.assertTrue(any(t.startswith(f"[{E.VERIFICACION_SENIOR.label}]") for t in titulos))
+        self.assertTrue(any(t.startswith(f"[{E.HECHO.label}]") for t in titulos))
 
     @override_settings(ALERT_THRESHOLDS_DAYS=[1, 0])
     def test_la_urgencia_del_calendario_usa_los_umbrales_de_las_alertas(self):

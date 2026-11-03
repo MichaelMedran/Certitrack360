@@ -9,7 +9,7 @@ from collections import namedtuple
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.clientes.models import Cliente, Contrato
+from apps.clientes.models import Cliente, Contrato, LineaServicio
 from apps.cuentas.models import Usuario
 
 from . import urgencia as urg
@@ -57,6 +57,11 @@ def aplicar(qs, params, hoy=None):
         qs = qs.filter(estado=estado)
         activos["estado"] = estado
 
+    linea = entero(params.get("linea"))  # línea de servicio del contrato (SDD del Sprint 2, RF-24)
+    if linea is not None:
+        qs = qs.filter(contrato__linea_servicio_id=linea)
+        activos["linea"] = linea
+
     urgencia = params.get("urgencia")
     if urgencia in urg.ETIQUETAS:
         qs = qs.filter(urg.condicion(urgencia, hoy))
@@ -86,12 +91,13 @@ def ordenar(qs, orden, hoy=None):
 def chips(params, activos, opciones_):
     """Un chip por filtro aplicado, con la dirección que lo quita (conservando los demás filtros y el orden)."""
     titulos = [("cliente", "Cliente"), ("contrato", "Contrato"), ("responsable", "Responsable"), ("estado", "Estado"),
-               ("urgencia", "Urgencia"), ("tipo_observacion", "Observación abierta")]
+               ("linea", "Línea de servicio"), ("urgencia", "Urgencia"), ("tipo_observacion", "Observación abierta")]
     nombres = {
         "cliente": {c.pk: c.nombre for c in opciones_["clientes"]},
         "contrato": {c.pk: c.numero_contrato for c in opciones_["contratos"]},
         "responsable": {u.pk: u.nombre for u in opciones_["responsables"]},
         "estado": dict(opciones_["estados"]),
+        "linea": {linea.pk: linea.nombre for linea in opciones_["lineas"]},
         "urgencia": dict(opciones_["urgencias"]),
         "tipo_observacion": dict(opciones_["tipos_observacion"]),
     }
@@ -117,6 +123,7 @@ def opciones(usuario):
             Q(entregables_asignados__in=visibles) | Q(entregables_a_revisar__in=visibles)
         ).distinct().order_by("first_name", "last_name", "username"),
         "estados": Entregable.Estado.choices,
+        "lineas": LineaServicio.objects.filter(contratos__entregables__in=visibles).distinct(),
         "urgencias": urg.CHOICES,
         "tipos_observacion": TipoError.choices,
         "ordenes": ORDEN_CHOICES,

@@ -1,10 +1,13 @@
 {% extends "base.html" %}
-{% block titulo %}{{ e.titulo }}{% endblock %}
+{% block titulo %}{{ e.codigo }} · {{ e.titulo }}{% endblock %}
 {% block contenido %}
-<h1>{{ e.titulo }}</h1>
+<h1>{{ e.titulo }} <span class="etiqueta codigo">{{ e.codigo }}</span></h1>
 <div class="cuadricula">
   <div class="tarjeta"><div class="suave">Cliente / contrato</div>{{ e.contrato.cliente }}<br>{{ e.contrato.numero_contrato }}</div>
-  <div class="tarjeta"><div class="suave">Plazo</div><strong>{{ e.plazo|date:"d/m/Y" }}</strong></div>
+  <div class="tarjeta"><div class="suave">ID-TDR · Línea</div>ID-TDR: {{ e.id_tdr|default:"sin registrar" }}<br>
+    Línea: {{ e.contrato.linea_servicio.nombre|default:"sin asignar" }}</div>
+  <div class="tarjeta"><div class="suave">Recepción · Plazo</div>Recepción: {{ e.fecha_recepcion|date:"d/m/Y"|default:"sin registrar" }}<br>
+    Plazo: <strong>{{ e.plazo|date:"d/m/Y" }}</strong></div>
   <div class="tarjeta"><div class="suave">Estado</div><strong>{{ e.get_estado_display }}</strong></div>
   <div class="tarjeta"><div class="suave">Urgencia</div>
     {% if e.estado == 'HECHO' %}<strong>No aplica</strong> <span class="suave">(entregado)</span>
@@ -81,7 +84,7 @@
     <p class="suave">Formatos: {{ extensiones }} · máximo {{ tamano_max }} MB. Si ya existe un adjunto de ese tipo se crea una versión nueva; nada se sobrescribe.</p>
   </form>
   {% elif junior_sin_subida %}
-  <p class="suave">Ya no puede subir adjuntos: solo se suben mientras el entregable está en «A realizar» o «En proceso».</p>
+  <p class="suave">Ya no puede subir adjuntos: solo se suben mientras el entregable está en {{ estados_de_subida }}.</p>
   {% endif %}
 </div>
 

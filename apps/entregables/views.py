@@ -5,9 +5,11 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models import Count
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.alertas.models import Notificacion
@@ -25,7 +27,9 @@ E = Entregable.Estado
 
 
 def _base(usuario):
-    return entregables_visibles(usuario).select_related("contrato__cliente", "junior_asignado", "senior_revisor")
+    return entregables_visibles(usuario).select_related(
+        "contrato__cliente", "contrato__linea_servicio", "junior_asignado", "senior_revisor"
+    )
 
 
 def _enriquecer(entregables):
@@ -148,9 +152,10 @@ def crear(request):
         if request.method == "POST":
             form = EntregableForm(usuario, plantilla, request.POST)
             if form.is_valid():
-                entregable = form.guardar(usuario)
-                servicios.registrar_creacion(entregable, usuario)
-                messages.success(request, "El entregable se creó y se asignó al junior.")
+                with transaction.atomic():  # el entregable (con su código), su historial y el aviso, o nada
+                    entregable = form.guardar(usuario)
+                    servicios.registrar_creacion(entregable, usuario)
+                messages.success(request, f"El entregable {entregable.codigo} se creó y se asignó al junior.")
                 return redirect("entregable_detalle", pk=entregable.pk)
         else:
             form = EntregableForm(usuario, plantilla)
@@ -159,6 +164,8 @@ def crear(request):
     return render(request, "entregables/crear.html", {
         "plantillas": plantillas, "plantilla": plantilla, "form": form,
         "hay_contratos": contratos_para(usuario).exists(),
+        # Ejemplo del formato del código que se asignará al guardar (p. ej. CT-2026-00031).
+        "ejemplo_codigo": f"{settings.CODIGO_PREFIJO}-{timezone.localdate().year}-00031",
     })
 
 
@@ -202,6 +209,7 @@ def _contexto_detalle(usuario, e):
         "grupos_adjuntos": grupos, "requeridos": requeridos,
         "puede_subir": puede_subir, "puede_eliminar": adjuntos.puede_eliminar(usuario),
         "junior_sin_subida": usuario.pk == e.junior_asignado_id and not puede_subir,
+        "estados_de_subida": " o ".join(f"«{E(estado).label}»" for estado in adjuntos.ESTADOS_INICIALES),
         "form_adjunto": AdjuntoForm(),
         "extensiones": ", ".join(adjuntos.extensiones_permitidas()), "tamano_max": f"{settings.MEDIA_MAX_UPLOAD_MB:g}",
         # Qué falta para pasar a verificación (datos y adjuntos), a la vista antes de intentarlo.
@@ -276,7 +284,7 @@ def registrar_observacion(request, pk):
         )
         Notificacion.objects.create(
             usuario=e.junior_asignado, entregable=e, tipo=Notificacion.Tipo.OBSERVACION,
-            mensaje=f"Nueva observación en «{e.titulo}».",
+            mensaje=servicios.texto_observacion(e),
         )
         messages.success(request, "Observación registrada.")
     else:

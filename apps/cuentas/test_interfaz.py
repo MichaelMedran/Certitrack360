@@ -51,7 +51,7 @@ class InicioTests(Base):
         self.assertRegex(html, r'<div class="cifra">4</div>Entregables activos')
         self.assertRegex(html, r'<div class="cifra rojo">1</div>Vencidos')
         self.assertRegex(html, r'<div class="cifra ambar">1</div>Vencen en 5 días')
-        self.assertRegex(html, r'<div class="cifra">1</div>En verificación senior')
+        self.assertRegex(html, r'<div class="cifra">1</div>En ' + re.escape(E.VERIFICACION_SENIOR.label.lower()))
 
     @override_settings(ALERT_THRESHOLDS_DAYS=[10, 4, 0])
     def test_la_ventana_de_por_vencer_es_la_de_las_alertas(self):

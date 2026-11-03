@@ -2,7 +2,7 @@
 {% block titulo %}Notificaciones{% endblock %}
 {% block contenido %}
 <h1>Notificaciones</h1>
-<p class="suave">Avisos automáticos de asignaciones, observaciones, entregables en verificación y vencimientos. No hay mensajes entre personas.</p>
+<p class="suave">Avisos automáticos de asignaciones, observaciones, entregables en revisión senior y vencimientos. No hay mensajes entre personas.</p>
 {% if no_leidas %}
 <form method="post" action="{% url 'notificaciones_leidas' %}" class="acciones">{% csrf_token %}<button class="boton sec">Marcar todas como leídas</button></form>
 {% endif %}

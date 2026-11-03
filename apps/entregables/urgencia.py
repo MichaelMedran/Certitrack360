@@ -1,7 +1,9 @@
 """Urgencia de un entregable: se calcula en el momento y no se almacena (SDD §10.3, RF-15).
 
-Los umbrales salen de la misma configuración que las alertas (`ALERT_THRESHOLDS_DAYS`, por defecto 5,2,0):
-  - CRITICO: vence en `critico` días o menos (el menor umbral positivo; 2 por defecto).
+Los umbrales salen de la misma configuración que las alertas (`ALERT_THRESHOLDS_DAYS`, p. ej. 5,2,0 o 5,2,1,0):
+  - CRITICO: vence en `critico` días o menos: el segundo umbral mayor de los positivos (SDD del Sprint 2, §10.1), así
+    que sumar el aviso de 24 h (5,2,1,0) no cambia su significado: sigue empezando a 2 días. Con un solo umbral positivo,
+    ese; sin positivos, 0 (solo el día del vencimiento).
   - PROXIMO: vence en `proximo` días o menos (el mayor umbral; 5 por defecto).
   - VENCIDO: el plazo ya pasó y el entregable no está en HECHO.
   - NORMAL: el resto. Un entregable HECHO ya no corre contra el plazo, así que siempre es NORMAL.
@@ -20,10 +22,14 @@ CHOICES = list(ETIQUETAS.items())
 
 
 def umbrales():
-    """(días de «crítico», días de «próximo»), leídos de la configuración en cada llamada."""
-    todos = sorted(set(settings.ALERT_THRESHOLDS_DAYS))
+    """(días de «crítico», días de «próximo»), leídos de la configuración en cada llamada.
+
+    Ejemplos: 5,2,1,0 → (2, 5) · 5,2,0 → (2, 5) · 7,3,0 → (3, 7) · 10,0 → (10, 10) · 0 → (0, 0).
+    """
+    todos = sorted(set(settings.ALERT_THRESHOLDS_DAYS), reverse=True)
     positivos = [u for u in todos if u > 0]
-    return (min(positivos) if positivos else 0), (max(todos) if todos else 0)
+    critico = positivos[1] if len(positivos) > 1 else (positivos[0] if positivos else 0)
+    return critico, (todos[0] if todos else 0)
 
 
 def calcular(plazo, estado, hoy=None):

@@ -288,7 +288,7 @@ class HistorialDeAdjuntosTests(Base):
         servicios.mover(self.e1, E.EN_PROCESO, self.j1)
         h = self.e1.historial.get()
         self.assertTrue(h.es_cambio_de_estado)
-        self.assertEqual(h.descripcion, "Estado: A realizar → En proceso")
+        self.assertEqual(h.descripcion, f"Estado: {E.A_REALIZAR.label} → {E.EN_PROCESO.label}")
 
     def test_el_detalle_muestra_el_historial_de_adjuntos(self):
         adjuntos.subir(self.e1, self.j1, pdf("informe_enero.pdf"), "BORRADOR")

@@ -90,7 +90,7 @@ class HistorialTests(Base):
         e = self.nuevo(self.c1, self.j1, self.s1, "V", estado=E.VERIFICACION_SENIOR)
         servicios.mover(e, E.EN_PROCESO, self.s1, tipo_error="FORMATO", descripcion="Falta numeración")
         h = e.historial.get()
-        self.assertEqual(h.descripcion, "Estado: Verificación senior → En proceso (Devuelto con observación (Formato))")
+        self.assertEqual(h.descripcion, f"Estado: {E.VERIFICACION_SENIOR.label} → {E.EN_PROCESO.label} (Devuelto con observación (Formato))")
 
     def test_devolver_sin_observacion_falla(self):
         e = self.nuevo(self.c1, self.j1, self.s1, "V", estado=E.VERIFICACION_SENIOR)
@@ -111,7 +111,7 @@ class HistorialTests(Base):
         e = Entregable.objects.get(titulo="Nuevo")
         h = e.historial.get()
         self.assertEqual((h.estado_anterior, h.estado_nuevo, h.usuario), ("", E.A_REALIZAR, self.s1))
-        self.assertEqual(h.descripcion, "Estado: — → A realizar (Entregable creado)")
+        self.assertEqual(h.descripcion, f"Estado: — → {E.A_REALIZAR.label} (Entregable creado)")
         self.assertTrue(Notificacion.objects.filter(usuario=self.j1, entregable=e, tipo="ASIGNACION").exists())
 
 

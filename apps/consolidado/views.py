@@ -21,4 +21,5 @@ def consolidado(request):
 
     return render(request, "consolidado/consolidado.html", {
         **datos, "opciones": filtros.opciones(request.user), "estados": Entregable.Estado.choices,
+        "etiqueta_cerrado": Entregable.Estado.HECHO.label,
     })

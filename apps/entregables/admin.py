@@ -2,9 +2,19 @@ from django.contrib import admin
 
 from .models import Adjunto, Entregable, HistorialEstado, Observacion
 
-admin.site.register(Entregable)
 admin.site.register(Observacion)
 admin.site.register(HistorialEstado)
+
+
+@admin.register(Entregable)
+class EntregableAdmin(admin.ModelAdmin):
+    """El código se asigna solo al crear (también desde aquí) y no se edita: se muestra de solo lectura."""
+
+    list_display = ("codigo", "titulo", "contrato", "estado", "plazo")
+    list_select_related = ("contrato__cliente",)
+    list_filter = ("estado",)
+    search_fields = ("codigo", "titulo", "id_tdr")
+    readonly_fields = ("codigo",)
 
 
 @admin.register(Adjunto)

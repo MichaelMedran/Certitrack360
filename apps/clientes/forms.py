@@ -1,11 +1,13 @@
 import re
 
 from django import forms
+from django.db.models import Q
 
 from apps.cuentas.models import Usuario
+from apps.entregables.models import Entregable
 from apps.entregables.tipos import TipoAdjunto
 
-from .models import Cliente, Contrato, PlantillaTDR
+from .models import Cliente, Contrato, LineaServicio, PlantillaTDR
 
 TIPOS_CAMPO_ETIQUETAS = [
     ("texto", "Texto"), ("texto_largo", "Texto largo"), ("numero", "Número"), ("fecha", "Fecha"), ("opcion", "Opción"),
@@ -24,12 +26,39 @@ class ClienteForm(forms.ModelForm):
         self.fields["sector"].choices = [("", "— Elija el sector —")] + list(Cliente.Sector.choices)
 
 
+class LineaServicioForm(forms.ModelForm):
+    """Alta y edición de una línea de servicio: nombre (único, sin distinguir mayúsculas) y si está activa."""
+
+    class Meta:
+        model = LineaServicio
+        fields = ["nombre", "activa"]
+        labels = {"nombre": "Nombre", "activa": "Activa"}
+        error_messages = {
+            "nombre": {
+                "required": "Falta el nombre de la línea de servicio.",
+                "max_length": "El nombre no puede superar los 80 caracteres.",
+            },
+        }
+
+    def clean_nombre(self):
+        nombre = " ".join(self.cleaned_data["nombre"].split())
+        # El catálogo es pequeño: se compara en Python para no depender de cómo cada base de datos trata las tildes.
+        otras = LineaServicio.objects.exclude(pk=self.instance.pk).values_list("nombre", flat=True)
+        if any(otra.casefold() == nombre.casefold() for otra in otras):
+            raise forms.ValidationError("Ya existe una línea de servicio con ese nombre.")
+        return nombre
+
+
 class ContratoForm(forms.ModelForm):
+    """Contrato. La línea de servicio (SDD del Sprint 2, RF-24) es obligatoria aquí aunque en la base de datos sea
+    opcional (los contratos anteriores no la tienen). Compatibilidad (RNF-11): una petición que no trae el campo
+    —un formulario anterior al Sprint 2— no lo toca; la pantalla siempre lo envía."""
+
     class Meta:
         model = Contrato
         fields = [
-            "cliente", "numero_contrato", "descripcion", "fecha_inicio", "fecha_fin", "senior_responsable", "juniors",
-            "activo",
+            "cliente", "numero_contrato", "descripcion", "linea_servicio", "fecha_inicio", "fecha_fin",
+            "senior_responsable", "juniors", "activo",
         ]
         widgets = {
             "fecha_inicio": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
@@ -48,6 +77,25 @@ class ContratoForm(forms.ModelForm):
         self.fields["cliente"].queryset = permitidos
         self.fields["cliente"].empty_label = "— Elija el cliente —"
         self.fields["senior_responsable"].empty_label = "— Elija el senior —"
+        self._preparar_linea()
+
+    def _preparar_linea(self):
+        if self.is_bound and "linea_servicio" not in self.data:
+            del self.fields["linea_servicio"]  # petición anterior al Sprint 2: el contrato conserva la línea que tenga
+            return
+        campo = self.fields["linea_servicio"]
+        # Igual que con el cliente: las líneas inactivas no se ofrecen, salvo la que el contrato ya tiene.
+        condicion = Q(activa=True)
+        if self.instance.linea_servicio_id:
+            condicion |= Q(pk=self.instance.linea_servicio_id)
+        campo.queryset = LineaServicio.objects.filter(condicion)
+        campo.required = True
+        campo.empty_label = "— Elija la línea de servicio —"
+        campo.error_messages = {
+            **campo.error_messages,
+            "required": "Falta elegir la línea de servicio.",
+            "invalid_choice": "Elija una línea de servicio activa de la lista.",
+        }
 
     def clean(self):
         datos = super().clean()
@@ -67,7 +115,10 @@ class PlantillaForm(forms.ModelForm):
 
     adjuntos_requeridos = forms.MultipleChoiceField(
         label="Adjuntos obligatorios", choices=TipoAdjunto.choices, widget=forms.CheckboxSelectMultiple, required=False,
-        help_text="Tipos de documento que el entregable debe tener antes de pasar a Verificación senior. Puede dejarlos vacíos.",
+        help_text=(
+            f"Tipos de documento que el entregable debe tener antes de pasar a {Entregable.Estado.VERIFICACION_SENIOR.label}. "
+            "Puede dejarlos vacíos."
+        ),
     )
 
     class Meta:

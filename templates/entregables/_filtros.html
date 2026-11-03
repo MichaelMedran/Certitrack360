@@ -21,6 +21,9 @@
       <div><label for="f-estado">Estado</label>
         <select id="f-estado" name="estado"><option value="">Todos</option>
           {% for valor, etiqueta in opciones.estados %}<option value="{{ valor }}"{% if filtros_activos.estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-linea">Línea de servicio</label>
+        <select id="f-linea" name="linea"><option value="">Todas</option>
+          {% for l in opciones.lineas %}<option value="{{ l.pk }}"{% if filtros_activos.linea == l.pk %} selected{% endif %}>{{ l.nombre }}</option>{% endfor %}</select></div>
       <div><label for="f-orden">Ordenar por</label>
         <select id="f-orden" name="orden">
           {% for valor, etiqueta in opciones.ordenes %}<option value="{{ valor }}"{% if orden == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>

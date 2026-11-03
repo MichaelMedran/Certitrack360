@@ -3,6 +3,29 @@
 {% block titulo %}Calendario{% endblock %}
 {% block contenido %}
 <h1>Calendario de plazos</h1>
+
+<details class="filtros"{% if n_filtros %} open{% endif %}>
+  <summary>Filtros <span class="chip" id="resumen-filtros">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span></summary>
+  <form method="get" action="{% url 'calendario' %}" id="filtros-calendario" data-eventos="{% url 'calendario_eventos' %}">
+    <div class="filtros-grid">
+      <div><label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente"><option value="">Todos</option>
+          {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-estado">Estado</label>
+        <select id="f-estado" name="estado"><option value="">Todos</option>
+          {% for valor, etiqueta in opciones.estados %}<option value="{{ valor }}"{% if filtros_activos.estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+      <div><label for="f-responsable">Responsable</label>
+        <select id="f-responsable" name="responsable"><option value="">Todos</option>
+          {% for u in opciones.responsables %}<option value="{{ u.pk }}"{% if filtros_activos.responsable == u.pk %} selected{% endif %}>{{ u.nombre }} ({{ u.get_rol_display }})</option>{% endfor %}</select></div>
+    </div>
+    <div class="acciones">
+      <button class="boton">Aplicar</button>
+      <a class="boton sec" href="{% url 'calendario' %}">Limpiar</a>
+    </div>
+  </form>
+  <p class="suave">Los filtros se aplican sobre los plazos que usted ya puede ver. La fecha se elige navegando por mes o semana.</p>
+</details>
+
 <div id="calendario"></div>
 {% endblock %}
 {% block scripts %}
@@ -16,11 +39,28 @@ document.addEventListener('DOMContentLoaded', function(){
     initialView: angosto.matches ? 'listMonth' : 'dayGridMonth', firstDay: 1, height: 'auto',
     buttonText: {today:'Hoy', month:'Mes', week:'Semana', list:'Lista'},
     headerToolbar: {left:'prev,next today', center:'title', right:'dayGridMonth,dayGridWeek,listMonth'},
-    events: "{% url 'calendario_eventos' %}", eventTimeFormat: {hour:'2-digit', minute:'2-digit'},
+    events: "{% url 'calendario_eventos' %}{{ consulta|escapejs }}", eventTimeFormat: {hour:'2-digit', minute:'2-digit'},
     noEventsContent: 'No hay plazos en este período', locale: 'es'
   });
   calendario.render();
   angosto.addEventListener('change', function(){ calendario.changeView(angosto.matches ? 'listMonth' : 'dayGridMonth'); });
+
+  // Filtros: se aplican sin recargar la página y sin perder el mes que se está mirando. El servidor los vuelve a
+  // aplicar sobre lo que el usuario puede ver, así que nunca muestran plazos ajenos.
+  var filtros = document.getElementById('filtros-calendario');
+  function aplicar(evento){
+    if (evento) evento.preventDefault();
+    var parametros = new URLSearchParams();
+    new FormData(filtros).forEach(function(valor, clave){ if (valor) parametros.append(clave, valor); });
+    var consulta = parametros.toString() ? '?' + parametros.toString() : '';
+    window.history.replaceState(null, '', filtros.getAttribute('action') + consulta);
+    calendario.getEventSources().forEach(function(fuente){ fuente.remove(); });
+    calendario.addEventSource(filtros.dataset.eventos + consulta);
+    var activos = Array.from(parametros.keys()).length;
+    document.getElementById('resumen-filtros').textContent = activos + ' activo' + (activos === 1 ? '' : 's');
+  }
+  filtros.addEventListener('change', aplicar);
+  filtros.addEventListener('submit', aplicar);
 });
 </script>
 {% endblock %}

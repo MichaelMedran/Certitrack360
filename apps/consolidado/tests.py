@@ -167,8 +167,8 @@ class PantallaTests(FiltrosBase):
     def test_los_contadores_por_estado_se_muestran_en_el_orden_del_tablero(self):
         html = self.ver(self.gerente).content.decode()
         contadores = re.findall(r'<div class="contador"><b>(\d+)</b>([^<]+)</div>', html)
-        self.assertEqual(contadores, [("2", "A realizar"), ("4", "En proceso"), ("1", "Verificación senior"),
-                                      ("1", "Listo para entrega"), ("1", "Hecho")])
+        self.assertEqual(contadores, [("2", E.A_REALIZAR.label), ("4", E.EN_PROCESO.label), ("1", E.VERIFICACION_SENIOR.label),
+                                      ("1", E.LISTO_PARA_ENTREGA.label), ("1", E.HECHO.label)])
         self.assertContains(self.ver(self.gerente), "9 entregables en total · 8 activos")
 
     def test_vencidos_y_proximos_enlazan_al_detalle(self):
@@ -185,7 +185,7 @@ class PantallaTests(FiltrosBase):
                                r"\s*<td class=\"num\">2</td><td class=\"num\">3</td><td class=\"num\">0</td><td class=\"num\">1</td><td class=\"num\">1</td></tr>")
         self.assertRegex(html, r"<tr><td>C3</td><td>Segundo Cliente</td><td class=\"num\">2</td>")
         # una columna por estado, con su etiqueta, en cada resumen
-        self.assertEqual(html.count('<th class="num">Verificación senior</th>'), 2)
+        self.assertEqual(html.count(f'<th class="num">{E.VERIFICACION_SENIOR.label}</th>'), 2)
 
     def test_carga_por_persona_con_barras_proporcionales(self):
         html = self.ver(self.gerente).content.decode()

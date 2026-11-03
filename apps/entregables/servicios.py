@@ -29,8 +29,24 @@ def datos_faltantes(entregable):
     ]
 
 
+def texto_asignacion(entregable):
+    return f"Se le asignó {entregable.referencia} (vence el {entregable.plazo:%d/%m/%Y})."
+
+
+def texto_en_revision(entregable):
+    return f"{entregable.referencia} pasó a «{E.VERIFICACION_SENIOR.label}» y espera su revisión."
+
+
+def texto_devuelto(entregable):
+    return f"{entregable.referencia} fue devuelto con una observación."
+
+
+def texto_observacion(entregable):
+    return f"Nueva observación en {entregable.referencia}."
+
+
 def requisitos_para_verificacion(entregable):
-    """Mensaje con todo lo que falta para pasar a Verificación senior, o None si ya se puede (SDD §10.1)."""
+    """Mensaje con todo lo que falta para pasar a Revisión senior (VERIFICACION_SENIOR), o None si ya se puede (SDD §10.1)."""
     partes, ayudas = [], []
     datos = datos_faltantes(entregable)
     if datos:
@@ -82,7 +98,7 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
         if nuevo_estado == E.VERIFICACION_SENIOR and entregable.senior_revisor_id != usuario.pk:
             Notificacion.objects.create(
                 usuario=entregable.senior_revisor, entregable=entregable, tipo=Notificacion.Tipo.VERIFICACION,
-                mensaje=f"«{entregable.titulo}» está en verificación y espera su revisión.",
+                mensaje=texto_en_revision(entregable),
             )
         if devuelve:
             Observacion.objects.create(
@@ -90,7 +106,7 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
             )
             Notificacion.objects.create(
                 usuario=entregable.junior_asignado, entregable=entregable, tipo=Notificacion.Tipo.OBSERVACION,
-                mensaje=f"«{entregable.titulo}» fue devuelto con una observación.",
+                mensaje=texto_devuelto(entregable),
             )
         if nuevo_estado == E.HECHO:
             # Fase 2: las observaciones resueltas de un entregable cerrado se convierten en lecciones aprendidas.
@@ -101,12 +117,12 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion=""):
 
 
 def registrar_creacion(entregable, usuario):
-    """Primer registro del historial y aviso de asignación al junior."""
+    """Primer registro del historial y aviso de asignación al junior (con el código del entregable)."""
     HistorialEstado.objects.create(
         entregable=entregable, estado_anterior="", estado_nuevo=entregable.estado, usuario=usuario,
         detalle="Entregable creado",
     )
     Notificacion.objects.create(
         usuario=entregable.junior_asignado, entregable=entregable, tipo=Notificacion.Tipo.ASIGNACION,
-        mensaje=f"Se le asignó «{entregable.titulo}» (vence el {entregable.plazo:%d/%m/%Y}).",
+        mensaje=texto_asignacion(entregable),
     )

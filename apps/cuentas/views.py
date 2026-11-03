@@ -23,6 +23,7 @@ def inicio(request):
         "por_vencer": activos.filter(plazo__gte=hoy, plazo__lte=hoy + datetime.timedelta(days=dias_proximo)).count(),
         "dias_proximo": dias_proximo,
         "en_verificacion": qs.filter(estado=Entregable.Estado.VERIFICACION_SENIOR).count(),
+        "etiqueta_revision": Entregable.Estado.VERIFICACION_SENIOR.label,
         "proximos": activos.order_by("plazo")[:6],
         "recientes": Notificacion.objects.filter(usuario=request.user).select_related("entregable")[:5],
     }

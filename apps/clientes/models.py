@@ -1,7 +1,34 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.functions import Lower
 
 from apps.entregables.tipos import TipoAdjunto
+
+# Las cinco líneas del tablero del equipo (SDD del Sprint 2, RF-24). La migración 0005 las crea; el seed las reutiliza.
+LINEAS_INICIALES = ("BPO", "Custodia", "Digitalización", "Banca", "Estado")
+
+
+class LineaServicio(models.Model):
+    """Catálogo de líneas de servicio (RF-24), administrado por el gerente y el admin en Gestión.
+
+    Nunca se borra (baja lógica): una línea inactiva deja de ofrecerse para contratos nuevos, pero los contratos que ya la
+    tienen la conservan. Es el mismo catálogo que usarán el repositorio, el buscador y las etiquetas del Sprint 3.
+    """
+
+    nombre = models.CharField(
+        max_length=80, unique=True, error_messages={"unique": "Ya existe una línea de servicio con ese nombre."}
+    )
+    activa = models.BooleanField(
+        default=True, help_text="Una línea inactiva no se ofrece para contratos nuevos; los que ya la tienen la conservan."
+    )
+
+    class Meta:
+        ordering = [Lower("nombre")]
+        verbose_name = "línea de servicio"
+        verbose_name_plural = "líneas de servicio"
+
+    def __str__(self):
+        return self.nombre
 
 
 class Cliente(models.Model):
@@ -43,6 +70,11 @@ class Contrato(models.Model):
     activo = models.BooleanField(
         default=True, help_text="La baja es lógica: el contrato conserva su historial pero no admite entregables nuevos."
     )
+    # Opcional en la base de datos (los contratos anteriores al Sprint 2 no la tienen) y obligatoria en el formulario.
+    linea_servicio = models.ForeignKey(
+        LineaServicio, null=True, blank=True, on_delete=models.PROTECT, related_name="contratos",
+        verbose_name="línea de servicio",
+    )
 
     class Meta:
         ordering = ["numero_contrato"]
@@ -69,7 +101,7 @@ class PlantillaTDR(models.Model):
     campos_requeridos = models.JSONField(default=list, blank=True)
     adjuntos_requeridos = models.JSONField(
         "adjuntos obligatorios", default=list, blank=True,
-        help_text="Tipos de adjunto que el entregable debe tener antes de pasar a Verificación senior.",
+        help_text="Tipos de adjunto que el entregable debe tener antes de pasar a Revisión senior.",
     )
     plazo_dias_por_defecto = models.PositiveIntegerField("plazo por defecto (días)", default=10)
 

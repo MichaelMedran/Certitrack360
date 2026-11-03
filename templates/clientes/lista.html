@@ -9,11 +9,12 @@
   <tbody>{% for o in objetos %}<tr><td>{{ o.nombre }}</td><td>{{ o.get_sector_display }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>
   {% empty %}<tr><td colspan="4">Todavía no hay clientes.</td></tr>{% endfor %}</tbody>
   {% elif entidad == 'contratos' %}
-  <thead><tr><th>Contrato</th><th>Cliente</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th>Activo</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <thead><tr><th>Contrato</th><th>Cliente</th><th>Línea de servicio</th><th>Vigencia</th><th>Senior responsable</th><th>Juniors</th><th>Activo</th><th><span class="sr-only">Acciones</span></th></tr></thead>
   <tbody>{% for o in objetos %}<tr><td>{{ o.numero_contrato }}<div class="suave">{{ o.descripcion }}</div></td><td>{{ o.cliente }}</td>
+  <td>{{ o.linea_servicio.nombre|default:"Sin asignar" }}</td>
   <td>{{ o.fecha_inicio|date:"d/m/Y" }} – {{ o.fecha_fin|date:"d/m/Y" }}</td><td>{{ o.senior_responsable.nombre }}</td>
   <td>{{ o.juniors.all|join:", " }}</td><td>{{ o.activo|yesno:"Sí,No" }}</td><td><a href="{% url 'adm_editar' entidad o.pk %}">Editar</a></td></tr>
-  {% empty %}<tr><td colspan="7">Todavía no hay contratos.</td></tr>{% endfor %}</tbody>
+  {% empty %}<tr><td colspan="8">Todavía no hay contratos.</td></tr>{% endfor %}</tbody>
   {% else %}
   <thead><tr><th>Plantilla</th><th>Cliente</th><th>Campos obligatorios</th><th>Adjuntos obligatorios</th><th>Plazo (días)</th><th><span class="sr-only">Acciones</span></th></tr></thead>
   <tbody>{% for o in objetos %}<tr><td>{{ o.nombre }}<div class="suave">{{ o.formato }}</div></td><td>{{ o.cliente|default:"Genérica" }}</td>

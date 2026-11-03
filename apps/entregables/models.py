@@ -1,8 +1,17 @@
 from django.conf import settings
-from django.db import models
-from django.utils.text import slugify
+from django.db import models, router, transaction
+from django.utils import timezone
+from django.utils.text import Truncator, slugify
 
 from .tipos import TipoAdjunto
+
+
+def generar_codigo(pk, creado_en):
+    """Código único del entregable (SDD del Sprint 2, RF-20): <prefijo>-<año de creación>-<id con 5 dígitos>.
+
+    El año es el de la fecha local (America/Lima) de creación; el id garantiza que no se repita aunque cambie el prefijo.
+    """
+    return f"{settings.CODIGO_PREFIJO}-{timezone.localtime(creado_en).year}-{pk:05d}"
 
 
 class TipoError(models.TextChoices):
@@ -15,15 +24,21 @@ class TipoError(models.TextChoices):
 
 class Entregable(models.Model):
     class Estado(models.TextChoices):
-        A_REALIZAR = "A_REALIZAR", "A realizar"
+        # Etiquetas de HU-04 (SDD del Sprint 2, RF-23). Los códigos guardados son los del Sprint 1 y no cambian.
+        A_REALIZAR = "A_REALIZAR", "Por hacer"
         EN_PROCESO = "EN_PROCESO", "En proceso"
-        VERIFICACION_SENIOR = "VERIFICACION_SENIOR", "Verificación senior"
-        LISTO_PARA_ENTREGA = "LISTO_PARA_ENTREGA", "Listo para entrega"
-        HECHO = "HECHO", "Hecho"
+        VERIFICACION_SENIOR = "VERIFICACION_SENIOR", "Revisión senior"
+        LISTO_PARA_ENTREGA = "LISTO_PARA_ENTREGA", "Aprobado"
+        HECHO = "HECHO", "Entregado"
 
+    # Se asigna al crear, en la misma transacción, por cualquier camino (formulario, panel técnico, seed_demo...): ver save().
+    codigo = models.CharField("código", max_length=30, unique=True, null=True, blank=True, editable=False)
     contrato = models.ForeignKey("clientes.Contrato", on_delete=models.PROTECT, related_name="entregables")
     plantilla = models.ForeignKey("clientes.PlantillaTDR", on_delete=models.PROTECT, related_name="entregables")
     titulo = models.CharField("título", max_length=200)
+    # Datos de recepción (HU-01): obligatorios en el formulario «Nuevo entregable», opcionales en la base de datos.
+    id_tdr = models.CharField("ID-TDR", max_length=50, blank=True, default="")
+    fecha_recepcion = models.DateField("fecha de recepción", null=True, blank=True)
     datos = models.JSONField(default=dict, blank=True)
     plazo = models.DateField()
     estado = models.CharField(max_length=25, choices=Estado.choices, default=Estado.A_REALIZAR)
@@ -46,6 +61,29 @@ class Entregable(models.Model):
 
     def __str__(self):
         return self.titulo
+
+    def save(self, *args, **kwargs):
+        """Al crear: fecha de recepción por defecto (la fecha local de creación) y código único.
+
+        El código lleva el id, que existe recién después del INSERT; por eso ambas escrituras van en una transacción y no
+        queda ningún entregable sin código. Las ediciones posteriores no lo tocan.
+        """
+        alta = self._state.adding
+        if alta and self.fecha_recepcion is None:
+            self.fecha_recepcion = timezone.localdate()
+        if not alta or self.codigo:
+            return super().save(*args, **kwargs)
+        base = kwargs.get("using") or router.db_for_write(type(self), instance=self)
+        with transaction.atomic(using=base):
+            super().save(*args, **kwargs)
+            self.codigo = generar_codigo(self.pk, self.creado_en)
+            type(self)._base_manager.using(base).filter(pk=self.pk).update(codigo=self.codigo)
+
+    @property
+    def referencia(self):
+        """Código y título para los avisos: CT-2026-00031 «Informe técnico 03» (el título, acotado)."""
+        titulo = Truncator(self.titulo).chars(150)
+        return f"{self.codigo} «{titulo}»" if self.codigo else f"«{titulo}»"
 
     @property
     def cliente(self):

@@ -48,7 +48,7 @@
     if (resultados()) htmx.ajax("GET", window.location.href, { target: "#resultados", swap: "innerHTML" });
   });
 
-  // Devolver desde «Verificación senior» exige una observación: el servidor lo pide y aquí se abre el diálogo.
+  // Devolver desde «Revisión senior» exige una observación: el servidor lo pide y aquí se abre el diálogo.
   let pendiente = null;
   document.addEventListener("pedirObservacion", function (evento) {
     const dialogo = document.getElementById("dialogo-devolver");

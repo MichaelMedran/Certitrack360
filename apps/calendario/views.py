@@ -1,9 +1,11 @@
+from urllib.parse import urlencode
+
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from apps.entregables import urgencia
+from apps.entregables import filtros, urgencia
 from apps.entregables.models import Entregable
 from apps.entregables.visibilidad import entregables_visibles
 
@@ -16,16 +18,45 @@ COLORES = {
 }
 COLOR_HECHO = "#4b5563"
 
+# Filtros del calendario (SDD del Sprint 2, RF-21; HU-02 criterio 3). La fecha se elige navegando por mes o semana.
+FILTROS = ("cliente", "estado", "responsable")
+
+
+def _filtros_de(params):
+    """Solo los filtros del calendario; se aplican con el mismo módulo que el tablero y la lista."""
+    return {clave: params[clave] for clave in FILTROS if params.get(clave)}
+
+
+def titulo_evento(e, nivel):
+    """Texto de cada evento (HU-02 criterio 2): estado, código, cliente, responsable (el junior asignado) y entregable.
+
+    «[Estado] CÓDIGO Cliente (a cargo de Responsable): Título — Urgencia». La urgencia va al final y solo si no es normal,
+    para que se lea en texto y no solo por el color.
+    """
+    titulo = (f"[{e.get_estado_display()}] {e.codigo} {e.contrato.cliente.nombre} "
+              f"(a cargo de {e.junior_asignado.nombre}): {e.titulo}")
+    if nivel != urgencia.NORMAL:
+        titulo += f" — {urgencia.ETIQUETAS[nivel]}"
+    return titulo
+
 
 @login_required
 def pagina(request):
-    return render(request, "calendario/calendario.html")
+    """Calendario de plazos con su panel de filtros. Las opciones salen de lo que el usuario ya puede ver."""
+    resultado = filtros.aplicar(entregables_visibles(request.user), _filtros_de(request.GET))
+    activos = resultado.activos
+    return render(request, "calendario/calendario.html", {
+        "opciones": filtros.opciones(request.user), "filtros_activos": activos, "n_filtros": len(activos),
+        # Los mismos filtros viajan a la API de eventos (y FullCalendar suma el rango que muestra).
+        "consulta": f"?{urlencode(activos)}" if activos else "",
+    })
 
 
 @login_required
 def eventos(request):
-    """Eventos JSON; usa el mismo queryset de visibilidad que el resto de vistas."""
-    qs = entregables_visibles(request.user).select_related("contrato__cliente")
+    """Eventos JSON. Parte del mismo queryset de visibilidad que el resto de vistas: los filtros solo pueden reducirlo."""
+    qs = entregables_visibles(request.user).select_related("contrato__cliente", "junior_asignado")
+    qs = filtros.aplicar(qs, _filtros_de(request.GET)).queryset
     inicio, fin = request.GET.get("start", "")[:10], request.GET.get("end", "")[:10]
     if inicio:
         qs = qs.filter(plazo__gte=inicio)
@@ -34,12 +65,9 @@ def eventos(request):
     datos = []
     for e in qs:
         nivel = e.urgencia
-        titulo = f"[{e.get_estado_display()}] {e.contrato.cliente.nombre}: {e.titulo}"
-        if nivel != urgencia.NORMAL:
-            titulo += f" — {urgencia.ETIQUETAS[nivel]}"
         datos.append({
             "id": e.pk,
-            "title": titulo,
+            "title": titulo_evento(e, nivel),
             "start": e.plazo.isoformat(),
             "allDay": True,
             "url": reverse("entregable_detalle", args=[e.pk]),

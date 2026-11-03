@@ -11,11 +11,11 @@ from faker import Faker
 
 from apps.alertas.models import Notificacion
 from apps.alertas.servicios import generar_alertas
-from apps.clientes.models import Cliente, Contrato, PlantillaTDR
+from apps.clientes.models import LINEAS_INICIALES, Cliente, Contrato, LineaServicio, PlantillaTDR
 from apps.conocimiento.models import LeccionAprendida
 from apps.conocimiento.servicios import generar_lecciones, indexar_embeddings
 from apps.cuentas.models import Usuario
-from apps.entregables import adjuntos
+from apps.entregables import adjuntos, servicios
 from apps.entregables.demo_archivos import contenido_demo
 from apps.entregables.models import Adjunto, Entregable, HistorialEstado, Observacion
 
@@ -68,7 +68,7 @@ LECCIONES = [
     ("DATO_FALTANTE", None, "El acta de conformidad no tenía la lista completa de participantes del cliente.", "Pedir el listado de asistentes al terminar la reunión y adjuntarlo al acta el mismo día."),
     ("FORMATO", "BANCA", "El cliente bancario rechazó el informe por usar una plantilla con numeración de páginas distinta.", "Usar la plantilla vigente del TDR; la numeración debe ser «Página X de Y» en el pie."),
     ("FORMATO", "TELECOM", "La matriz de riesgos se entregó en un formato que el cliente de telecomunicaciones no pudo abrir.", "Exportar la matriz en el formato exigido por el TDR y probar la apertura antes de entregar."),
-    ("PLAZO", None, "El informe de cierre llegó fuera de plazo por una revisión tardía del senior.", "Enviar a verificación senior al menos tres días antes del vencimiento."),
+    ("PLAZO", None, "El informe de cierre llegó fuera de plazo por una revisión tardía del senior.", "Enviar a revisión senior al menos tres días antes del vencimiento."),
     ("PLAZO", None, "Se confundió el plazo del TDR con el plazo interno y se entregó un día después.", "Registrar siempre el plazo contractual en el sistema y usar la alerta de cinco días."),
     ("CONTENIDO", "PUBLICO", "El informe técnico no incluía las conclusiones que pide el TDR del sector público.", "Revisar la lista de secciones obligatorias del TDR; las conclusiones van antes de los anexos."),
     ("CONTENIDO", None, "Cifras inconsistentes entre el resumen ejecutivo y el anexo de datos.", "Actualizar el resumen al final, copiando las cifras del anexo ya validado."),
@@ -144,6 +144,7 @@ class Command(BaseCommand):
 
         clientes = [Cliente.objects.create(nombre=n, sector=s) for n, s in CLIENTES]
         plantillas = [self._plantilla(p, clientes) for p in PLANTILLAS]
+        lineas = self._lineas()
 
         contratos = []
         for i in range(10):
@@ -151,6 +152,7 @@ class Command(BaseCommand):
                 cliente=clientes[i % len(clientes)], numero_contrato=f"DEMO-2026-{i + 1:03d}",
                 descripcion=f"Servicio de consultoría simulado {i + 1}", fecha_inicio=hoy - datetime.timedelta(days=120),
                 fecha_fin=hoy + datetime.timedelta(days=240), senior_responsable=seniors[i % 2],
+                linea_servicio=lineas[i % len(lineas)],
             )
             c.juniors.set(rnd.sample(juniors, 2))
             contratos.append(c)
@@ -166,11 +168,14 @@ class Command(BaseCommand):
             candidatas = [p for p in plantillas if p.cliente_id in (None, contrato.cliente_id)]
             plantilla = candidatas[i % len(candidatas)]
             plazo = hoy - datetime.timedelta(days=30) if estado == E.HECHO else hoy + datetime.timedelta(days=PLAZOS[i % len(PLAZOS)])
-            e = Entregable.objects.create(
+            e = Entregable.objects.create(  # el código CT-AAAA-NNNNN lo asigna el modelo al crearlo
                 contrato=contrato, plantilla=plantilla, titulo=f"{TITULO_BASE[plantilla.nombre]} {i + 1:02d}",
                 datos={c["nombre"]: self._valor(c, fake, rnd, hoy) for c in plantilla.campos_requeridos},
                 plazo=plazo, estado=estado, junior_asignado=rnd.choice(list(contrato.juniors.all())),
                 senior_revisor=contrato.senior_responsable, creado_por=contrato.senior_responsable,
+                # Datos de recepción (HU-01): ID-TDR ficticio y recepción unos días antes de hoy y del plazo.
+                id_tdr=f"TDR-{self._siglas(contrato.cliente.nombre)}-{i + 1:03d}",
+                fecha_recepcion=min(hoy, plazo) - datetime.timedelta(days=3 + i % 8),
             )
             self._historial(e)
             entregables.append(e)
@@ -187,8 +192,19 @@ class Command(BaseCommand):
             f"{Adjunto.objects.count()} archivos ficticios, {Observacion.objects.count()} observaciones, "
             f"{Notificacion.objects.count()} notificaciones y {LeccionAprendida.objects.count()} lecciones. "
             f"Contraseña de prueba: {CLAVE}\n"
-            f"Para ver el bloqueo por adjuntos faltantes, mueva a «Verificación senior»: {bloqueados}."
+            f"Para ver el bloqueo por adjuntos faltantes, mueva a «{E.VERIFICACION_SENIOR.label}»: {bloqueados}."
         )
+
+    @staticmethod
+    def _lineas():
+        """Las líneas de servicio activas del catálogo (las crea la migración); si no hubiera, las cinco iniciales."""
+        lineas = list(LineaServicio.objects.filter(activa=True).order_by("pk"))
+        return lineas or [LineaServicio.objects.get_or_create(nombre=n)[0] for n in LINEAS_INICIALES]
+
+    @staticmethod
+    def _siglas(nombre):
+        """Iniciales del cliente ficticio para su ID-TDR: «Banco Andino Ficticio» → BAF."""
+        return "".join(palabra[0] for palabra in nombre.split() if palabra[:1].isupper())
 
     @staticmethod
     def _plantilla(definicion, clientes):
@@ -290,20 +306,20 @@ class Command(BaseCommand):
 
     @staticmethod
     def _notificaciones(entregables):
-        for e in entregables:
+        for e in entregables:  # los mismos textos (con el código del entregable) que generan los servicios
             Notificacion.objects.create(
                 usuario=e.junior_asignado, entregable=e, tipo=Notificacion.Tipo.ASIGNACION,
-                mensaje=f"Se le asignó «{e.titulo}» (vence el {e.plazo:%d/%m/%Y}).", leida=e.estado != E.A_REALIZAR,
+                mensaje=servicios.texto_asignacion(e), leida=e.estado != E.A_REALIZAR,
             )
             if e.estado == E.VERIFICACION_SENIOR:
                 Notificacion.objects.create(
                     usuario=e.senior_revisor, entregable=e, tipo=Notificacion.Tipo.VERIFICACION,
-                    mensaje=f"«{e.titulo}» está en verificación y espera su revisión.",
+                    mensaje=servicios.texto_en_revision(e),
                 )
         for o in Observacion.objects.filter(resuelta=False).select_related("entregable__junior_asignado"):
             Notificacion.objects.create(
                 usuario=o.entregable.junior_asignado, entregable=o.entregable, tipo=Notificacion.Tipo.OBSERVACION,
-                mensaje=f"Nueva observación en «{o.entregable.titulo}».",
+                mensaje=servicios.texto_observacion(o.entregable),
             )
 
     # ------------------------------------------------------------------ limpieza

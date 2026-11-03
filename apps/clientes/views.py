@@ -1,12 +1,15 @@
-"""Gestión de clientes, contratos y plantillas (solo Gerente y Admin)."""
+"""Gestión de clientes, contratos, plantillas y líneas de servicio (solo Gerente y Admin)."""
 from django.contrib import messages
+from django.db.models import Count
+from django.db.models.functions import Lower
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.cuentas.permisos import solo_gestion
+from apps.entregables.filtros import entero
 
-from .forms import FILA_VACIA, TIPOS_CAMPO_ETIQUETAS, ClienteForm, ContratoForm, PlantillaForm
-from .models import Cliente, Contrato, PlantillaTDR
+from .forms import FILA_VACIA, TIPOS_CAMPO_ETIQUETAS, ClienteForm, ContratoForm, LineaServicioForm, PlantillaForm
+from .models import Cliente, Contrato, LineaServicio, PlantillaTDR
 
 ENTIDADES = {
     "clientes": {"modelo": Cliente, "form": ClienteForm, "titulo": "Clientes", "nuevo": "Nuevo cliente",
@@ -36,7 +39,7 @@ def lista(request, entidad):
     modelo = config["modelo"]
     qs = modelo.objects.all()
     if modelo is Contrato:
-        qs = qs.select_related("cliente", "senior_responsable").prefetch_related("juniors")
+        qs = qs.select_related("cliente", "senior_responsable", "linea_servicio").prefetch_related("juniors")
     if modelo is PlantillaTDR:
         qs = qs.select_related("cliente")
     return render(request, "clientes/lista.html", {"entidad": entidad, "config": config, "objetos": qs})
@@ -54,4 +57,37 @@ def editar(request, entidad, pk=None):
     return render(request, "clientes/form.html", {
         "form": form, "entidad": entidad, "config": config, "objeto": objeto,
         "tipos_campo": TIPOS_CAMPO_ETIQUETAS, "fila_vacia": FILA_VACIA,
+    })
+
+
+@solo_gestion  # sin sesión: al ingreso; junior y senior: 403, igual que el resto de Gestión
+def lineas_servicio(request):
+    """Pestaña «Líneas de servicio» (SDD del Sprint 2, RF-24; ruta /lineas-servicio/, GET y POST).
+
+    GET: el catálogo y, con ?nueva o ?editar=<id>, el formulario de alta o de edición.
+    POST: guarda una línea nueva o, si trae «linea», la edita (renombrar, activar o desactivar). No hay borrado: la baja
+    es lógica y una línea en uso está protegida también en la base de datos.
+    """
+    editando, form = None, None
+    if request.method == "POST":
+        pk = entero(request.POST.get("linea"))
+        if pk is not None:
+            editando = get_object_or_404(LineaServicio, pk=pk)
+        form = LineaServicioForm(request.POST, instance=editando)
+        if form.is_valid():
+            linea = form.save()
+            accion = "Se guardaron los cambios de" if editando else "Se creó"
+            messages.success(request, f"{accion} la línea de servicio «{linea.nombre}».")
+            return redirect("lineas_servicio")
+    else:
+        pk = entero(request.GET.get("editar"))
+        if pk is not None:
+            editando = get_object_or_404(LineaServicio, pk=pk)
+            form = LineaServicioForm(instance=editando)
+        elif "nueva" in request.GET:
+            form = LineaServicioForm()
+    # Con GROUP BY Django no aplica el orden del modelo: se pide de nuevo, alfabético.
+    lineas = LineaServicio.objects.annotate(n_contratos=Count("contratos")).order_by(Lower("nombre"))
+    return render(request, "clientes/lineas.html", {
+        "entidad": "lineas", "lineas": lineas, "form": form, "editando": editando,
     })

@@ -9,6 +9,7 @@ SECCIONES = {
     "asistente": "asistente",
     "consolidado": "consolidado",
     "gestion": "gestion", "adm_lista": "gestion", "adm_nuevo": "gestion", "adm_editar": "gestion",
+    "lineas_servicio": "gestion",
     "notificaciones": "avisos",
 }
 

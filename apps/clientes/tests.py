@@ -25,7 +25,8 @@ class GestionTests(Base):
         for entidad, activa in (("clientes", "Clientes"), ("contratos", "Contratos"), ("plantillas", "Plantillas")):
             with self.subTest(entidad=entidad):
                 html = self.client.get(reverse("adm_lista", args=[entidad])).content.decode()
-                self.assertEqual(pestanas(html), [(t, t == activa) for t in ("Clientes", "Contratos", "Plantillas")])
+                self.assertEqual(pestanas(html), [(t, t == activa) for t in ("Clientes", "Contratos", "Plantillas",
+                                                                               "Líneas de servicio")])
 
     def test_las_pestanas_tambien_estan_en_los_formularios(self):
         html = self.client.get(reverse("adm_nuevo", args=["contratos"])).content.decode()

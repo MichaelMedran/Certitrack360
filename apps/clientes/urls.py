@@ -10,4 +10,6 @@ urlpatterns = [
     re_path(rf"^{_ENTIDADES}/$", views.lista, name="adm_lista"),
     re_path(rf"^{_ENTIDADES}/nuevo/$", views.editar, name="adm_nuevo"),
     re_path(rf"^{_ENTIDADES}/(?P<pk>[0-9]+)/$", views.editar, name="adm_editar"),
+    # Pestaña «Líneas de servicio» de Gestión (SDD del Sprint 2, §10: GET y POST en la misma ruta).
+    path("lineas-servicio/", views.lineas_servicio, name="lineas_servicio"),
 ]
