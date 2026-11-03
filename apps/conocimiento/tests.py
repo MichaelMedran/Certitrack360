@@ -13,8 +13,8 @@ from django.urls import reverse
 
 from apps.conocimiento import ollama, servicios
 from apps.conocimiento.models import LeccionAprendida
-from apps.entregables import servicios as flujo
 from apps.entregables.models import Entregable, Observacion
+from apps.entregables.testing import entregar
 from apps.entregables.tests import Base
 
 E = Entregable.Estado
@@ -61,7 +61,7 @@ class LeccionesBase(Base):
 class GeneracionTests(LeccionesBase):
     def test_al_cerrar_el_entregable_se_genera_una_leccion_por_observacion_resuelta(self):
         self.assertEqual(LeccionAprendida.objects.count(), 0)
-        flujo.mover(self.cerrado, E.HECHO, self.s1)
+        entregar(self.cerrado, self.s1)
         leccion = LeccionAprendida.objects.get()
         self.assertEqual(leccion.entregable_origen, self.cerrado)
         self.assertEqual(leccion.observacion_origen, self.resuelta)
@@ -70,20 +70,20 @@ class GeneracionTests(LeccionesBase):
         self.assertEqual(leccion.solucion, self.resuelta.solucion)
 
     def test_las_observaciones_abiertas_no_generan_leccion(self):
-        flujo.mover(self.cerrado, E.HECHO, self.s1)
+        entregar(self.cerrado, self.s1)
         self.assertFalse(LeccionAprendida.objects.filter(observacion_origen=self.abierta).exists())
 
     def test_cerrar_no_genera_lecciones_mientras_el_entregable_no_este_hecho(self):
         self.assertEqual(servicios.generar_lecciones_pendientes(), 0)
 
     def test_no_se_duplican(self):
-        flujo.mover(self.cerrado, E.HECHO, self.s1)
+        entregar(self.cerrado, self.s1)
         self.assertEqual(servicios.generar_lecciones(self.cerrado), 0)
         self.assertEqual(servicios.generar_lecciones_pendientes(), 0)
         self.assertEqual(LeccionAprendida.objects.count(), 1)
 
     def test_una_observacion_resuelta_despues_de_cerrar_se_recoge_al_indexar(self):
-        flujo.mover(self.cerrado, E.HECHO, self.s1)
+        entregar(self.cerrado, self.s1)
         Observacion.objects.filter(pk=self.abierta.pk).update(resuelta=True, solucion="Usar el pie de página de la plantilla.")
         with mock.patch.object(ollama, "_post", FalsoOllama()):
             nuevas, indexadas, aviso = servicios.indexar_lecciones()
@@ -91,13 +91,13 @@ class GeneracionTests(LeccionesBase):
 
     def test_una_solucion_en_blanco_no_genera_leccion(self):
         Observacion.objects.filter(pk=self.resuelta.pk).update(solucion="   ")
-        flujo.mover(self.cerrado, E.HECHO, self.s1)
+        entregar(self.cerrado, self.s1)
         self.assertEqual(LeccionAprendida.objects.count(), 0)
 
 
 class IndexacionTests(LeccionesBase):
     def setUp(self):
-        flujo.mover(self.cerrado, E.HECHO, self.s1)
+        entregar(self.cerrado, self.s1)
 
     def test_calcula_y_guarda_el_embedding(self):
         falso = FalsoOllama()

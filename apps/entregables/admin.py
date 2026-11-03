@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Adjunto, Entregable, HistorialEstado, Observacion
+from . import adjuntos
+from .models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion
 
 admin.site.register(Observacion)
 admin.site.register(HistorialEstado)
@@ -22,8 +23,8 @@ class AdjuntoAdmin(admin.ModelAdmin):
     """Solo consulta y soporte. Los archivos no tienen URL pública, así que el panel no enlaza al archivo: muestra
     su ubicación en texto. Los adjuntos se suben desde el entregable (con sus permisos y su versionado)."""
 
-    list_display = ("nombre_original", "tipo", "version", "entregable", "subido_por", "subido_en")
-    list_filter = ("tipo",)
+    list_display = ("nombre_original", "tipo", "version", "bloqueado", "entregable", "subido_por", "subido_en")
+    list_filter = ("tipo", "bloqueado")
     exclude = ("archivo",)
     readonly_fields = ("ruta_en_disco",)
 
@@ -32,4 +33,28 @@ class AdjuntoAdmin(admin.ModelAdmin):
         return obj.archivo.name
 
     def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Una versión bloqueada (enviada al cliente, cargo o acta) no se elimina ni desde el panel (RF-28)."""
+        return not (obj is not None and adjuntos.esta_bloqueado(obj)) and super().has_delete_permission(request, obj)
+
+
+@admin.register(Entrega)
+class EntregaAdmin(admin.ModelAdmin):
+    """Solo consulta y soporte: las entregas y las actas se registran desde el entregable (con sus permisos, el cargo
+    obligatorio y el bloqueo de la versión enviada), nunca desde el panel."""
+
+    list_display = ("entregable", "numero", "fecha_entrega", "medio", "acta_estado", "registrada_por")
+    list_filter = ("acta_estado", "medio")
+    search_fields = ("entregable__codigo", "entregable__titulo")
+    list_select_related = ("entregable", "registrada_por")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False

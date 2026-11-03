@@ -118,6 +118,12 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .obs-pendiente{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
 .obs-en_correccion{background:#fef9c3;color:#713f12;border:1px solid #fcd34d}
 .obs-resuelta{background:#dcfce7;color:#14532d;border:1px solid #86efac}
+/* Versiones y entregas (Sprint 2, RF-28 y RF-29): «Vigente», «Bloqueada» y el estado del acta también van en texto */
+.vigente{background:#dbeafe;color:#1e3a8a;border:1px solid #93c5fd;font-weight:600}
+.bloqueada{background:#f1f5f9;color:#334155;border:1px solid #94a3b8}
+.acta-pendiente{background:#fef9c3;color:#713f12;border:1px solid #fcd34d}
+.acta-recibida{background:#dcfce7;color:#14532d;border:1px solid #86efac}
+.acta-observada{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
 .caja-gris{background:#f1f5f9;border:1px solid var(--borde);border-radius:6px;padding:.6rem .8rem;margin:.5rem 0}
 details.versiones{margin:.3rem 0 .8rem}
 details.versiones summary{cursor:pointer;font-weight:600}

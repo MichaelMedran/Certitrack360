@@ -17,7 +17,7 @@ from apps.conocimiento.servicios import generar_lecciones, indexar_embeddings
 from apps.cuentas.models import Usuario
 from apps.entregables import adjuntos, servicios
 from apps.entregables.demo_archivos import contenido_demo
-from apps.entregables.models import Adjunto, Entregable, HistorialEstado, Observacion
+from apps.entregables.models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion
 
 CLAVE = "demo1234"
 E = Entregable.Estado
@@ -182,6 +182,7 @@ class Command(BaseCommand):
 
         self._observaciones(entregables)
         sin_adjuntos = self._adjuntos(entregables)
+        self._entregas(entregables, hoy)
         self._notificaciones(entregables)
         generar_alertas(hoy)
 
@@ -305,6 +306,41 @@ class Command(BaseCommand):
         return sin_adjuntos
 
     @staticmethod
+    def _entrega_ficticia(e, tipo, usuario, comentario):
+        """Cargo o acta ficticios del entregable cerrado (PDF diminuto); nacen bloqueados, como en la operación real."""
+        nombre = f"{slugify(e.titulo)}_{tipo.lower()}.pdf"
+        contenido = contenido_demo(
+            "pdf", f"{e.titulo} - {adjuntos.etiqueta_tipo(tipo)}", f"Cliente: {e.contrato.cliente}. Contrato: {e.contrato.numero_contrato}."
+        )
+        return adjuntos.crear_adjunto(e, usuario, ContentFile(contenido, name=nombre), tipo, comentario, bloqueado=True)
+
+    def _entregas(self, entregables, hoy):
+        """Cargo de recepción, entrega y acta de los entregables cerrados (RF-29), para que sigan siendo coherentes con la
+        regla nueva: no se pasa a «Entregado» sin cargo. Actas variadas: la mayoría recibida, una pendiente y una observada
+        (la ampliación grande del seed es del hito S2-H13)."""
+        actas = [Entrega.ActaEstado.RECIBIDA, Entrega.ActaEstado.RECIBIDA, Entrega.ActaEstado.PENDIENTE,
+                 Entrega.ActaEstado.RECIBIDA, Entrega.ActaEstado.OBSERVADA, Entrega.ActaEstado.RECIBIDA,
+                 Entrega.ActaEstado.RECIBIDA]
+        medios = list(Entrega.Medio.values)
+        for n, e in enumerate((x for x in entregables if x.estado == E.HECHO)):
+            estado_acta = actas[n % len(actas)]
+            fecha = {Entrega.ActaEstado.PENDIENTE: hoy - datetime.timedelta(days=2),
+                     Entrega.ActaEstado.OBSERVADA: hoy - datetime.timedelta(days=8)}.get(
+                estado_acta, e.plazo - datetime.timedelta(days=n % 3))
+            cargo = self._entrega_ficticia(e, "CARGO_RECEPCION", e.senior_revisor, "Cargo de recepción del cliente (ficticio)")
+            acta = None
+            if estado_acta != Entrega.ActaEstado.PENDIENTE:
+                acta = self._entrega_ficticia(e, "ACTA_CONFORMIDAD", e.senior_revisor, "Acta de conformidad (ficticia)")
+            cierre = e.historial.filter(estado_anterior=E.LISTO_PARA_ENTREGA, estado_nuevo=E.HECHO).first()
+            version = adjuntos.vigente(e, "VERSION_FINAL")
+            Adjunto.objects.filter(pk=version.pk).update(bloqueado=True)
+            Entrega.objects.create(
+                entregable=e, numero=1, fecha_entrega=fecha, medio=medios[n % len(medios)], cargo=cargo,
+                version_enviada=version, acta_estado=estado_acta, acta=acta,
+                acta_actualizada_en=timezone.now() if acta else None, registrada_por=e.senior_revisor, cierre=cierre,
+            )
+
+    @staticmethod
     def _notificaciones(entregables):
         for e in entregables:  # los mismos textos (con el código del entregable) que generan los servicios
             Notificacion.objects.create(
@@ -326,6 +362,6 @@ class Command(BaseCommand):
 
     @staticmethod
     def _borrar():
-        for modelo in (Notificacion, LeccionAprendida, HistorialEstado, Adjunto, Observacion, Entregable, PlantillaTDR, Contrato, Cliente):
+        for modelo in (Notificacion, LeccionAprendida, Entrega, HistorialEstado, Adjunto, Observacion, Entregable, PlantillaTDR, Contrato, Cliente):
             modelo.objects.all().delete()  # los archivos de los adjuntos se borran del disco al confirmar (ver signals)
         Usuario.objects.filter(username__in=[x[0] for x in USUARIOS]).delete()

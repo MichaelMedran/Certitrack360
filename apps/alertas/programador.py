@@ -26,11 +26,13 @@ def _con_conexion_limpia(tarea):
 
 
 def tarea_alertas():
-    from apps.alertas.servicios import generar_alertas
+    from apps.alertas.servicios import generar_alertas, generar_alertas_acta
 
     creadas = generar_alertas()
     logger.info("Alertas de vencimiento generadas: %s", creadas)
-    return creadas
+    actas = generar_alertas_acta()  # acta de conformidad pendiente: una sola vez por entrega (RF-29)
+    logger.info("Alertas de acta pendiente generadas: %s", actas)
+    return creadas + actas
 
 
 def tarea_lecciones():

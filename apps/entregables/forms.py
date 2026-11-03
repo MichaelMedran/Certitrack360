@@ -6,9 +6,9 @@ from django.utils import timezone
 from apps.clientes.models import Contrato
 from apps.cuentas.models import Usuario
 
-from . import adjuntos
-from .models import Entregable, TipoError
-from .tipos import TipoAdjunto
+from . import adjuntos, entregas
+from .models import Adjunto, Entrega, Entregable, TipoError
+from .tipos import TIPOS_DE_SUBIDA
 
 
 def contratos_para(usuario):
@@ -194,10 +194,14 @@ class EntregableForm(forms.Form):
 
 class AdjuntoForm(forms.Form):
     """Campos de la subida. La validación de extensión, tamaño y nombre la hace `archivos.validar_archivo` (común a otras
-    apps), que el servicio `adjuntos` aplica al guardar."""
+    apps), que el servicio `adjuntos` aplica al guardar.
+
+    Desde el Sprint 2 (RF-28) el comentario del cambio es obligatorio en el formulario; el servicio `adjuntos.subir` lo sigue
+    aceptando vacío (lo usan el seed y las pruebas). El cargo y el acta no se suben aquí: nacen del registro de la entrega.
+    """
 
     tipo = forms.ChoiceField(
-        choices=[("", "— Elija el tipo —")] + TipoAdjunto.choices, label="Tipo",
+        choices=[("", "— Elija el tipo —")] + TIPOS_DE_SUBIDA, label="Tipo",
         error_messages={"required": "Elija el tipo de adjunto.", "invalid_choice": "Elija un tipo de adjunto válido."},
     )
     archivo = forms.FileField(
@@ -210,13 +214,101 @@ class AdjuntoForm(forms.Form):
         },
     )
     comentario = forms.CharField(
-        label="Comentario (opcional)", max_length=255, required=False,
-        error_messages={"max_length": "El comentario no puede superar los 255 caracteres."},
+        label="Comentario del cambio", max_length=255,
+        error_messages={
+            "required": "Escriba el comentario del cambio: qué incluye esta versión.",
+            "max_length": "El comentario no puede superar los 255 caracteres.",
+        },
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # El navegador solo ofrece los formatos permitidos (el servidor igual los valida).
+        self.fields["archivo"].widget.attrs["accept"] = ",".join(f".{e}" for e in adjuntos.extensiones_permitidas())
+
+    def clean_comentario(self):
+        comentario = self.cleaned_data["comentario"].strip()
+        if not comentario:
+            raise forms.ValidationError(self.fields["comentario"].error_messages["required"])
+        return comentario
+
+
+class EntregaForm(forms.Form):
+    """«Marcar como entregado» (RF-29): fecha, medio, cargo de recepción y versión enviada. La fecha no puede ser futura;
+    el cargo es obligatorio. El servicio `entregas.registrar` vuelve a validar todo."""
+
+    fecha_entrega = forms.DateField(
+        label="Fecha de entrega", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        error_messages={"required": "Falta la fecha de entrega.", "invalid": "La fecha de entrega no es una fecha válida."},
+    )
+    medio = forms.ChoiceField(
+        label="Medio de entrega", choices=[("", "— Elija el medio —")] + list(Entrega.Medio.choices),
+        error_messages={"required": "Elija el medio de entrega.", "invalid_choice": "Elija un medio de entrega válido."},
+    )
+    cargo = forms.FileField(
+        label="Cargo de recepción",
+        error_messages={
+            "required": "Falta el cargo de recepción. Sin él no se puede marcar como entregado.",
+            "missing": "Falta el cargo de recepción. Sin él no se puede marcar como entregado.",
+            "empty": "El archivo del cargo está vacío.", "invalid": "No se pudo leer el archivo del cargo.",
+        },
+    )
+    version_enviada = forms.ModelChoiceField(
+        label="Versión enviada al cliente", queryset=Adjunto.objects.none(), empty_label="— Elija la versión —",
+        error_messages={"required": "Elija la versión enviada al cliente.",
+                        "invalid_choice": "La versión enviada debe ser un adjunto de este mismo entregable."},
+    )
+    comentario = forms.CharField(
+        label="Comentario", max_length=255, required=False,
+        error_messages={"max_length": "El comentario no puede superar los 255 caracteres."},
+    )
+
+    def __init__(self, entregable, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entregable = entregable
+        versiones = list(entregas.versiones_enviables(entregable).select_related("subido_por"))
+        self.fields["version_enviada"].queryset = entregas.versiones_enviables(entregable)
+        self.fields["version_enviada"].label_from_instance = self._etiqueta_version
+        self.vigentes = {v.pk for v in versiones if v.pk == getattr(adjuntos.vigente(entregable, v.tipo), "pk", None)}
+        if not self.is_bound:
+            self.fields["fecha_entrega"].initial = timezone.localdate()
+            por_defecto = entregas.version_por_defecto(entregable)
+            if por_defecto:
+                self.fields["version_enviada"].initial = por_defecto.pk
+        self.fields["cargo"].widget.attrs["accept"] = ",".join(f".{e}" for e in adjuntos.extensiones_permitidas())
+
+    def _etiqueta_version(self, a):
+        vigente = " (vigente)" if a.pk in self.vigentes else ""
+        return f"{a.get_tipo_display()} v{a.version}{vigente} · {a.nombre_original}"
+
+    def clean_fecha_entrega(self):
+        fecha = self.cleaned_data["fecha_entrega"]
+        if fecha > timezone.localdate():
+            raise forms.ValidationError("La fecha de entrega no puede ser futura.")
+        return fecha
+
+
+class ActaForm(forms.Form):
+    """Acta de conformidad (RF-29): Recibida u Observada, con su archivo (obligatorio)."""
+
+    ESTADOS = [("", "— Elija el estado —"), *[(v, l) for v, l in Entrega.ActaEstado.choices if v != "PENDIENTE"]]
+
+    estado = forms.ChoiceField(
+        label="Estado del acta", choices=ESTADOS,
+        error_messages={"required": "Elija el estado del acta: Recibida u Observada.",
+                        "invalid_choice": "Elija el estado del acta: Recibida u Observada."},
+    )
+    archivo = forms.FileField(
+        label="Archivo del acta",
+        error_messages={
+            "required": "Adjunte el archivo del acta: es obligatorio si el acta está Recibida u Observada.",
+            "missing": "Adjunte el archivo del acta: es obligatorio si el acta está Recibida u Observada.",
+            "empty": "El archivo del acta está vacío.", "invalid": "No se pudo leer el archivo del acta.",
+        },
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.fields["archivo"].widget.attrs["accept"] = ",".join(f".{e}" for e in adjuntos.extensiones_permitidas())
 
 

@@ -34,7 +34,17 @@
         // Arrastre por puntero (no el de HTML5): igual con ratón, pantalla táctil (tabletas) y lápiz.
         forceFallback: true, fallbackOnBody: true, fallbackTolerance: 4,
         onEnd: function (evento) {
-          if (evento.from !== evento.to) enviar(evento.item.dataset.id, { estado: evento.to.dataset.estado });
+          if (evento.from === evento.to) return;
+          if (evento.from.dataset.estado === "LISTO_PARA_ENTREGA" && evento.to.dataset.estado === "HECHO") {
+            // Pasar a «Entregado» exige el cargo de recepción: la tarjeta no se mueve, vuelve a «Aprobado» y se abre el
+            // formulario de entrega. Se pregunta al servidor (que decide por permisos): a quien puede entregar le responde
+            // con HX-Redirect al formulario; a quien no, con el tablero y el motivo (403).
+            const lugar = evento.from.children[evento.oldIndex] || null;
+            evento.from.insertBefore(evento.item, lugar);
+            enviar(evento.item.dataset.id, { estado: "HECHO" });
+            return;
+          }
+          enviar(evento.item.dataset.id, { estado: evento.to.dataset.estado });
         },
       });
     });

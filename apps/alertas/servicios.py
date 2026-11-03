@@ -19,6 +19,43 @@ def texto_vencimiento(entregable, dias):
     return f"{entregable.referencia} {cuando}."
 
 
+def generar_alertas_acta(hoy=None):
+    """Aviso de acta pendiente (SDD del Sprint 2, RF-29 y §7.4). Idempotente. Devuelve la cantidad de avisos creados.
+
+    Si el acta de una entrega sigue PENDIENTE más de ACTA_DIAS_PENDIENTE días desde la fecha de entrega, avisa al junior
+    asignado y al senior revisor (tipo ACTA) UNA sola vez por entrega, aunque la tarea corra varias veces: la entrega se
+    marca (`alerta_acta_en`) con un UPDATE condicional antes de crear los avisos, así dos ejecuciones simultáneas no
+    duplican nada.
+    """
+    from django.db import transaction
+
+    from apps.entregables.entregas import enlace_entregas, texto_acta_pendiente
+    from apps.entregables.models import Entrega
+
+    hoy = hoy or timezone.localdate()
+    limite = hoy - datetime.timedelta(days=settings.ACTA_DIAS_PENDIENTE)
+    pendientes = Entrega.objects.filter(
+        acta_estado=Entrega.ActaEstado.PENDIENTE, alerta_acta_en__isnull=True, fecha_entrega__lt=limite,
+    ).select_related("entregable__junior_asignado", "entregable__senior_revisor").order_by("pk")
+    creadas = 0
+    for entrega in pendientes:
+        with transaction.atomic():
+            reclamada = Entrega.objects.filter(pk=entrega.pk, alerta_acta_en__isnull=True).update(
+                alerta_acta_en=timezone.now()
+            )
+            if not reclamada:
+                continue
+            e = entrega.entregable
+            texto = texto_acta_pendiente(entrega, (hoy - entrega.fecha_entrega).days)[:255]
+            for destinatario in dict.fromkeys([e.junior_asignado, e.senior_revisor]):
+                Notificacion.objects.create(
+                    usuario=destinatario, entregable=e, tipo=Notificacion.Tipo.ACTA, mensaje=texto,
+                    enlace=enlace_entregas(e),
+                )
+                creadas += 1
+    return creadas
+
+
 def generar_alertas(hoy=None):
     """Crea una notificación por entregable, destinatario y umbral. Idempotente.
 

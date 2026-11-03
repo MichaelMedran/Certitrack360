@@ -1,5 +1,12 @@
 <a class="boton sec chico" href="{% url 'adjunto_descargar' a.pk %}">Descargar<span class="sr-only"> {{ a.nombre_original }}</span></a>
-{% if puede_eliminar %}
+{% if a.puede_restaurar %}
+<form class="en-linea" method="post" action="{% url 'adjunto_restaurar' a.pk %}" data-confirmar="¿Restaurar la v{{ a.version }} como versión vigente? Se creará una versión nueva con el mismo archivo; las demás no se modifican.">{% csrf_token %}
+  <button class="boton sec chico">Restaurar como vigente<span class="sr-only"> la v{{ a.version }} de {{ a.nombre_original }}</span></button>
+</form>
+{% endif %}
+{% if a.bloqueado %}
+<span class="suave" title="Es parte de una entrega al cliente: no se puede eliminar.">Bloqueada: no se elimina</span>
+{% elif puede_eliminar %}
 <form class="en-linea" method="post" action="{% url 'adjunto_eliminar' a.pk %}" data-confirmar="¿Eliminar «{{ a.nombre_original }}»? Esta acción no se puede deshacer.">{% csrf_token %}
   <button class="boton sec chico">Eliminar<span class="sr-only"> {{ a.nombre_original }}</span></button>
 </form>

@@ -155,6 +155,12 @@ CODIGO_PREFIJO = os.environ.get("CODIGO_PREFIJO", "CT").strip()
 if not re.fullmatch(r"[A-Za-z0-9]{1,10}", CODIGO_PREFIJO):
     raise ImproperlyConfigured("CODIGO_PREFIJO debe tener de 1 a 10 letras o números, sin espacios ni guiones.")
 
+# Entregas (SDD del Sprint 2, RF-29 y §7.4): días que el acta de conformidad puede seguir pendiente antes de avisar (una sola
+# vez por entrega) al junior asignado y al senior revisor.
+ACTA_DIAS_PENDIENTE = int(os.environ.get("ACTA_DIAS_PENDIENTE", "5"))
+if ACTA_DIAS_PENDIENTE < 0:
+    raise ImproperlyConfigured("ACTA_DIAS_PENDIENTE no puede ser negativo.")
+
 # Adjuntos de los entregables: se guardan en disco local y NO se sirven por una URL pública.
 # MEDIA_URL = None impide que Django construya direcciones a los archivos; no hay ruta de medios en urls.py
 # y toda descarga pasa por una vista que verifica los permisos del entregable.

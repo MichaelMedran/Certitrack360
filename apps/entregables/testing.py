@@ -2,25 +2,38 @@
 import shutil
 import tempfile
 
+from django.core.files.base import ContentFile
+from django.db import transaction
 from django.test import override_settings
+from django.utils import timezone
 
-from . import servicios
-from .models import Entregable
+from . import adjuntos, entregas
+from .models import Entrega
+from .tipos import TipoAdjunto
 
 
-def entregar(entregable, usuario):
+def pdf_ficticio(nombre="archivo.pdf"):
+    """Un archivo PDF diminuto y ficticio para las pruebas."""
+    return ContentFile(b"%PDF-1.4 ficticio", name=nombre)
+
+
+def entregar(entregable, usuario, fecha_entrega=None, medio=Entrega.Medio.CORREO, version_enviada=None):
     """Lleva un entregable de «Aprobado» (LISTO_PARA_ENTREGA) a «Entregado» (HECHO) y lo devuelve.
 
-    Hoy (hito S2-H2) solo llama a `servicios.mover(entregable, HECHO, usuario)`, que es lo que hacen las pruebas del
-    Sprint 1, así que sirve tal cual: valida la transición y el permiso igual que `mover` (ValidationError o
-    PermissionDenied).
-
-    En el hito S2-H4 (RF-29) el paso a Entregado exigirá el cargo de recepción. Entonces este ayudante creará el cargo
-    (un adjunto CARGO_RECEPCION ficticio, con fecha y medio de entrega) y usará el servicio de entrega en lugar de `mover`,
-    y las pruebas que cierran entregables lo usarán (SDD del Sprint 2, §11.3) sin cambiar nada más. Mientras tanto, las
-    pruebas del Sprint 1 no se tocan.
+    Desde el hito S2-H4 (RF-29) el paso a Entregado exige el cargo de recepción, así que este ayudante crea un cargo
+    ficticio y usa el servicio de entrega (`entregas.registrar`), igual que la interfaz: valida el permiso y la transición
+    como `mover` (ValidationError o PermissionDenied) y bloquea la versión enviada. Si el entregable no tiene una versión
+    final, crea una ficticia (la que se «envía»). Los tests que cierran entregables lo usan (SDD del Sprint 2, §11.3).
     """
-    return servicios.mover(entregable, Entregable.Estado.HECHO, usuario)
+    with transaction.atomic():  # si el servicio rechaza la entrega, tampoco queda la versión final ficticia
+        if version_enviada is None and adjuntos.vigente(entregable, TipoAdjunto.VERSION_FINAL) is None:
+            adjuntos.crear_adjunto(entregable, usuario, pdf_ficticio("version_final.pdf"), TipoAdjunto.VERSION_FINAL,
+                                   "Versión aprobada para entrega")
+        entregas.registrar(
+            entregable, usuario, fecha_entrega or timezone.localdate(), medio, pdf_ficticio("cargo.pdf"),
+            version_enviada=version_enviada,
+        )
+    return entregable
 
 
 class MediaTemporal:

@@ -3,4 +3,5 @@
 <nav class="pestanas" aria-label="Entregables">
   <a href="{% url 'entregables' %}"{% if pestana == 'entregables' %} aria-current="true"{% endif %}>Entregables</a>
   <a href="{% url 'observaciones' %}"{% if pestana == 'observaciones' %} aria-current="true"{% endif %}>Observaciones</a>
+  <a href="{% url 'entregas' %}"{% if pestana == 'entregas' %} aria-current="true"{% endif %}>Entregas</a>
 </nav>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Historial de entregas{% endblock %}
+{% block contenido %}
+<h1>Entregables</h1>
+{% include "entregables/_pestanas.html" %}
+<h2 style="margin-top:0">Historial de entregas</h2>
+
+<details class="filtros"{% if n_filtros %} open{% endif %}>
+  <summary>Filtros <span class="chip" id="resumen-filtros">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span></summary>
+  <form method="get" action="{{ request.path }}" data-filtros
+        hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="filtros-grid">
+      <div><label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente"><option value="">Todos</option>
+          {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-contrato">Contrato</label>
+        <select id="f-contrato" name="contrato"><option value="">Todos</option>
+          {% for c in opciones.contratos %}<option value="{{ c.pk }}"{% if filtros_activos.contrato == c.pk %} selected{% endif %}>{{ c.numero_contrato }} · {{ c.cliente }}</option>{% endfor %}</select></div>
+      <div><label for="f-desde">Entregado desde</label>
+        <input id="f-desde" name="desde" type="date" value="{{ filtros_activos.desde|date:'Y-m-d' }}"></div>
+      <div><label for="f-hasta">Entregado hasta</label>
+        <input id="f-hasta" name="hasta" type="date" value="{{ filtros_activos.hasta|date:'Y-m-d' }}"></div>
+      <div><label for="f-acta">Estado del acta</label>
+        <select id="f-acta" name="acta"><option value="">Todos</option>
+          {% for valor, etiqueta in opciones.actas %}<option value="{{ valor }}"{% if filtros_activos.acta == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="acciones">
+      <button class="boton">Aplicar</button>
+      <a class="boton sec" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true">Limpiar</a>
+    </div>
+  </form>
+  <p class="suave">Solo se muestran las entregas de los entregables que usted puede ver. El periodo es por la fecha de entrega.</p>
+</details>
+
+<div id="resultados" aria-live="polite">
+  {% include "entregables/_entregas_lista.html" %}
+</div>
+{% endblock %}

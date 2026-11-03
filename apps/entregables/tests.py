@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import F
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -11,7 +12,7 @@ from apps.clientes.models import Cliente, Contrato, PlantillaTDR
 from apps.cuentas.models import Usuario
 from apps.entregables import servicios
 from apps.entregables.models import Entregable, HistorialEstado, Observacion
-from apps.entregables.testing import MediaTemporal
+from apps.entregables.testing import MediaTemporal, entregar
 
 E = Entregable.Estado
 
@@ -161,8 +162,10 @@ class FlujoTests(Base):
         servicios.mover(self.e1, E.EN_PROCESO, self.j1)
         servicios.mover(self.e1, E.VERIFICACION_SENIOR, self.j1)
         servicios.mover(self.e1, E.LISTO_PARA_ENTREGA, self.s1)
-        servicios.mover(self.e1, E.HECHO, self.gerente)
-        self.assertEqual(HistorialEstado.objects.filter(entregable=self.e1).count(), 4)
+        entregar(self.e1, self.gerente)  # ajuste derivado de RF-29: pasar a Entregado exige el cargo (SDD §11.3)
+        # Las cuatro transiciones; el cargo y la versión final ficticia que crea el ayudante son otras líneas del historial.
+        cambios = HistorialEstado.objects.filter(entregable=self.e1).exclude(estado_anterior=F("estado_nuevo"))
+        self.assertEqual(cambios.count(), 4)
 
     def test_junior_ajeno_no_mueve(self):
         with self.assertRaises(PermissionDenied):

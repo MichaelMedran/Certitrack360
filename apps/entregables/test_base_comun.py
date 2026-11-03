@@ -7,10 +7,11 @@ from unittest import mock
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models import F
 from django.test import SimpleTestCase, override_settings
 
 from apps.conocimiento.models import LeccionAprendida
-from apps.entregables import adjuntos, archivos, servicios
+from apps.entregables import adjuntos, archivos, entregas, servicios
 from apps.entregables.models import Entregable, Observacion
 from apps.entregables.testing import entregar
 from apps.entregables.tests import Base
@@ -87,20 +88,25 @@ class LosAdjuntosUsanLaFuncionComunTests(Base):
 
 
 class AyudanteEntregarTests(Base):
-    """Por ahora `entregar` es `servicios.mover(..., HECHO, ...)`; en el S2-H4 creará el cargo de recepción."""
+    """Desde el S2-H4 (RF-29) `entregar` crea el cargo de recepción y usa el servicio de entrega (SDD §11.3)."""
 
     def aprobado(self, titulo="Aprobado"):
         return self.nuevo(self.c1, self.j1, self.s1, titulo, estado=E.LISTO_PARA_ENTREGA)
 
-    def test_lleva_de_aprobado_a_entregado_con_el_servicio_de_siempre(self):
+    def test_lleva_de_aprobado_a_entregado_con_el_servicio_de_entrega(self):
         e = self.aprobado()
-        with mock.patch.object(servicios, "mover", wraps=servicios.mover) as mover:
+        with mock.patch.object(entregas, "registrar", wraps=entregas.registrar) as registrar:
             self.assertIs(entregar(e, self.s1), e)
-        mover.assert_called_once_with(e, E.HECHO, self.s1)
+        registrar.assert_called_once()
         e.refresh_from_db()
         self.assertEqual(e.estado, E.HECHO)
-        h = e.historial.get()
+        h = e.historial.exclude(estado_anterior=F("estado_nuevo")).get()
         self.assertEqual((h.estado_anterior, h.estado_nuevo, h.usuario), (E.LISTO_PARA_ENTREGA, E.HECHO, self.s1))
+        entrega = e.entregas.get()
+        self.assertEqual((entrega.numero, entrega.acta_estado), (1, "PENDIENTE"))
+        self.assertEqual(entrega.cargo.tipo, "CARGO_RECEPCION")
+        self.assertTrue(entrega.cargo.bloqueado and entrega.version_enviada.bloqueado)
+        self.assertEqual(entrega.version_enviada.tipo, "VERSION_FINAL")
 
     def test_genera_las_lecciones_como_cualquier_cierre(self):
         e = self.aprobado()

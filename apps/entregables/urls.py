@@ -16,5 +16,10 @@ urlpatterns = [
     path("entregables/<int:pk>/adjuntos/", views.adjunto_subir, name="adjunto_subir"),
     path("adjuntos/<int:adjunto_id>/descargar/", views.adjunto_descargar, name="adjunto_descargar"),
     path("adjuntos/<int:adjunto_id>/eliminar/", views.adjunto_eliminar, name="adjunto_eliminar"),
+    # Sprint 2 (RF-28 y RF-29)
+    path("adjuntos/<int:adjunto_id>/restaurar/", views.adjunto_restaurar, name="adjunto_restaurar"),
+    path("entregables/<int:pk>/entregar/", views.entregar, name="entregable_entregar"),
+    path("entregas/", views.historial_entregas, name="entregas"),
+    path("entregas/<int:entrega_id>/acta/", views.entrega_acta, name="entrega_acta"),
     path("tablero/", views.tablero, name="tablero"),
 ]

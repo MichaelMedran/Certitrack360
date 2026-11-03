@@ -160,7 +160,9 @@ class PermisosDeSubidaTests(Base):
     def test_http_mensajes_claros_al_fallar_la_validacion(self):
         self.client.force_login(self.j1)
         url = reverse("adjunto_subir", args=[self.e1.pk])
-        r = self.client.post(url, {"tipo": "BORRADOR", "archivo": SimpleUploadedFile("a.exe", b"x")}, follow=True)
+        # Desde el Sprint 2 (RF-28, SDD §11.3) el formulario exige el comentario del cambio: se envía uno.
+        r = self.client.post(url, {"tipo": "BORRADOR", "archivo": SimpleUploadedFile("a.exe", b"x"), "comentario": "c"},
+                             follow=True)
         self.assertContains(r, "no es de un tipo permitido")
         r = self.client.post(url, {"tipo": "BORRADOR"}, follow=True)
         self.assertContains(r, "Elija el archivo que desea subir.")

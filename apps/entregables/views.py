@@ -17,13 +17,13 @@ from django.views.decorators.http import require_POST
 from apps.clientes.models import PlantillaTDR
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import adjuntos, filtros, servicios, subestado
-from . import filtros_observaciones
+from . import adjuntos, entregas, filtros, servicios, subestado
+from . import filtros_entregas, filtros_observaciones
 from . import observaciones as obs_servicio
-from .forms import AdjuntoForm, EntregableForm, ObservacionForm, contratos_para
+from .forms import ActaForm, AdjuntoForm, EntregaForm, EntregableForm, ObservacionForm, contratos_para
 from .htmx import con_vary, es_htmx, pide_parcial
-from .models import Adjunto, Entregable, Observacion, TipoError
-from .tipos import TipoAdjunto
+from .models import Adjunto, Entrega, Entregable, Observacion, TipoError
+from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
 from .visibilidad import entregables_visibles, es_senior_del_entregable
 
 E = Entregable.Estado
@@ -48,7 +48,14 @@ def _enriquecer(entregables):
     ):
         abiertas[entregable_id].append(tipo)
     etiquetas = dict(TipoError.choices)
+    # «Entregado»: la tarjeta muestra la fecha de entrega y el estado del acta en texto (última entrega, una consulta).
+    ultimas = {}
+    for entrega in Entrega.objects.filter(
+        entregable_id__in=[e.pk for e in entregables if e.estado == E.HECHO]
+    ).order_by("entregable_id", "numero"):
+        ultimas[entrega.entregable_id] = entrega  # la de número más alto queda al final
     for e in entregables:
+        e.ultima_entrega = ultimas.get(e.pk)
         e.n_adjuntos = adjuntos_por.get(e.pk, 0)
         e.n_obs_abiertas = len(abiertas[e.pk])
         e.tipos_obs_abiertas = [etiquetas[t] for t in TipoError.values if t in abiertas[e.pk]]
@@ -112,6 +119,16 @@ def cambiar_estado(request, pk):
     """
     e = get_object_or_404(_base(request.user), pk=pk)
     codigo, mensaje, pide_observacion = 200, None, False
+    if (request.POST.get("estado") == E.HECHO and e.estado == E.LISTO_PARA_ENTREGA
+            and entregas.puede_registrar(request.user, e)):
+        # Pasar a «Entregado» exige el cargo de recepción (RF-29): soltar la tarjeta o pulsar el botón no la mueve, abre el
+        # formulario de entrega. (Quien no puede entregar sigue por mover(), que responde 403.)
+        destino = reverse("entregable_entregar", args=[e.pk])
+        if es_htmx(request):
+            respuesta = HttpResponse("")
+            respuesta["HX-Redirect"] = destino
+            return con_vary(respuesta)
+        return redirect(destino)
     try:
         servicios.mover(
             e, request.POST.get("estado", ""), request.user,
@@ -188,18 +205,34 @@ def _contexto_detalle(usuario, e):
     siguientes = [
         (dest, E(dest).label)
         for (orig, dest), quien in servicios.TRANSICIONES.items()
-        if orig == e.estado and (es_senior or (quien == "junior" and usuario.pk == e.junior_asignado_id))
+        if orig == e.estado and (orig, dest) != servicios.REAPERTURA  # la reapertura tiene su propio formulario (Entregas)
+        and (es_senior or (quien == "junior" and usuario.pk == e.junior_asignado_id))
     ]
 
-    # Adjuntos: la versión más reciente de cada tipo y, plegadas, las anteriores (vienen de la más nueva a la más antigua).
+    # Adjuntos: la versión vigente de cada tipo (la de número más alto) y, plegadas, las anteriores (de la más nueva a la
+    # más antigua). Restaurar solo se ofrece en las anteriores de los tipos que se versionan (no el cargo ni el acta).
+    puede_restaurar = adjuntos.puede_restaurar(usuario, e)
     por_tipo = defaultdict(list)
-    for a in e.adjuntos.select_related("subido_por"):
+    for a in e.adjuntos.select_related("subido_por", "restaurado_desde"):
         por_tipo[a.tipo].append(a)
     posicion = {tipo: i for i, tipo in enumerate(TipoAdjunto.values)}
     grupos = [
         {"tipo": tipo, "etiqueta": adjuntos.etiqueta_tipo(tipo), "ultima": versiones[0], "anteriores": versiones[1:]}
         for tipo, versiones in sorted(por_tipo.items(), key=lambda par: posicion.get(par[0], 99))
     ]
+    for g in grupos:
+        g["ultima"].puede_restaurar = False
+        for a in g["anteriores"]:
+            a.puede_restaurar = puede_restaurar and a.tipo not in TIPOS_DE_ENTREGA
+
+    # Entregas y acta (RF-29): historial de entregas del entregable, con lo que el usuario puede hacer sobre ellas.
+    lista_entregas = list(e.entregas.select_related("cargo", "version_enviada", "acta", "registrada_por").order_by("numero"))
+    ultima_entrega = lista_entregas[-1] if lista_entregas else None
+    for entrega in lista_entregas:
+        entrega.dias_pendiente = entrega.dias_acta_pendiente()
+    puede_entregar = es_senior and e.estado == E.LISTO_PARA_ENTREGA
+    puede_acta = es_senior and e.estado == E.HECHO and ultima_entrega is not None
+    puede_reabrir = es_senior and servicios.puede_reabrir(e)
     requeridos = [
         {"tipo": tipo, "etiqueta": adjuntos.etiqueta_tipo(tipo), "cumplido": tipo in por_tipo}
         for tipo in dict.fromkeys(t for t in e.plantilla.adjuntos_requeridos if t)
@@ -240,7 +273,11 @@ def _contexto_detalle(usuario, e):
         "puede_subir": puede_subir, "puede_eliminar": adjuntos.puede_eliminar(usuario),
         "junior_sin_subida": usuario.pk == e.junior_asignado_id and not puede_subir,
         "estados_de_subida": " o ".join(f"«{E(estado).label}»" for estado in adjuntos.ESTADOS_INICIALES),
-        "form_adjunto": AdjuntoForm(),
+        "form_adjunto": AdjuntoForm(), "puede_restaurar": puede_restaurar,
+        "entregas": lista_entregas, "ultima_entrega": ultima_entrega, "puede_entregar": puede_entregar,
+        "puede_acta": puede_acta, "puede_reabrir": puede_reabrir,
+        "form_acta": ActaForm(auto_id="ac_%s") if puede_acta else None,
+        "form_reabrir": ObservacionForm(auto_id="re_%s") if puede_reabrir else None,
         "extensiones": ", ".join(adjuntos.extensiones_permitidas()), "tamano_max": f"{settings.MEDIA_MAX_UPLOAD_MB:g}",
         "falta_para_verificar": falta_para_verificar, "falta_para_aprobar": falta_para_aprobar,
     }
@@ -292,9 +329,120 @@ def adjunto_descargar(request, adjunto_id):
 def adjunto_eliminar(request, adjunto_id):
     a = _adjunto_visible(request.user, adjunto_id)
     entregable_id, nombre = a.entregable_id, a.nombre_original
-    adjuntos.eliminar(a, request.user)  # PermissionDenied (403) si no es gerente o admin
+    # PermissionDenied (403) si no es gerente o admin, o si la versión está bloqueada por una entrega (RF-28): ni siquiera
+    # el gerente o el admin la eliminan, y la página 403 dice el motivo.
+    adjuntos.eliminar(a, request.user)
     messages.success(request, f"Se eliminó «{nombre}».")
     return redirect("entregable_detalle", pk=entregable_id)
+
+
+@login_required
+@require_POST
+def adjunto_restaurar(request, adjunto_id):
+    """Restaura una versión anterior como vigente: crea una versión NUEVA (senior del entregable, gerente y admin)."""
+    a = _adjunto_visible(request.user, adjunto_id)
+    e = _base(request.user).get(pk=a.entregable_id)
+    a.entregable = e
+    if not adjuntos.puede_restaurar(request.user, e):
+        raise PermissionDenied("Solo el senior del entregable, el gerente y el admin restauran versiones.")
+    try:
+        nueva = adjuntos.restaurar(a, request.user)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+    else:
+        messages.success(
+            request, f"Se restauró la v{a.version} de {adjuntos.etiqueta_tipo(a.tipo)}: ahora es la v{nueva.version}, la versión vigente."
+        )
+    return redirect(reverse("entregable_detalle", args=[e.pk]) + "#adjuntos")
+
+
+# ------------------------------------------------------------------ entregas y actas (RF-29)
+
+def _volver_a_entregas(e):
+    return redirect(reverse("entregable_detalle", args=[e.pk]) + "#entregas")
+
+
+@login_required
+def entregar(request, pk):
+    """«Marcar como entregado»: formulario de entrega (fecha, medio, cargo y versión enviada). Al guardar, en una
+    transacción, crea el cargo y la entrega, bloquea la versión enviada y pasa el entregable a «Entregado»."""
+    e = get_object_or_404(_base(request.user), pk=pk)  # 404 si no lo ve
+    if not entregas.puede_registrar(request.user, e):
+        raise PermissionDenied("Solo el senior del entregable, el gerente y el admin registran entregas.")
+    if e.estado != E.LISTO_PARA_ENTREGA:
+        messages.error(request, f"Solo se registra la entrega de un entregable «{E.LISTO_PARA_ENTREGA.label}»; "
+                                f"este está «{e.get_estado_display()}».")
+        return redirect("entregable_detalle", pk=e.pk)
+    if request.method == "POST":
+        form = EntregaForm(e, request.POST, request.FILES)
+        if form.is_valid():
+            d = form.cleaned_data
+            try:
+                entrega = entregas.registrar(
+                    e, request.user, d["fecha_entrega"], d["medio"], d["cargo"], d["version_enviada"], d["comentario"]
+                )
+            except ValidationError as exc:
+                form.add_error(None, exc)
+            else:
+                messages.success(request, f"Entrega n.º {entrega.numero} registrada: «{e.titulo}» pasó a «{e.get_estado_display()}». "
+                                          "El acta de conformidad queda pendiente.")
+                return _volver_a_entregas(e)
+    else:
+        form = EntregaForm(e)
+    return render(request, "entregables/entregar.html", {
+        "e": e, "form": form, "extensiones": ", ".join(adjuntos.extensiones_permitidas()),
+        "tamano_max": f"{settings.MEDIA_MAX_UPLOAD_MB:g}", "numero": e.entregas.count() + 1,
+        "acta_dias": settings.ACTA_DIAS_PENDIENTE,
+        "sin_version_final": entregas.version_por_defecto(e) is None,
+    })
+
+
+@login_required
+@require_POST
+def entrega_acta(request, entrega_id):
+    """Registra o actualiza el acta de conformidad de la entrega: Recibida u Observada, con su archivo."""
+    entrega = get_object_or_404(entregas.visibles(request.user).select_related("entregable"), pk=entrega_id)
+    e = _base(request.user).get(pk=entrega.entregable_id)
+    entrega.entregable = e
+    if not entregas.puede_registrar(request.user, e):
+        raise PermissionDenied("Solo el senior del entregable, el gerente y el admin registran el acta.")
+    form = ActaForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, " ".join(m for errores in form.errors.values() for m in errores))
+        return _volver_a_entregas(e)
+    try:
+        entregas.registrar_acta(entrega, request.user, form.cleaned_data["estado"], form.cleaned_data["archivo"])
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+    else:
+        estado = Entrega.ActaEstado(form.cleaned_data["estado"]).label.lower()
+        texto = f"Acta de la entrega n.º {entrega.numero} registrada como {estado}."
+        if form.cleaned_data["estado"] == Entrega.ActaEstado.OBSERVADA:
+            texto += " Puede reabrir el entregable para corrección."
+        messages.success(request, texto)
+    return _volver_a_entregas(e)
+
+
+@login_required
+def historial_entregas(request):
+    """Pestaña «Entregas» de Entregables: historial filtrable sobre los entregables visibles (RF-29)."""
+    resultado = filtros_entregas.aplicar(entregas.visibles(request.user), request.GET)
+    paginador = Paginator(resultado.queryset, 50)
+    pagina = paginador.get_page(request.GET.get("pagina"))
+    resto = request.GET.copy()
+    resto.pop("pagina", None)
+    opciones = filtros_entregas.opciones(request.user)
+    hoy = timezone.localdate()
+    filas = list(pagina.object_list)
+    for entrega in filas:
+        entrega.dias_pendiente = entrega.dias_acta_pendiente(hoy)
+    contexto = {
+        "pagina": pagina, "entregas": filas, "total": paginador.count,
+        "opciones": opciones, "filtros_activos": resultado.activos, "n_filtros": len(resultado.activos),
+        "chips": filtros_entregas.chips(request.GET, resultado.activos, opciones),
+        "consulta_sin_pagina": resto.urlencode(), "pestana": "entregas", "acta_dias": settings.ACTA_DIAS_PENDIENTE,
+    }
+    return _respuesta(request, "entregables/entregas.html", "entregables/_entregas_lista.html", contexto)
 
 
 # ------------------------------------------------------------------ observaciones

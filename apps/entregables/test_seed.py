@@ -6,6 +6,7 @@ from unittest import mock
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.alertas.models import Notificacion
 from apps.clientes.models import Cliente, Contrato, PlantillaTDR
@@ -101,7 +102,9 @@ class SeedDemoTests(MediaTemporal, TestCase):
             self.assertTrue(Adjunto.objects.filter(entregable=a.entregable, tipo=a.tipo, version=a.version - 1).exists())
 
     def test_los_tipos_de_adjunto_son_variados(self):
-        self.assertEqual(set(Adjunto.objects.values_list("tipo", flat=True)), {"TDR", "BORRADOR", "VERSION_FINAL", "EVIDENCIA"})
+        # Ajuste derivado de RF-29 (SDD §11.3): el seed crea el cargo y el acta de los entregables cerrados.
+        self.assertEqual(set(Adjunto.objects.values_list("tipo", flat=True)),
+                         {"TDR", "BORRADOR", "VERSION_FINAL", "EVIDENCIA", "CARGO_RECEPCION", "ACTA_CONFORMIDAD"})
 
     def test_ningun_entregable_en_verificacion_o_despues_incumple_los_adjuntos_requeridos(self):
         for e in Entregable.objects.filter(estado__in=[E.VERIFICACION_SENIOR, E.LISTO_PARA_ENTREGA, E.HECHO]):
@@ -125,6 +128,33 @@ class SeedDemoTests(MediaTemporal, TestCase):
             partes = a.archivo.name.split("/")
             self.assertTrue(partes[0].startswith(f"{a.entregable.contrato.cliente_id}-"))
             self.assertEqual(partes[2], f"entregable-{a.entregable_id}")
+
+    # ---- Sprint 2 (RF-29): los entregables cerrados tienen cargo, entrega y acta
+    def test_los_siete_entregados_tienen_entrega_con_cargo_y_la_version_enviada_bloqueada(self):
+        from apps.entregables.models import Entrega
+
+        hechos = Entregable.objects.filter(estado=E.HECHO)
+        self.assertEqual(hechos.count(), 7)
+        for e in hechos:
+            entrega = e.entregas.get()
+            self.assertEqual(entrega.numero, 1)
+            self.assertEqual(entrega.cargo.tipo, "CARGO_RECEPCION")
+            self.assertTrue(entrega.cargo.bloqueado and entrega.version_enviada.bloqueado, e.codigo)
+            self.assertEqual(entrega.version_enviada.tipo, "VERSION_FINAL")
+            self.assertEqual(entrega.cierre.estado_nuevo, E.HECHO)
+            self.assertLessEqual(entrega.fecha_entrega, timezone.localdate())
+            self.assertGreaterEqual(entrega.fecha_entrega, e.fecha_recepcion)
+        self.assertEqual(set(Entrega.objects.values_list("acta_estado", flat=True)), {"RECIBIDA", "PENDIENTE", "OBSERVADA"})
+        for entrega in Entrega.objects.exclude(acta_estado="PENDIENTE"):
+            self.assertEqual(entrega.acta.tipo, "ACTA_CONFORMIDAD")
+            self.assertTrue(entrega.acta.bloqueado)
+        self.assertFalse(Entrega.objects.filter(acta_estado="PENDIENTE", acta__isnull=False).exists())
+        self.assertFalse(Entregable.objects.exclude(estado=E.HECHO).filter(entregas__isnull=False).exists())
+
+    def test_el_seed_no_genera_avisos_de_acta_ni_deja_versiones_bloqueadas_sin_entrega(self):
+        self.assertFalse(Notificacion.objects.filter(tipo="ACTA").exists())
+        for a in Adjunto.objects.filter(bloqueado=True):
+            self.assertEqual(a.entregable.estado, E.HECHO)
 
     # ---- fase 2
     def test_entre_15_y_20_lecciones_con_su_caso_de_origen(self):

@@ -316,9 +316,9 @@ class NavegacionTests(Base):
             self.client.force_login(usuario)
             for nombre in ("inicio", "tablero", "calendario", "entregables"):
                 html = self.client.get(reverse(nombre)).content.decode()
-                # /observaciones/ ya existe (S2-H3): es la pestaña «Observaciones» de Entregables.
+                # /observaciones/ (S2-H3) y /entregas/ (S2-H4) ya existen: son pestañas de Entregables.
                 for ruta in ("/repositorio/", "/indicadores/", "/buscar/", "/fichas/", "/personal/",
-                             "/entregas/", "/tiempos/", "/incorporacion/", "/procedimientos/"):
+                             "/tiempos/", "/incorporacion/", "/procedimientos/"):
                     self.assertNotIn(f'href="{ruta}', html, f"{usuario.username} {nombre} {ruta}")
 
     def test_todas_las_pestanas_de_gestion_abren(self):

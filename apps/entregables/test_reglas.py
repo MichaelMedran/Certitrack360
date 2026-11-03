@@ -8,8 +8,10 @@ from apps.alertas.models import Notificacion
 from apps.clientes.models import LineaServicio, PlantillaTDR
 from apps.entregables import adjuntos, servicios
 from apps.entregables.models import Entregable, Observacion
+from apps.entregables.testing import entregar
 from apps.entregables.tests import Base
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models import F
 
 E = Entregable.Estado
 
@@ -275,6 +277,10 @@ class AdjuntosYDatosEnElFlujoCompletoTests(Base):
         with self.assertRaises(PermissionDenied):
             servicios.mover(e, E.LISTO_PARA_ENTREGA, self.j1)  # el junior no aprueba
         servicios.mover(e, E.LISTO_PARA_ENTREGA, self.s1)
-        servicios.mover(e, E.HECHO, self.gerente)
-        self.assertEqual(e.historial.filter(estado_anterior__in=E.values).count(), 5)  # 4 transiciones + 1 subida
+        self.assertEqual(e.historial.filter(estado_anterior__in=E.values).count(), 4)  # 3 transiciones + 1 subida
         self.assertEqual(e.historial.exclude(detalle="").count(), 1)
+        # Ajuste derivado de RF-29 (SDD §11.3): pasar a Entregado exige el cargo, así que se cierra con el ayudante
+        # `entregar`, que además deja en el historial la versión final ficticia, el cargo y la transición.
+        entregar(e, self.gerente)
+        self.assertEqual(e.estado, E.HECHO)
+        self.assertEqual(e.historial.exclude(estado_anterior=F("estado_nuevo")).count(), 4)  # las 4 transiciones

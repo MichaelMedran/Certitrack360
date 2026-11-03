@@ -34,6 +34,9 @@
       <p><label for="{{ form_devolver.descripcion.id_for_label }}">Descripción</label>{{ form_devolver.descripcion }}</p>
       <button class="boton peligro">Devolver</button>
     </form>
+    {% elif destino == 'HECHO' %}
+    <a class="boton" href="{% url 'entregable_entregar' e.pk %}">Marcar como entregado</a>
+    <span class="suave">Pide el cargo de recepción, la fecha y el medio de entrega.</span>
     {% else %}
     <form class="en-linea" method="post" action="{% url 'entregable_estado' e.pk %}">{% csrf_token %}
       <input type="hidden" name="estado" value="{{ destino }}"><button class="boton">Pasar a «{{ etiqueta }}»</button>
@@ -46,7 +49,7 @@
 <h2>Datos del entregable ({{ e.plantilla.nombre }})</h2>
 <div class="tabla"><table>{% for etiqueta, valor in e.datos_etiquetados %}<tr><th style="width:30%">{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table></div>
 
-<h2>Adjuntos</h2>
+<h2 id="adjuntos">Adjuntos y versiones</h2>
 <div class="tarjeta">
   {% if requeridos %}
   <div class="requeridos"><strong>Requeridos por la plantilla:</strong>
@@ -56,9 +59,10 @@
 
   {% if grupos_adjuntos %}
   <div class="tabla"><table>
-    <thead><tr><th>Tipo</th><th>Archivo</th><th>Versión</th><th>Subido por</th><th>Fecha</th><th>Comentario</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>Tipo</th><th>Versión vigente</th><th>Archivo</th><th>Subido por</th><th>Fecha</th><th>Comentario del cambio</th><th>Acciones</th></tr></thead>
     <tbody>{% for g in grupos_adjuntos %}{% with a=g.ultima %}
-      <tr><td>{{ g.etiqueta }}</td><td>{{ a.nombre_original }}</td><td>v{{ a.version }}</td><td>{{ a.subido_por.nombre }}</td>
+      <tr><td>{{ g.etiqueta }}</td><td><span class="etiqueta vigente">Vigente · v{{ a.version }}</span>{% if a.bloqueado %} <span class="etiqueta bloqueada">Bloqueada</span>{% endif %}</td>
+        <td>{{ a.nombre_original }}</td><td>{{ a.subido_por.nombre }}</td>
         <td>{{ a.subido_en|date:"d/m/Y H:i" }}</td><td>{{ a.comentario|default:"—" }}</td><td>{% include "entregables/_acciones_adjunto.html" %}</td></tr>
     {% endwith %}{% endfor %}</tbody>
   </table></div>
@@ -68,7 +72,7 @@
     <summary>Ver versiones anteriores de «{{ g.etiqueta }}» ({{ g.anteriores|length }})</summary>
     <div class="tabla"><table>
       <tbody>{% for a in g.anteriores %}
-        <tr><td>{{ g.etiqueta }}</td><td>{{ a.nombre_original }}</td><td>v{{ a.version }}</td><td>{{ a.subido_por.nombre }}</td>
+        <tr><td>{{ g.etiqueta }}</td><td>v{{ a.version }}{% if a.bloqueado %} <span class="etiqueta bloqueada">Bloqueada</span>{% endif %}</td><td>{{ a.nombre_original }}</td><td>{{ a.subido_por.nombre }}</td>
           <td>{{ a.subido_en|date:"d/m/Y H:i" }}</td><td>{{ a.comentario|default:"—" }}</td><td>{% include "entregables/_acciones_adjunto.html" %}</td></tr>
       {% endfor %}</tbody>
     </table></div>
@@ -77,15 +81,15 @@
   {% else %}<p class="suave">Todavía no hay adjuntos.</p>{% endif %}
 
   {% if puede_subir %}
-  <h3>Subir un adjunto</h3>
+  <h3>Subir un adjunto <span class="suave">(cada subida del mismo tipo es una versión nueva)</span></h3>
   <form method="post" action="{% url 'adjunto_subir' e.pk %}" enctype="multipart/form-data">{% csrf_token %}
     <div class="filtros-grid">
       <div><label for="{{ form_adjunto.tipo.id_for_label }}">Tipo</label>{{ form_adjunto.tipo }}</div>
       <div><label for="{{ form_adjunto.archivo.id_for_label }}">Archivo</label>{{ form_adjunto.archivo }}</div>
-      <div><label for="{{ form_adjunto.comentario.id_for_label }}">Comentario (opcional)</label>{{ form_adjunto.comentario }}</div>
+      <div><label for="{{ form_adjunto.comentario.id_for_label }}">Comentario del cambio <strong>(obligatorio)</strong></label>{{ form_adjunto.comentario }}</div>
     </div>
     <button class="boton">Subir</button>
-    <p class="suave">Formatos: {{ extensiones }} · máximo {{ tamano_max }} MB. Si ya existe un adjunto de ese tipo se crea una versión nueva; nada se sobrescribe.</p>
+    <p class="suave">Formatos: {{ extensiones }} · máximo {{ tamano_max }} MB. Si ya existe un adjunto de ese tipo se crea una versión nueva, que pasa a ser la vigente; nada se sobrescribe.</p>
   </form>
   {% elif junior_sin_subida %}
   <p class="suave">Ya no puede subir adjuntos: solo se suben mientras el entregable está en {{ estados_de_subida }}.</p>
@@ -173,6 +177,55 @@
   </div>
 </form>
 {% endif %}
+
+<h2 id="entregas">Entregas y acta de conformidad</h2>
+<div class="tarjeta">
+  {% if entregas %}
+  <div class="tabla"><table>
+    <thead><tr><th>N.º</th><th>Fecha de entrega</th><th>Medio</th><th>Cargo</th><th>Versión enviada</th><th>Acta</th><th>Registró</th></tr></thead>
+    <tbody>{% for en in entregas %}
+      <tr>
+        <td>{{ en.numero }}</td><td>{{ en.fecha_entrega|date:"d/m/Y" }}</td><td>{{ en.get_medio_display }}</td>
+        <td><a href="{% url 'adjunto_descargar' en.cargo_id %}">{{ en.cargo.nombre_original }}</a></td>
+        <td>{{ en.version_enviada.get_tipo_display }} v{{ en.version_enviada.version }} <span class="etiqueta bloqueada">Bloqueada</span></td>
+        <td><span class="etiqueta acta-{{ en.acta_estado|lower }}">{{ en.get_acta_estado_display }}{% if en.dias_pendiente is not None %} · {{ en.dias_pendiente }} día{{ en.dias_pendiente|pluralize }}{% endif %}</span>
+          {% if en.acta_id %}<br><a href="{% url 'adjunto_descargar' en.acta_id %}">{{ en.acta.nombre_original }}</a>{% endif %}</td>
+        <td>{{ en.registrada_por.nombre }}</td>
+      </tr>{% endfor %}</tbody>
+  </table></div>
+  {% elif e.estado == 'LISTO_PARA_ENTREGA' %}
+  <p class="suave">Este entregable aún no se entregó. Está «{{ e.get_estado_display }}»{% if puede_entregar %}: use «Marcar como entregado» para registrar el cargo de recepción{% endif %}.</p>
+  {% else %}
+  <p class="suave">Este entregable aún no se entregó. Cuando esté «{{ e.get_estado_display }}» y pase a «Aprobado», aparecerá el botón «Marcar como entregado».</p>
+  {% endif %}
+
+  {% if puede_entregar %}
+  <div class="acciones"><a class="boton" href="{% url 'entregable_entregar' e.pk %}">Marcar como entregado</a></div>
+  {% endif %}
+
+  {% if puede_acta %}
+  <form method="post" action="{% url 'entrega_acta' ultima_entrega.pk %}" enctype="multipart/form-data" class="caja-gris">{% csrf_token %}
+    <h3 style="margin-top:0">{% if ultima_entrega.acta_estado == 'PENDIENTE' %}Registrar acta{% else %}Actualizar acta{% endif %} de la entrega n.º {{ ultima_entrega.numero }}</h3>
+    <div class="filtros-grid">
+      <div><label for="{{ form_acta.estado.id_for_label }}">Estado del acta</label>{{ form_acta.estado }}</div>
+      <div><label for="{{ form_acta.archivo.id_for_label }}">Archivo del acta <strong>(obligatorio)</strong></label>{{ form_acta.archivo }}</div>
+    </div>
+    <button class="boton">Guardar acta</button>
+    <p class="suave">Recibida u Observada, siempre con su archivo. Si está observada, el senior, el gerente o el admin pueden reabrir el trabajo para corrección.</p>
+  </form>
+  {% endif %}
+
+  {% if puede_reabrir %}
+  <form method="post" action="{% url 'entregable_estado' e.pk %}" class="caja-gris">{% csrf_token %}
+    <input type="hidden" name="estado" value="EN_PROCESO">
+    <h3 style="margin-top:0">Reabrir para corrección (requiere una observación)</h3>
+    <p class="suave">El acta de la entrega n.º {{ ultima_entrega.numero }} está observada. Se devuelve a «En proceso» con la observación; las versiones bloqueadas siguen bloqueadas, la corrección se sube como versión nueva y la siguiente entrega será la n.º {{ ultima_entrega.numero|add:1 }}.</p>
+    <p><label for="{{ form_reabrir.tipo_error.id_for_label }}">Tipo de error</label>{{ form_reabrir.tipo_error }}</p>
+    <p><label for="{{ form_reabrir.descripcion.id_for_label }}">Descripción</label>{{ form_reabrir.descripcion }}</p>
+    <button class="boton peligro">Reabrir para corrección</button>
+  </form>
+  {% endif %}
+</div>
 
 <h2>Historial</h2>
 <div class="tabla"><table>

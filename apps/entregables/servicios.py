@@ -6,7 +6,7 @@ from django.urls import reverse
 from apps.alertas.models import Notificacion
 
 from . import adjuntos
-from .models import Entregable, HistorialEstado, Observacion, TipoError
+from .models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion, TipoError
 from .visibilidad import es_senior_del_entregable
 
 E = Entregable.Estado
@@ -18,7 +18,12 @@ TRANSICIONES = {
     (E.VERIFICACION_SENIOR, E.LISTO_PARA_ENTREGA): "senior",
     (E.VERIFICACION_SENIOR, E.EN_PROCESO): "senior",
     (E.LISTO_PARA_ENTREGA, E.HECHO): "senior",
+    # Reapertura (SDD del Sprint 2, §7.1 y §7.4): solo con el acta de la última entrega observada y con observación.
+    (E.HECHO, E.EN_PROCESO): "senior",
 }
+
+REAPERTURA = (E.HECHO, E.EN_PROCESO)
+DEVOLUCION = (E.VERIFICACION_SENIOR, E.EN_PROCESO)
 
 
 def datos_faltantes(entregable):
@@ -89,6 +94,43 @@ def observaciones_que_impiden(entregable, nuevo_estado):
             return (f"No se puede aprobar: hay {_plural(n, 'observación abierta', 'observaciones abiertas')} ({detalle}). "
                     "Confirme las correcciones o resuelva las observaciones en la sección Observaciones.")
     return None
+
+
+def texto_reabierto(entregable, n):
+    """Aviso al junior al reabrir un entregado por su acta observada (RF-29): lleva el código y la cantidad."""
+    return (f"{entregable.referencia} se reabrió porque el acta de conformidad quedó observada; tiene "
+            f"{_plural(n, 'observación', 'observaciones')} por atender.")
+
+
+def entrega_por_cerrar(entregable):
+    """La entrega del ciclo actual, todavía sin cerrar: la que `mover` consume al pasar a «Entregado». Tras una reapertura
+    la entrega anterior ya está cerrada, así que hace falta registrar otra (con `numero` + 1)."""
+    return entregable.entregas.filter(cierre__isnull=True).select_related("version_enviada").order_by("-numero").first()
+
+
+def ultima_entrega(entregable):
+    return entregable.entregas.order_by("-numero").first()
+
+
+MOTIVO_SIN_ENTREGA = (
+    f"No se puede marcar como «{E.HECHO.label}» sin registrar la entrega: falta el cargo de recepción con la fecha y el "
+    "medio de entrega. Use «Marcar como entregado»."
+)
+
+
+def motivo_sin_reapertura(entregable):
+    """Mensaje si un entregado no se puede reabrir (solo con el acta de la última entrega observada), o None."""
+    ultima = ultima_entrega(entregable)
+    base = f"Solo se reabre un entregable «{E.HECHO.label}» cuando el acta de la última entrega está «Observada»"
+    if ultima is None:
+        return base + "; este entregable no tiene entregas registradas."
+    if ultima.acta_estado != ultima.ActaEstado.OBSERVADA:
+        return base + f"; la entrega n.º {ultima.numero} tiene el acta «{ultima.get_acta_estado_display()}»."
+    return None
+
+
+def puede_reabrir(entregable):
+    return entregable.estado == E.HECHO and motivo_sin_reapertura(entregable) is None
 
 
 def responsables_posibles(entregable):
@@ -168,6 +210,10 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
     la del Sprint 1 (`tipo_error` y `descripcion`) o varias a la vez (`observaciones`: lista de dicts con tipo_error,
     descripcion y responsable opcional), que se crean aquí mismo, en la misma transacción, una sola vez.
 
+    Pasar a «Entregado» (RF-29) exige la entrega del ciclo actual (cargo de recepción, fecha y medio), que se registra con
+    `entregas.registrar`: aquí se consume y su versión enviada queda bloqueada. Reabrir un entregado (HECHO → EN_PROCESO,
+    §7.4) solo vale con el acta de la última entrega observada y exige observaciones igual que una devolución.
+
     `rechazo`: devolución por el rechazo de una corrección (§7.1 y §7.2). La observación rechazada, de este entregable y
     ya de vuelta en Pendiente, es la observación abierta que justifica la devolución: no se crea otra. Los avisos los da
     quien rechaza (`observaciones.rechazar`).
@@ -189,47 +235,70 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
     if nuevo_estado == E.VERIFICACION_SENIOR:
         motivos.append(requisitos_para_verificacion(entregable))
     motivos.append(observaciones_que_impiden(entregable, nuevo_estado))  # condiciones nuevas del Sprint 2 (§7.1)
+    entrega = None
+    if nuevo_estado == E.HECHO:  # RF-29: la entrega del ciclo actual, con su cargo, es condición del paso a Entregado
+        entrega = entrega_por_cerrar(entregable)
+        if entrega is None:
+            motivos.append(MOTIVO_SIN_ENTREGA)
+    if clave == REAPERTURA:
+        motivos.append(motivo_sin_reapertura(entregable))
     motivos = [m for m in motivos if m]
     if motivos:
         raise ValidationError(motivos[0] if len(motivos) == 1 else motivos)
 
-    devuelve = clave == (E.VERIFICACION_SENIOR, E.EN_PROCESO)
+    devuelve = clave == DEVOLUCION
+    reabre = clave == REAPERTURA
     if rechazo is not None:
         if not devuelve or rechazo.entregable_id != entregable.pk or rechazo.estado != Observacion.Estado.PENDIENTE:
             raise ValidationError("Solo se devuelve por rechazo con una observación de este entregable que volvió a "
                                   f"«{Observacion.Estado.PENDIENTE.label}».")
-    elif devuelve:
+    elif devuelve or reabre:  # devolver y reabrir exigen al menos una observación
         if observaciones is None:  # devolución del Sprint 1: una observación
             observaciones = [{"tipo_error": tipo_error, "descripcion": descripcion or ""}] if (tipo_error or descripcion) else []
         observaciones = validar_observaciones(entregable, observaciones)
 
     with transaction.atomic():
+        if entrega is not None:  # se consume una sola vez, aunque dos pasos a Entregado coincidan
+            entrega = Entrega.objects.select_for_update().filter(pk=entrega.pk, cierre__isnull=True).first()
+            if entrega is None:
+                raise ValidationError(MOTIVO_SIN_ENTREGA)
         entregable.estado = nuevo_estado
         entregable.save(update_fields=["estado", "actualizado_en"])
+        n = len(observaciones) if observaciones else 0
         if rechazo is not None:
             detalle = f"Devuelto por corrección rechazada ({rechazo.get_tipo_error_display()})"
-        elif devuelve:
-            n = len(observaciones)
-            detalle = (f"Devuelto con observación ({TipoError(observaciones[0]['tipo_error']).label})" if n == 1
-                       else f"Devuelto con {n} observaciones ("
-                            + ", ".join(dict.fromkeys(TipoError(o["tipo_error"]).label for o in observaciones)) + ")")
+        elif devuelve or reabre:
+            tipos = ", ".join(dict.fromkeys(TipoError(o["tipo_error"]).label for o in observaciones))
+            verbo = "Devuelto" if devuelve else "Reabierto por acta observada"
+            detalle = (f"{verbo} con observación ({TipoError(observaciones[0]['tipo_error']).label})" if n == 1
+                       else f"{verbo} con {n} observaciones ({tipos})")
+        elif entrega is not None:
+            detalle = f"Entrega n.º {entrega.numero} ({entrega.get_medio_display()})"
         else:
             detalle = ""
-        HistorialEstado.objects.create(
+        cambio = HistorialEstado.objects.create(
             entregable=entregable, estado_anterior=actual, estado_nuevo=nuevo_estado, usuario=usuario, detalle=detalle[:255],
         )
+        if entrega is not None:
+            # La entrega queda cerrada con este paso y la versión enviada, bloqueada: nadie la elimina (RF-28).
+            entrega.cierre = cambio
+            entrega.save(update_fields=["cierre"])
+            Adjunto.objects.filter(pk=entrega.version_enviada_id).update(bloqueado=True)
         if nuevo_estado == E.VERIFICACION_SENIOR and entregable.senior_revisor_id != usuario.pk:
             Notificacion.objects.create(
                 usuario=entregable.senior_revisor, entregable=entregable, tipo=Notificacion.Tipo.VERIFICACION,
                 mensaje=texto_en_revision(entregable),
             )
-        if devuelve and rechazo is None:
+        if (devuelve or reabre) and rechazo is None:
             # Queda «Con correcciones pendientes»: aviso inmediato al junior con el código (RF-22 y RF-26).
             crear_observaciones(entregable, usuario, observaciones)
+            if reabre:
+                mensaje = texto_reabierto(entregable, n)
+            else:
+                mensaje = texto_devuelto(entregable) if n == 1 else texto_devuelto_varias(entregable, n)
             Notificacion.objects.create(
                 usuario=entregable.junior_asignado, entregable=entregable, tipo=Notificacion.Tipo.OBSERVACION,
-                mensaje=texto_devuelto(entregable) if n == 1 else texto_devuelto_varias(entregable, n),
-                enlace=enlace_observaciones(entregable),
+                mensaje=mensaje[:255], enlace=enlace_observaciones(entregable),
             )
         if nuevo_estado == E.HECHO:
             # Fase 2: las observaciones resueltas de un entregable cerrado se convierten en lecciones aprendidas.

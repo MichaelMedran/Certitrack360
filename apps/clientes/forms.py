@@ -5,7 +5,7 @@ from django.db.models import Q
 
 from apps.cuentas.models import Usuario
 from apps.entregables.models import Entregable
-from apps.entregables.tipos import TipoAdjunto
+from apps.entregables.tipos import TIPOS_DE_SUBIDA
 
 from .models import Cliente, Contrato, LineaServicio, PlantillaTDR
 
@@ -111,7 +111,7 @@ class PlantillaForm(forms.ModelForm):
     en los parámetros repetidos campo_nombre / campo_etiqueta / campo_tipo / campo_opciones."""
 
     adjuntos_requeridos = forms.MultipleChoiceField(
-        label="Adjuntos obligatorios", choices=TipoAdjunto.choices, widget=forms.CheckboxSelectMultiple, required=False,
+        label="Adjuntos obligatorios", choices=TIPOS_DE_SUBIDA, widget=forms.CheckboxSelectMultiple, required=False,
         help_text=(
             f"Tipos de documento que el entregable debe tener antes de pasar a {Entregable.Estado.VERIFICACION_SENIOR.label}. "
             "Puede dejarlos vacíos."

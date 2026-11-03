@@ -261,11 +261,17 @@ class Adjunto(models.Model):
     entregable = models.ForeignKey(Entregable, on_delete=models.CASCADE, related_name="adjuntos")
     archivo = models.FileField(upload_to=ruta_adjunto, max_length=255)
     nombre_original = models.CharField("nombre del archivo", max_length=255)
-    tipo = models.CharField(max_length=15, choices=TipoAdjunto.choices)
+    tipo = models.CharField(max_length=20, choices=TipoAdjunto.choices)
     version = models.PositiveIntegerField(default=1)
     comentario = models.CharField(max_length=255, blank=True)
     subido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     subido_en = models.DateTimeField(auto_now_add=True)
+    # Sprint 2 (RF-28). La versión enviada al cliente, el cargo y el acta quedan bloqueados: no se eliminan, ni siquiera
+    # por el gerente o el admin. Restaurar una versión crea una NUEVA y deja aquí de cuál se copió.
+    bloqueado = models.BooleanField(default=False)
+    restaurado_desde = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="restauraciones"
+    )
 
     class Meta:
         ordering = ["tipo", "-version"]
@@ -275,3 +281,67 @@ class Adjunto(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} v{self.version} · {self.nombre_original}"
+
+
+class Entrega(models.Model):
+    """Entrega de un entregable al cliente (SDD del Sprint 2, RF-29 y §7.4). Nada se sobrescribe: una reentrega, que solo
+    existe tras reabrir un entregado con el acta observada, es un registro nuevo con `numero` + 1.
+
+    `cierre` es el registro del historial del paso a «Entregado» que consumió esta entrega. Una entrega sin `cierre` es la
+    del ciclo actual, todavía por cerrar: `servicios.mover` exige una para pasar a «Entregado» y la consume. Así, tras una
+    reapertura, la entrega anterior no sirve para volver a cerrar y se registra una nueva.
+    """
+
+    class Medio(models.TextChoices):
+        CORREO = "CORREO", "Correo"
+        MESA_DE_PARTES = "MESA_DE_PARTES", "Mesa de partes"
+        FILEDOC = "FILEDOC", "FileDoc"
+        PRESENCIAL = "PRESENCIAL", "Presencial"
+        OTRO = "OTRO", "Otro"
+
+    class ActaEstado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        RECIBIDA = "RECIBIDA", "Recibida"
+        OBSERVADA = "OBSERVADA", "Observada"
+
+    entregable = models.ForeignKey(Entregable, on_delete=models.CASCADE, related_name="entregas")
+    numero = models.PositiveIntegerField("n.º", default=1)
+    fecha_entrega = models.DateField("fecha de entrega")
+    medio = models.CharField("medio de entrega", max_length=20, choices=Medio.choices)
+    cargo = models.ForeignKey(Adjunto, on_delete=models.PROTECT, related_name="+", verbose_name="cargo de recepción")
+    version_enviada = models.ForeignKey(
+        Adjunto, on_delete=models.PROTECT, related_name="+", verbose_name="versión enviada"
+    )
+    acta_estado = models.CharField("estado del acta", max_length=10, choices=ActaEstado.choices, default=ActaEstado.PENDIENTE)
+    acta = models.ForeignKey(
+        Adjunto, on_delete=models.PROTECT, null=True, blank=True, related_name="+", verbose_name="acta de conformidad"
+    )
+    acta_actualizada_en = models.DateTimeField(null=True, blank=True)
+    registrada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    registrada_en = models.DateTimeField(auto_now_add=True)
+    cierre = models.ForeignKey(
+        HistorialEstado, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+        help_text="Paso a «Entregado» que consumió esta entrega.",
+    )
+    # Cuándo se avisó que el acta seguía pendiente: garantiza un solo aviso por entrega (tarea programada).
+    alerta_acta_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["entregable", "numero"]
+        verbose_name_plural = "entregas"
+        constraints = [
+            models.UniqueConstraint(fields=["entregable", "numero"], name="entrega_numero_unico"),
+            models.CheckConstraint(
+                condition=models.Q(acta_estado="PENDIENTE") | models.Q(acta__isnull=False),
+                name="acta_con_archivo", violation_error_message="Un acta recibida u observada lleva su archivo.",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Entrega n.º {self.numero} · {self.entregable}"
+
+    def dias_acta_pendiente(self, hoy=None):
+        """Días desde la entrega mientras el acta sigue pendiente; None si ya se registró."""
+        if self.acta_estado != self.ActaEstado.PENDIENTE:
+            return None
+        return ((hoy or timezone.localdate()) - self.fecha_entrega).days

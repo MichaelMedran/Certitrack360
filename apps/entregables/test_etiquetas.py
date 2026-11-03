@@ -10,6 +10,7 @@ from apps.alertas.models import Notificacion
 from apps.entregables import servicios
 from apps.entregables.models import Entregable, HistorialEstado
 from apps.entregables.test_filtros import FiltrosBase
+from apps.entregables.testing import entregar
 
 E = Entregable.Estado
 HU_04 = ["Por hacer", "En proceso", "Revisión senior", "Aprobado", "Entregado"]
@@ -43,7 +44,7 @@ class EtiquetasDeHU04Tests(FiltrosBase):
     def test_el_detalle_ofrece_los_movimientos_con_las_etiquetas_nuevas(self):
         self.client.force_login(self.s1)
         self.assertContains(self.client.get(reverse("entregable_detalle", args=[self.d.pk])), "Pasar a «Aprobado»")
-        servicios.mover(self.f, E.HECHO, self.gerente)
+        entregar(self.f, self.gerente)
         self.client.force_login(self.gerente)
         self.assertContains(self.client.get(reverse("entregable_detalle", args=[self.f.pk])), "<strong>Entregado</strong>")
 

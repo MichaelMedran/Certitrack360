@@ -101,7 +101,9 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 | RF-25 Observaciones con estados, responsable, acción correctiva, fecha de atención y evidencia | S2-H3 | Hecho: `Observacion` suma `estado` (Pendiente, En corrección, Resuelta), `responsable` (por defecto el junior asignado), `corregida_por`/`corregida_en` (fecha de atención), `revisada_por`/`resuelta_en` y `evidencia` (versión de un adjunto del mismo entregable); la acción correctiva es el campo `solucion` existente (propiedad `accion_correctiva`, sin columna duplicada). `resuelta` se conserva y se sincroniza en `save()` (Resuelta ⇔ `resuelta=True`), así lecciones, filtros y consolidado no cambian. Máquina de estados en `apps/entregables/observaciones.py`: corregir (responsable o senior del entregable; exige texto; avisa al senior revisor, tipo Corrección), confirmar o rechazar (senior del entregable, gerente o admin; el rechazo vuelve a Pendiente y avisa al responsable) y resolver directo del Sprint 1 (`/observaciones/<id>/resolver/`, ahora también registra quién y cuándo). Resuelta exige acción correctiva. Cada paso queda en el historial. Migración `entregables/0004` aditiva, con relleno y reversa. Rutas POST `/observaciones/<id>/corregir/` y `/observaciones/<id>/revisar/`, con CSRF (también desde HTMX, que recibe `HX-Redirect`) | `apps/entregables/test_observaciones.py` (ModeloTests, MigracionTests, CorregirTests, RevisarTests, HtmxYCsrfTests, DetalleTests) |
 | RF-26 Sección «Observaciones»: varias a la vez, devolución y subestado «Con correcciones pendientes» | S2-H3 | Hecho: el formulario del detalle registra varias observaciones en un envío (botón «+ Otra observación»; senior del entregable, gerente o admin), cada una con su responsable. En Revisión senior las devuelve a En proceso en la misma transacción con `servicios.mover`, que crea las observaciones una sola vez (la devolución del Sprint 1 por el tablero y el detalle sigue igual). Condiciones nuevas dentro de `mover`: a Revisión senior no se pasa con observaciones Pendiente (las En corrección sí) y a Aprobado no se pasa con observaciones abiertas; el mensaje dice cuántas y de qué tipo, y el detalle lo avisa antes de intentarlo. Subestado calculado (EN_PROCESO con observaciones abiertas, `apps/entregables/subestado.py`, con EXISTS y sin una consulta por fila) como texto en tarjeta, lista, detalle y calendario, y como opción del filtro de estado (tablero, lista, calendario) que no amplía la visibilidad | `test_observaciones.py` (RegistrarTests, CondicionesDeMoverTests, SubestadoTests, DetalleTests) |
 | RF-27 Historial de observaciones filtrable | S2-H3 | Hecho: `/observaciones/`, pestaña «Observaciones» de Entregables; parte de las observaciones de `entregables_visibles` y filtra por cliente, contrato, entregable (código o título), responsable, estado y tipo de error, con chips, HTMX y páginas de 50; las opciones solo muestran lo visible y los valores no válidos se ignoran (sin error 500); cada fila lleva a la sección Observaciones del detalle | `test_observaciones.py` (HistorialDeObservacionesTests) |
-| RF-28 a RF-38 | S2-H4 a S2-H12 | Pendiente | — |
+| RF-28 Versiones: vigente visible, comentario obligatorio, restaurar y versión enviada bloqueada | S2-H4 | Hecho. Vigente = la de número más alto no eliminada (`adjuntos.vigente`): el detalle la marca «Vigente · vN» en la tabla «Adjuntos y versiones» y agrupa el resto en «Ver versiones anteriores de …». El **comentario del cambio es obligatorio en el formulario** (mensaje del servidor «Escriba el comentario del cambio…»); `adjuntos.subir()` lo sigue aceptando vacío (seed y pruebas). **Restaurar** (`POST /adjuntos/<id>/restaurar/`, con CSRF; senior del entregable, gerente o admin; el junior 403, ajenos 404) crea una versión NUEVA que copia el archivo, con `restaurado_desde` y el comentario «Restaurada desde la vN»; nunca reescribe ninguna versión; solo tipos versionables y solo una que ya no es la vigente; queda en el historial («Restauró … como vigente (nueva vN …)»). `Adjunto.bloqueado`: la versión enviada, el cargo y el acta quedan bloqueados; la vista de eliminación responde **403 con el motivo** incluso al gerente y al admin (la página 403 muestra el mensaje), el servicio también, y el panel técnico tampoco permite eliminarlas (además la base las protege con `PROTECT`). Los tipos `CARGO_RECEPCION` y `ACTA_CONFORMIDAD` no se ofrecen en el formulario de subida ni como adjuntos requeridos de la plantilla (`tipos.TIPOS_DE_SUBIDA`) y no alteran `faltantes_requeridos` ni la numeración de las versiones. Migración `entregables/0005` aditiva (campo `tipo` pasa a 20 caracteres), con reversa | `apps/entregables/test_entregas.py` (VersionVigenteTests, TiposNuevosNoSonRequeridosTests, RestaurarTests, VersionBloqueadaTests) |
+| RF-29 Entregas: cargo obligatorio, acta, alerta de acta, historial filtrable y reentregas | S2-H4 | Hecho. Modelo `Entrega` (§6.2; más `cierre` y `alerta_acta_en`, ver decisiones). `servicios.mover` exige, para pasar a Entregado, una entrega del ciclo actual (con su cargo, fecha y medio) y la consume (`cierre`), bloqueando la versión enviada: no hay otro camino. El servicio `entregas.registrar` (una transacción) valida la fecha (no futura) y el medio, crea el cargo con `validar_archivo`, la entrega (número siguiente, acta Pendiente), y llama a `mover`; todo o nada, sin archivos huérfanos. Formulario `/entregables/<id>/entregar/` («Marcar como entregado»; senior del entregable, gerente y admin: junior 403, ajenos 404). **Tablero:** soltar una tarjeta de Aprobado en Entregado no la mueve (`tablero.js` la devuelve a su columna y la vista responde con `HX-Redirect` al formulario; quien no puede entregar recibe el 403 en el tablero); el botón «Marcar como entregado» del detalle lo abre. **Acta:** `POST /entregas/<id>/acta/`, Recibida u Observada con archivo obligatorio (`validar_archivo`), cada archivo es una versión nueva bloqueada, aviso tipo Acta al junior y al senior revisor (salvo a quien la registra). **Reapertura** `HECHO → EN_PROCESO` en `TRANSICIONES`: solo senior del entregable, gerente o admin, solo si la última entrega tiene el acta Observada, exigiendo observación como una devolución (se crea dentro de `mover`; aviso al junior con el código); las versiones bloqueadas siguen bloqueadas y la siguiente entrega es la n.º 2. **Alerta de acta:** `alertas.generar_alertas_acta`, dentro de la tarea programada existente (`tarea_alertas`) y del comando `generar_alertas`: acta Pendiente más de `ACTA_DIAS_PENDIENTE` (5) días → aviso al junior y al senior revisor UNA sola vez por entrega (marca `alerta_acta_en` con UPDATE condicional). **Historial** `/entregas/` (pestaña «Entregas» de Entregables): filtros por cliente, contrato, periodo (fecha de entrega) y estado del acta sobre `entregables_visibles`; el cargo y el acta se descargan solo por `adjunto_descargar` | `test_entregas.py` (ServicioDeEntregaTests, EntregaDelCicloActualTests, FormularioDeEntregaTests, SoltarEnEntregadoTests, ActaTests, ReaperturaTests, AlertaDeActaTests, HistorialDeEntregasTests, DetalleDeEntregasTests); `test_seed.py` |
+| RF-30 a RF-38 | S2-H5 a S2-H12 | Pendiente | — |
 
 ### Base común (S2-H2)
 
@@ -114,7 +116,7 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | Enlace solo interno (sin redirecciones abiertas) | Hecho: empieza con una sola «/», sin esquema ni anfitrión, sin «://», barras invertidas, espacios ni caracteres de control. Se valida al guardar (`ValidationError`), en la base de datos (restricción `enlace_es_ruta_interna`, que cubre `bulk_create` y `update`) y otra vez al mostrarlo | `test_avisos_sin_entregable.py` (EnlaceInternoTests, ModeloTests, PantallaDeAvisosTests) |
 | «Una alerta por umbral» conserva su sentido | Hecho: la restricción no cambia y la nueva `vencimiento_con_entregable` impide un aviso de vencimiento sin entregable (con el entregable vacío la base de datos no compararía la fila) | `test_avisos_sin_entregable.py` (UnaAlertaPorUmbralTests); `apps/alertas/tests.py` y `test_aviso_24h.py` sin cambios |
 | Validación común de archivos (§5) | Hecho: `validar_archivo`, `sanear_nombre`, `extensiones_permitidas` y `tamano_maximo_bytes` pasan a `apps/entregables/archivos.py` sin cambiar su comportamiento ni sus mensajes. Como `tipos.py`, no importa modelos ni otras apps, así que la ficha (S2-H5) y el repositorio (S2-H9) pueden usarla sin importaciones circulares. Los adjuntos la usan y `adjuntos.py` sigue ofreciendo esos nombres | `apps/entregables/test_base_comun.py` (ValidarArchivoComunTests, LosAdjuntosUsanLaFuncionComunTests); `test_adjuntos.py` (ValidacionDeArchivosTests) sin cambios |
-| Ayudante de pruebas `entregar(entregable, usuario)` (§11.3) | Hecho en `apps/entregables/testing.py`: por ahora mueve de Aprobado a Entregado con `servicios.mover`; en el S2-H4 creará el cargo de recepción y usará el servicio de entrega. Las pruebas del Sprint 1 todavía no lo usan | `test_base_comun.py` (AyudanteEntregarTests) |
+| Ayudante de pruebas `entregar(entregable, usuario)` (§11.3) | Hecho en `apps/entregables/testing.py`. En el S2-H2 solo llamaba a `servicios.mover`; **desde el S2-H4 crea un cargo ficticio (y una versión final ficticia si no hay) y usa el servicio de entrega `entregas.registrar`**; lo usan las pruebas que cierran entregables | `test_base_comun.py` (AyudanteEntregarTests) |
 
 ### Casos clave (§13)
 
@@ -126,6 +128,9 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | 16 | Las columnas muestran las etiquetas de HU-04 y los códigos guardados no cambian | `test_etiquetas.py`, `test_recepcion.py` (MigracionDeRellenoTests) |
 | 17 | Observar en revisión devuelve a En proceso, muestra «Con correcciones pendientes» y avisa al junior | `test_observaciones.py` (RegistrarTests.test_caso_17_observar_en_revision_devuelve_marca_el_subestado_y_avisa_al_junior, test_una_sola_en_revision_usa_los_textos_del_sprint_1) |
 | 18 | No se resuelve una observación sin acción correctiva; no se aprueba con observaciones abiertas | `test_observaciones.py` (RevisarTests.test_caso_18_no_se_resuelve_sin_accion_correctiva, CorregirTests.test_exige_texto, CondicionesDeMoverTests) |
+| 19 | No se pasa a Entregado sin cargo; la versión enviada queda bloqueada; restaurar crea versión nueva | `test_entregas.py` (ServicioDeEntregaTests.test_no_se_pasa_a_entregado_sin_cargo_por_ningun_camino, test_registrar_hace_todo_en_una_transaccion; VersionBloqueadaTests; RestaurarTests; SoltarEnEntregadoTests) |
+| 20 | El acta pendiente más allá del plazo genera un solo aviso al junior y al senior | `test_entregas.py` (AlertaDeActaTests.test_pasado_el_plazo_avisa_al_junior_y_al_senior_una_sola_vez, test_el_plazo_es_mas_de_acta_dias_pendiente_dias, test_la_tarea_programada_diaria_y_el_comando_la_incluyen) |
+| 21b | Reabrir un entregado solo es posible con el acta observada, por senior, gerente o admin, y exige observación | `test_entregas.py` (ReaperturaTests) |
 | 29 | Regresión: pasan las pruebas del Sprint 1 y `migrate` funciona sobre una base del Sprint 1 | Suite completa; `migrate` (y su reversa) probado sobre una copia de la base del `seed_demo` del Sprint 1 y sobre una base vacía (en el S2-H1 y otra vez en el S2-H2, con `alertas/0004`: los 64 avisos de esa base quedan idénticos, y la reversa solo quita los avisos que el esquema del Sprint 1 no admite) |
 
 ### Hitos (§12)
@@ -136,7 +141,8 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | S2-H1 Cierre del Sprint 1 | Hecho; corregido y revisado en S2-H1-H2-ajustes (umbral por defecto 5,2,1,0 y datos de recepción y línea obligatorios siempre) |
 | S2-H2 Base común | Hecho, sin cambiar ninguna prueba del Sprint 1 (decisiones abajo); revisado en S2-H1-H2-ajustes |
 | S2-H3 Observaciones y revisiones | Hecho: una observación no queda resuelta sin acción correctiva; observar en revisión devuelve el entregable y avisa al junior con el código. Ninguna prueba del Sprint 1 cambió (decisiones abajo) |
-| S2-H4 a S2-H13 | Pendientes |
+| S2-H4 Versiones y entregas | Hecho: no se pasa a Entregado sin cargo; la versión enviada no se puede eliminar; restaurar crea una versión nueva; una sola alerta por acta pendiente. Pruebas del Sprint 1 ajustadas según la §11.3 y tres conteos derivados (ver «Ajustes del S2-H4») |
+| S2-H5 a S2-H13 | Pendientes |
 
 ### Ajustes a pruebas del Sprint 1 (§11.3)
 
@@ -155,6 +161,57 @@ prueba verifica y lo indica con un comentario en el código):
 | `apps/alertas/tests.py` (test_una_notificacion_por_umbral_a_lo_largo_de_los_dias) | RF-22 y §10.1: valor por defecto `5,2,1,0` | Fija con `override_settings` los umbrales `5,2,0` que verifica (sigue esperando `[0, 2, 5]`); el caso `5,2,1,0` está en `test_aviso_24h.py` |
 | `apps/entregables/tests.py` (PokaYokeTests.datos), `apps/entregables/test_interfaz.py` (NuevoEntregableTests.datos), `apps/entregables/test_reglas.py` (test_la_creacion_queda_en_el_historial_y_avisa_al_junior, CamposDeOpcionTests.crear, ContratosDadosDeBajaTests.datos) | RF-20: ID-TDR y fecha de recepción obligatorios en el formulario | Envían `id_tdr` y `fecha_recepcion` |
 | `apps/clientes/tests.py` (GestionTests.datos_contrato), `apps/entregables/test_reglas.py` (test_se_da_de_baja_desde_el_formulario_de_gestion) | RF-24: línea de servicio obligatoria en el formulario de contrato | Envían `linea_servicio` |
+
+### Ajustes del S2-H4 (pruebas existentes)
+
+Filas de la §11.3 aplicadas:
+
+| Prueba | Fila de la §11.3 | Ajuste |
+|---|---|---|
+| `apps/conocimiento/tests.py` (GeneracionTests, IndexacionTests: `setUp` y casos que cierran el entregable), `apps/entregables/test_etiquetas.py` (test_el_detalle_ofrece_los_movimientos_con_las_etiquetas_nuevas), `apps/entregables/tests.py` (FlujoTests.test_camino_feliz_registra_historial), `apps/entregables/test_reglas.py` (AdjuntosYDatosEnElFlujoCompletoTests.test_flujo_completo) | «Cargo obligatorio para HECHO (RF-29)» | Llaman a `entregar(entregable, usuario)` (`apps/entregables/testing.py`) en lugar de `servicios.mover(..., HECHO, ...)` |
+| `apps/entregables/test_adjuntos.py` (test_http_mensajes_claros_al_fallar_la_validacion) | «Comentario obligatorio al subir (formulario)» | Envía `comentario` |
+| `apps/entregables/test_seed.py` (test_los_tipos_de_adjunto_son_variados) | «Cargo obligatorio…»: «el seed crea cargo y acta para los entregables cerrados» | El conjunto esperado de tipos suma `CARGO_RECEPCION` y `ACTA_CONFORMIDAD` |
+
+**Ajustes derivados de RF-29 no previstos en la §11.3** (la prueba fija literalmente el historial del cierre, que ahora incluye el
+cargo; conservan lo que verifican, con comentario en el código):
+
+| Prueba | Ajuste |
+|---|---|
+| `apps/entregables/tests.py` (FlujoTests.test_camino_feliz_registra_historial) | Cuenta las 4 transiciones (`estado_anterior ≠ estado_nuevo`) en lugar de todas las líneas del historial: el cierre suma las líneas «Subió adjunto» de la versión final ficticia y «Registró el cargo…» |
+| `apps/entregables/test_reglas.py` (AdjuntosYDatosEnElFlujoCompletoTests.test_flujo_completo) | Las dos comprobaciones de conteo del historial se hacen antes del cierre (3 transiciones + 1 subida) y, después de `entregar`, se comprueban las 4 transiciones |
+| `apps/entregables/test_base_comun.py` (AyudanteEntregarTests, del S2-H2) | El ayudante ya no llama solo a `mover`: la prueba comprueba el cargo, la entrega, la versión bloqueada y una sola transición |
+
+Otras pruebas del Sprint 2 actualizadas: `apps/clientes/test_lineas.py` (NavegacionTests) quita `/entregas/` de las «pantallas futuras»
+porque ya existe (como se hizo con `/observaciones/` en el S2-H3). Todas las demás pruebas del Sprint 1 pasan sin cambios.
+
+### Decisiones del S2-H4 (versiones y entregas)
+
+1. **Cómo sabe `mover` que la entrega es del ciclo actual.** `Entrega.cierre` (FK nula al `HistorialEstado` del paso a Entregado):
+   una entrega sin `cierre` es la del ciclo actual; `mover(..., HECHO)` exige una, la consume (`select_for_update`, una sola vez) y
+   bloquea su versión enviada. Tras una reapertura la entrega anterior ya está cerrada, así que hace falta registrar otra (n.º + 1).
+   Es un campo adicional a los de la §6.2.
+2. **Un solo aviso de acta por entrega:** `Entrega.alerta_acta_en` (otro campo adicional), marcado con un UPDATE condicional antes de
+   crear los avisos; sirve aunque la tarea corra varias veces o a la vez.
+3. **«Más de 5 días»** es estricto: con `fecha_entrega` hace 5 días todavía no avisa; al sexto, sí (días desde la fecha de entrega,
+   no desde el registro). `ACTA_DIAS_PENDIENTE` está en `settings.py` y `.env.example`.
+4. **La versión enviada es obligatoria** (`Entrega.version_enviada` no admite nulo): por defecto la versión final vigente; si no hay
+   ninguna y no se indica otra, el servicio lo rechaza diciendo qué falta. Es la lectura más conservadora de RF-28 (siempre hay una
+   versión que bloquear). Puede indicarse cualquier adjunto del mismo entregable salvo el cargo y el acta.
+5. **El cargo y el acta nacen bloqueados** (además de la versión enviada) y las referencias de `Entrega` son `PROTECT`: eliminar
+   uno por cualquier camino fallaría con un error 500, así que `adjuntos.eliminar` y el panel técnico lo rechazan antes.
+6. **El acta solo se registra o actualiza para la última entrega y mientras el entregable está Entregado**; cada archivo es una
+   versión nueva de `ACTA_CONFORMIDAD`. Aceptar «Pendiente» no tiene sentido: el formulario solo ofrece Recibida y Observada.
+7. **Quién se entera del acta:** el junior asignado y el senior revisor, salvo quien la registra (aviso tipo Acta, con el código y
+   enlace a «Entregas y acta»).
+8. **Entregados antes del Sprint 2.** Los 7 entregados de la base del Sprint 1 no tienen `Entrega` (no se puede inventar un cargo):
+   no se pueden reabrir ni generan alerta de acta; los indicadores (S2-H8) usan el historial para ellos, como pide la §7.8.
+9. **Textos del Sprint 1 que se conservan** («Subir un adjunto», «Ver versiones anteriores de …»): los fijan pruebas del Sprint 1 que
+   la §11.3 no cubre.
+10. **Tablero:** el servidor decide (permisos) y el script solo devuelve la tarjeta a «Aprobado» y envía la petición; así quien no
+    puede entregar ve el 403 en el tablero y quien puede es llevado al formulario con `HX-Redirect`.
+11. **La reapertura no se ofrece en «Mover entregable»:** vive en «Entregas y acta» (botón «Reabrir para corrección») solo con el
+    acta observada, con su formulario de observación. El tablero la sigue intentando (arrastrar de Entregado a En proceso) y abre el
+    mismo diálogo de observación del Sprint 1.
 
 ### Decisiones del S2-H1 (compatibilidad con el Sprint 1)
 

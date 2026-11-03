@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Marcar como entregado · {{ e.codigo }}{% endblock %}
+{% block contenido %}
+<p><a href="{% url 'entregable_detalle' e.pk %}">← {{ e.codigo }} · {{ e.titulo }}</a></p>
+<h1>Marcar como entregado</h1>
+<p class="suave">El entregable está «{{ e.get_estado_display }}». Para pasarlo a «Entregado» registre la evidencia de la entrega al cliente
+  (entrega n.º {{ numero }}).</p>
+
+{% if form.non_field_errors or form.errors %}
+<div class="aviso aviso-error" role="alert">
+  <strong>No se registró la entrega:</strong>
+  <ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+    {% for campo in form %}{% for error in campo.errors %}<li>{{ error }}</li>{% endfor %}{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="tarjeta">{% csrf_token %}
+  <div class="filtros-grid">
+    <div><label for="{{ form.fecha_entrega.id_for_label }}">Fecha de entrega</label>{{ form.fecha_entrega }}
+      <p class="suave">No puede ser futura.</p></div>
+    <div><label for="{{ form.medio.id_for_label }}">Medio de entrega</label>{{ form.medio }}
+      <p class="suave">Correo · Mesa de partes · FileDoc · Presencial · Otro</p></div>
+    <div><label for="{{ form.cargo.id_for_label }}">Cargo de recepción <strong>(obligatorio)</strong></label>{{ form.cargo }}
+      <p class="suave">Formatos: {{ extensiones }} · máximo {{ tamano_max }} MB. Se guarda como adjunto «Cargo de recepción» y queda en el historial.</p></div>
+    <div><label for="{{ form.version_enviada.id_for_label }}">Versión enviada al cliente</label>{{ form.version_enviada }}
+      <p class="suave">{% if sin_version_final %}Este entregable no tiene una «Versión final»: elija la versión que se envía.{% else %}Por defecto, la versión final vigente.{% endif %}
+        Queda <strong>bloqueada</strong>: no se podrá eliminar.</p></div>
+    <div><label for="{{ form.comentario.id_for_label }}">Comentario (opcional)</label>{{ form.comentario }}</div>
+  </div>
+  <div class="acciones">
+    <button class="boton">Registrar entrega y marcar como «Entregado»</button>
+    <a class="boton sec" href="{% url 'entregable_detalle' e.pk %}">Cancelar</a>
+  </div>
+</form>
+
+<ul class="suave">
+  <li>Sin el cargo de recepción no se puede marcar como entregado.</li>
+  <li>Después de entregar, registre el acta de conformidad desde el detalle del entregable. Si sigue pendiente más de {{ acta_dias }} días, el junior y el senior reciben un aviso (una sola vez).</li>
+  <li>Si el acta queda observada, el trabajo se puede reabrir para corrección y la siguiente entrega será la n.º {{ numero|add:1 }}.</li>
+</ul>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% include "entregables/_chips.html" %}
+{% if entregas %}
+<p class="suave">{{ total }} entrega{{ total|pluralize }}.</p>
+<div class="tabla"><table>
+  <thead><tr><th>Fecha</th><th>Entregable</th><th>Cliente · contrato</th><th>N.º</th><th>Medio</th><th>Cargo</th><th>Acta</th><th>Registró</th></tr></thead>
+  <tbody>{% for en in entregas %}
+  <tr>
+    <td>{{ en.fecha_entrega|date:"d/m/Y" }}</td>
+    <td class="codigo"><a href="{% url 'entregable_detalle' en.entregable_id %}#entregas" title="{{ en.entregable.titulo }}">{{ en.entregable.codigo|default:en.entregable.titulo }}</a></td>
+    <td>{{ en.entregable.contrato.cliente }} · {{ en.entregable.contrato.numero_contrato }}</td>
+    <td>{{ en.numero }}</td>
+    <td>{{ en.get_medio_display }}</td>
+    <td><a class="boton sec chico" href="{% url 'adjunto_descargar' en.cargo_id %}">Descargar<span class="sr-only"> el cargo de {{ en.entregable.codigo }}</span></a></td>
+    <td><span class="etiqueta acta-{{ en.acta_estado|lower }}">{{ en.get_acta_estado_display }}{% if en.dias_pendiente is not None %} · {{ en.dias_pendiente }} día{{ en.dias_pendiente|pluralize }}{% endif %}</span>
+      {% if en.acta_id %}<a class="boton sec chico" href="{% url 'adjunto_descargar' en.acta_id %}">Descargar<span class="sr-only"> el acta de {{ en.entregable.codigo }}</span></a>{% endif %}</td>
+    <td>{{ en.registrada_por.nombre }}</td>
+  </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% if pagina.has_other_pages %}
+<nav class="acciones" aria-label="Páginas">
+  {% if pagina.has_previous %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span class="suave">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}<p class="tarjeta">No hay entregas para mostrar con estos filtros.</p>{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}
