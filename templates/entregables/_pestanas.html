@@ -1,0 +1,6 @@
+{# Pestañas de «Entregables» (SDD del Sprint 2, §9.2). La barra principal ya marca la sección con aria-current="page"; #}
+{# aquí la pestaña activa es el elemento actual dentro del grupo (aria-current="true"). Cada hito suma su pestaña. #}
+<nav class="pestanas" aria-label="Entregables">
+  <a href="{% url 'entregables' %}"{% if pestana == 'entregables' %} aria-current="true"{% endif %}>Entregables</a>
+  <a href="{% url 'observaciones' %}"{% if pestana == 'observaciones' %} aria-current="true"{% endif %}>Observaciones</a>
+</nav>

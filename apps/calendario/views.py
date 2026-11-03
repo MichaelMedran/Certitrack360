@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from apps.entregables import filtros, urgencia
+from apps.entregables import filtros, subestado, urgencia
 from apps.entregables.models import Entregable
 from apps.entregables.visibilidad import entregables_visibles
 
@@ -42,7 +42,10 @@ def titulo_evento(e, nivel):
     «[Estado] CÓDIGO Cliente (a cargo de Responsable): Título — Urgencia». La urgencia va al final y solo si no es normal,
     para que se lea en texto y no solo por el color.
     """
-    titulo = (f"[{e.get_estado_display()}] {e.codigo} {e.contrato.cliente.nombre} "
+    estado = e.get_estado_display()
+    if subestado.aplica(e, getattr(e, "obs_abiertas", None)):  # «Con correcciones pendientes» (RF-26), en texto
+        estado = f"{estado} · {subestado.ETIQUETA}"
+    titulo = (f"[{estado}] {e.codigo} {e.contrato.cliente.nombre} "
               f"(a cargo de {e.junior_asignado.nombre}): {e.titulo}")
     if nivel != urgencia.NORMAL:
         titulo += f" — {urgencia.ETIQUETAS[nivel]}"
@@ -65,7 +68,7 @@ def pagina(request):
 def eventos(request):
     """Eventos JSON. Parte del mismo queryset de visibilidad que el resto de vistas: los filtros solo pueden reducirlo."""
     qs = entregables_visibles(request.user).select_related("contrato__cliente", "junior_asignado")
-    qs = filtros.aplicar(qs, _filtros_de(request.GET)).queryset
+    qs = subestado.anotar(filtros.aplicar(qs, _filtros_de(request.GET)).queryset)  # subestado sin una consulta por evento
     # Rango que pide FullCalendar (fecha ISO, a veces con hora). Una fecha no válida se ignora en lugar de dar un error 500.
     inicio, fin = _fecha(request.GET.get("start")), _fecha(request.GET.get("end"))
     if inicio:

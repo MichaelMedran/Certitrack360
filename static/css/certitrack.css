@@ -113,6 +113,12 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .requeridos{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-bottom:.6rem}
 .cumple{background:#dcfce7;color:#14532d;border:1px solid #86efac}
 .falta{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
+/* Observaciones (Sprint 2, RF-25 y RF-26): el estado y el subestado van siempre en texto; el color solo lo refuerza */
+.subestado{background:#fff7ed;color:#7c2d12;border:1px solid #fdba74;font-weight:600}
+.obs-pendiente{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
+.obs-en_correccion{background:#fef9c3;color:#713f12;border:1px solid #fcd34d}
+.obs-resuelta{background:#dcfce7;color:#14532d;border:1px solid #86efac}
+.caja-gris{background:#f1f5f9;border:1px solid var(--borde);border-radius:6px;padding:.6rem .8rem;margin:.5rem 0}
 details.versiones{margin:.3rem 0 .8rem}
 details.versiones summary{cursor:pointer;font-weight:600}
 
@@ -126,7 +132,7 @@ details.versiones summary{cursor:pointer;font-weight:600}
 /* Gestión: pestañas y editor de campos */
 .pestanas{display:flex;flex-wrap:wrap;gap:.25rem;border-bottom:2px solid var(--borde);margin-bottom:1rem}
 .pestanas a{padding:.45rem 1rem;text-decoration:none;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;color:var(--texto)}
-.pestanas a[aria-current=page]{background:#fff;border-color:var(--borde);font-weight:700;margin-bottom:-2px;border-bottom:2px solid #fff}
+.pestanas a[aria-current=page],.pestanas a[aria-current=true]{background:#fff;border-color:var(--borde);font-weight:700;margin-bottom:-2px;border-bottom:2px solid #fff}
 .editor-campos td{vertical-align:middle}
 .editor-campos input,.editor-campos select{max-width:none}
 .editor-campos select{min-width:9.5rem}

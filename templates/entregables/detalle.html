@@ -8,7 +8,8 @@
     Línea: {{ e.contrato.linea_servicio.nombre|default:"sin asignar" }}</div>
   <div class="tarjeta"><div class="suave">Recepción · Plazo</div>Recepción: {{ e.fecha_recepcion|date:"d/m/Y"|default:"sin registrar" }}<br>
     Plazo: <strong>{{ e.plazo|date:"d/m/Y" }}</strong></div>
-  <div class="tarjeta"><div class="suave">Estado</div><strong>{{ e.get_estado_display }}</strong></div>
+  <div class="tarjeta"><div class="suave">Estado</div><strong>{{ e.get_estado_display }}</strong>
+    {% if con_correcciones %}<br><span class="etiqueta subestado">{{ etiqueta_subestado }}</span>{% endif %}</div>
   <div class="tarjeta"><div class="suave">Urgencia</div>
     {% if e.estado == 'HECHO' %}<strong>No aplica</strong> <span class="suave">(entregado)</span>
     {% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</div>
@@ -21,6 +22,9 @@
   {% for destino, etiqueta in siguientes %}
     {% if destino == 'VERIFICACION_SENIOR' and falta_para_verificar %}
     <div class="aviso aviso-warning" role="status">{{ falta_para_verificar }}</div>
+    {% endif %}
+    {% if destino == 'LISTO_PARA_ENTREGA' and falta_para_aprobar %}
+    <div class="aviso aviso-warning" role="status">{{ falta_para_aprobar }}</div>
     {% endif %}
     {% if e.estado == 'VERIFICACION_SENIOR' and destino == 'EN_PROCESO' %}
     <form method="post" action="{% url 'entregable_estado' e.pk %}" style="margin-bottom:1rem">{% csrf_token %}
@@ -88,27 +92,83 @@
   {% endif %}
 </div>
 
-<h2>Observaciones</h2>
+<h2 id="observaciones">Observaciones</h2>
 {% for o in observaciones %}
-<div class="tarjeta" style="margin-bottom:.6rem">
+<div class="tarjeta observacion" style="margin-bottom:.6rem">
   <span class="etiqueta">{{ o.get_tipo_error_display }}</span>
-  {% if o.resuelta %}<span class="etiqueta cumple">Resuelta</span>{% else %}<span class="etiqueta falta">Abierta</span>{% endif %}
-  <span class="suave">{{ o.autor.nombre }} · {{ o.creada_en|date:"d/m/Y H:i" }}</span>
+  <span class="etiqueta obs-{{ o.estado|lower }}">{{ o.get_estado_display }}</span>
+  <span class="suave">{{ o.autor.nombre }} · {{ o.creada_en|date:"d/m/Y H:i" }} · Responsable: {{ o.responsable.nombre|default:"—" }}</span>
   <p>{{ o.descripcion }}</p>
-  {% if o.resuelta %}<p><strong>Solución:</strong> {{ o.solucion }}</p>
-  {% elif es_senior %}
+  {% if o.solucion %}
+  <p>{% if o.estado == 'PENDIENTE' %}<strong>Corrección rechazada:</strong>{% else %}<strong>Acción correctiva:</strong>{% endif %} {{ o.solucion }}
+    {% if o.evidencia %}<strong>Evidencia:</strong> <a href="{% url 'adjunto_descargar' o.evidencia.pk %}">{{ o.evidencia.get_tipo_display }} v{{ o.evidencia.version }} ({{ o.evidencia.nombre_original }})</a>{% endif %}</p>
+  {% endif %}
+  <p class="suave">
+    {% if o.corregida_en %}Corregida por {{ o.corregida_por.nombre }} el {{ o.corregida_en|date:"d/m/Y H:i" }}.{% endif %}
+    {% if o.estado == 'RESUELTA' and o.resuelta_en %}Revisada por {{ o.revisada_por.nombre }} el {{ o.resuelta_en|date:"d/m/Y H:i" }}.{% endif %}
+  </p>
+
+  {% if o.puede_corregir %}
+  <form method="post" action="{% url 'observacion_corregir' o.pk %}" class="caja-gris">{% csrf_token %}
+    <h3 style="margin-top:0">Registrar acción correctiva <span class="suave">(responsable o senior)</span></h3>
+    <div class="filtros-grid">
+      <div><label for="ac-{{ o.pk }}">Qué se corrigió</label><textarea id="ac-{{ o.pk }}" name="accion_correctiva" rows="2" required></textarea></div>
+      <div><label for="ev-{{ o.pk }}">Evidencia (opcional)</label>
+        <select id="ev-{{ o.pk }}" name="evidencia"><option value="">— Sin evidencia —</option>
+          {% for a in evidencias %}<option value="{{ a.pk }}">{{ a.get_tipo_display }} v{{ a.version }} · {{ a.nombre_original }}</option>{% endfor %}</select></div>
+    </div>
+    <button class="boton">Enviar corrección</button>
+  </form>
+  {% endif %}
+
+  {% if o.puede_revisar %}
+  <form method="post" action="{% url 'observacion_revisar' o.pk %}">{% csrf_token %}
+    <label for="mo-{{ o.pk }}">Motivo del rechazo (opcional)</label><textarea id="mo-{{ o.pk }}" name="motivo" rows="2"></textarea>
+    <div class="acciones">
+      <button class="boton" name="decision" value="confirmar">Confirmar corrección (resuelta)</button>
+      <button class="boton sec" name="decision" value="rechazar">Rechazar y volver a pendiente</button>
+    </div>
+  </form>
+  {% endif %}
+
+  {% if o.puede_resolver %}
+  <details><summary>Resolver directamente con la solución</summary>
   <form method="post" action="{% url 'observacion_resolver' o.pk %}">{% csrf_token %}
     <label for="sol-{{ o.pk }}">Solución aplicada</label><textarea id="sol-{{ o.pk }}" name="solucion" rows="2"></textarea><br><button class="boton sec">Marcar como resuelta</button>
-  </form>{% endif %}
+  </form>
+  </details>
+  {% endif %}
 </div>
 {% empty %}<p class="suave">Sin observaciones.</p>{% endfor %}
 
 {% if es_senior %}
 <form method="post" action="{% url 'observacion_nueva' e.pk %}" class="tarjeta">{% csrf_token %}
-  <h2 style="margin-top:0">Registrar observación</h2>
-  <p><label for="{{ form_obs.tipo_error.id_for_label }}">Tipo de error</label>{{ form_obs.tipo_error }}</p>
-  <p><label for="{{ form_obs.descripcion.id_for_label }}">Descripción</label>{{ form_obs.descripcion }}</p>
-  <button class="boton">Registrar</button>
+  <h2 style="margin-top:0">Registrar observaciones <span class="suave">(senior, gerente y admin)</span></h2>
+  {% if e.estado == 'VERIFICACION_SENIOR' %}<p class="suave">El entregable está en «Revisión senior»: al registrar, vuelve a «En proceso» con «{{ etiqueta_subestado }}».</p>{% endif %}
+  <div id="filas-observacion">
+    <div class="filtros-grid fila-observacion">
+      <div><label for="{{ form_obs.tipo_error.id_for_label }}">Tipo de error</label>{{ form_obs.tipo_error }}</div>
+      <div><label for="{{ form_obs.descripcion.id_for_label }}">Descripción</label>{{ form_obs.descripcion }}</div>
+      <div><label for="ob_responsable">Responsable</label>
+        <select name="responsable" id="ob_responsable">
+          {% for u in responsables_obs %}<option value="{{ u.pk }}"{% if u.pk == e.junior_asignado_id %} selected{% endif %}>{{ u.nombre }} ({{ u.get_rol_display }})</option>{% endfor %}</select></div>
+    </div>
+  </div>
+  <template id="plantilla-observacion">
+    <div class="filtros-grid fila-observacion">
+      <div><label for="ob__n___tipo_error">Tipo de error</label>
+        <select name="tipo_error" id="ob__n___tipo_error"><option value="">— Elija el tipo de error —</option>
+          {% for valor, etiqueta in form_obs.fields.tipo_error.choices %}{% if valor %}<option value="{{ valor }}">{{ etiqueta }}</option>{% endif %}{% endfor %}</select></div>
+      <div><label for="ob__n___descripcion">Descripción</label><textarea name="descripcion" rows="3" id="ob__n___descripcion"></textarea></div>
+      <div><label for="ob__n___responsable">Responsable</label>
+        <select name="responsable" id="ob__n___responsable">
+          {% for u in responsables_obs %}<option value="{{ u.pk }}"{% if u.pk == e.junior_asignado_id %} selected{% endif %}>{{ u.nombre }} ({{ u.get_rol_display }})</option>{% endfor %}</select></div>
+    </div>
+  </template>
+  <div class="acciones">
+    <button type="button" class="boton sec" data-agregar-fila="plantilla-observacion" data-destino="filas-observacion">+ Otra observación</button>
+    <button class="boton">Registrar y avisar al junior</button>
+  </div>
 </form>
 {% endif %}
 

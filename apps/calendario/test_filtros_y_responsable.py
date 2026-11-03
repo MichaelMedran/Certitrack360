@@ -36,8 +36,10 @@ class EventoConResponsableTests(CalendarioBase):
     def test_cada_evento_dice_estado_codigo_cliente_responsable_entregable_y_urgencia(self):
         por_id = {ev["id"]: ev for ev in self.eventos(self.gerente)}
         self.a.refresh_from_db()
+        # «a» está En proceso con observaciones abiertas: su estado lleva el subestado en texto (S2-H3, RF-26).
         self.assertEqual(por_id[self.a.pk]["title"],
-                         f"[{E.EN_PROCESO.label}] {self.a.codigo} Cliente Demo (a cargo de j1): a-vencido — Vencido")
+                         f"[{E.EN_PROCESO.label} · Con correcciones pendientes] {self.a.codigo} Cliente Demo "
+                         "(a cargo de j1): a-vencido — Vencido")
         self.e2.refresh_from_db()
         self.assertEqual(por_id[self.e2.pk]["title"], f"[{E.A_REALIZAR.label}] {self.e2.codigo} Cliente Demo (a cargo de j2): E2")
 

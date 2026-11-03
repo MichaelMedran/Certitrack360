@@ -95,10 +95,13 @@ cambian donde lo autoriza la §11.3 (ver «Ajustes a pruebas del Sprint 1»).
 |---|---|---|---|
 | RF-20 Código único `CT-AAAA-NNNNN`, ID-TDR, línea de servicio y fecha de recepción | S2-H1 | Hecho: el código se asigna al crear, en la misma transacción, por cualquier camino (formulario, panel técnico, `seed_demo` y, más adelante, la ficha), con prefijo `CODIGO_PREFIJO` y año local de Lima; los existentes se rellenan en la migración `entregables/0003` (con reversa). ID-TDR y fecha de recepción son obligatorios siempre en «Nuevo entregable», también si la petición no trae las claves (no futura, no posterior al plazo; el mensaje nombra cada dato; la base de datos los sigue admitiendo vacíos para los anteriores) y la línea se toma del contrato, de solo lectura. Se ve en tarjeta, lista (columnas Código e ID-TDR), detalle, calendario y avisos | `apps/entregables/test_recepcion.py` (CodigoTests, NuevoEntregableConRecepcionTests, DetalleYListaConRecepcionTests, MigracionDeRellenoTests, SeedConRecepcionTests) |
 | RF-21 Calendario con responsable y filtros por cliente, estado y responsable | S2-H1 | Hecho: cada evento dice estado, código, cliente, responsable (junior asignado), entregable y urgencia; panel «Filtros» que se aplica sin recargar y conserva el mes; los filtros parten de `entregables_visibles` y nunca amplían; ids fuera de rango y fechas del rango mal escritas se ignoran (sin error 500); sin consultas por evento | `apps/calendario/test_filtros_y_responsable.py` (incluye DatosLimiteTests) |
-| RF-22 Alertas a 48 y 24 h y aviso con código | S2-H1 / S2-H3 | Parte del S2-H1 hecha: valor por defecto `5,2,1,0` (`settings.py` y `.env.example`); el aviso de 24 h sale una sola vez (restricción «una alerta por umbral»); «Crítico» = segundo umbral mayor (sigue en 2 días); los avisos llevan el código. Solo queda, en el S2-H3, el aviso inmediato al quedar «Con correcciones pendientes» | `apps/alertas/test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests, ConfiguracionDeUmbralesTests, ValorPorDefectoTests) |
+| RF-22 Alertas a 48 y 24 h y aviso con código | S2-H1 / S2-H3 | Hecho. S2-H1: valor por defecto `5,2,1,0` (`settings.py` y `.env.example`); el aviso de 24 h sale una sola vez (restricción «una alerta por umbral»); «Crítico» = segundo umbral mayor (sigue en 2 días); los avisos llevan el código. S2-H3: aviso inmediato al junior asignado (tipo Observación, con el código y enlace a la sección Observaciones) al registrar observaciones, en la misma transacción; si el entregable estaba en revisión, el aviso es el de la devolución | `apps/alertas/test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests, ConfiguracionDeUmbralesTests, ValorPorDefectoTests); `apps/entregables/test_observaciones.py` (RegistrarTests, CondicionesDeMoverTests) |
 | RF-23 Columnas del Kanban según HU-04 | S2-H1 | Hecho: Por hacer, En proceso, Revisión senior, Aprobado, Entregado; los códigos guardados no cambian | `apps/entregables/test_etiquetas.py` |
 | RF-24 Catálogo de líneas de servicio | S2-H1 | Hecho: las cinco líneas se crean en la migración `clientes/0005` (con reversa); pestaña «Líneas de servicio» de Gestión (`/lineas-servicio/`, gerente y admin; junior y senior: 403) para crear, renombrar y activar o desactivar, sin borrado (baja lógica y `PROTECT`); un id de edición mal escrito o inexistente es 404; obligatoria siempre en el formulario de contrato (también si la petición no trae el campo; la base de datos la admite vacía); filtro por línea en tablero y lista | `apps/clientes/test_lineas.py` |
-| RF-25 a RF-38 | S2-H3 a S2-H12 | Pendiente | — |
+| RF-25 Observaciones con estados, responsable, acción correctiva, fecha de atención y evidencia | S2-H3 | Hecho: `Observacion` suma `estado` (Pendiente, En corrección, Resuelta), `responsable` (por defecto el junior asignado), `corregida_por`/`corregida_en` (fecha de atención), `revisada_por`/`resuelta_en` y `evidencia` (versión de un adjunto del mismo entregable); la acción correctiva es el campo `solucion` existente (propiedad `accion_correctiva`, sin columna duplicada). `resuelta` se conserva y se sincroniza en `save()` (Resuelta ⇔ `resuelta=True`), así lecciones, filtros y consolidado no cambian. Máquina de estados en `apps/entregables/observaciones.py`: corregir (responsable o senior del entregable; exige texto; avisa al senior revisor, tipo Corrección), confirmar o rechazar (senior del entregable, gerente o admin; el rechazo vuelve a Pendiente y avisa al responsable) y resolver directo del Sprint 1 (`/observaciones/<id>/resolver/`, ahora también registra quién y cuándo). Resuelta exige acción correctiva. Cada paso queda en el historial. Migración `entregables/0004` aditiva, con relleno y reversa. Rutas POST `/observaciones/<id>/corregir/` y `/observaciones/<id>/revisar/`, con CSRF (también desde HTMX, que recibe `HX-Redirect`) | `apps/entregables/test_observaciones.py` (ModeloTests, MigracionTests, CorregirTests, RevisarTests, HtmxYCsrfTests, DetalleTests) |
+| RF-26 Sección «Observaciones»: varias a la vez, devolución y subestado «Con correcciones pendientes» | S2-H3 | Hecho: el formulario del detalle registra varias observaciones en un envío (botón «+ Otra observación»; senior del entregable, gerente o admin), cada una con su responsable. En Revisión senior las devuelve a En proceso en la misma transacción con `servicios.mover`, que crea las observaciones una sola vez (la devolución del Sprint 1 por el tablero y el detalle sigue igual). Condiciones nuevas dentro de `mover`: a Revisión senior no se pasa con observaciones Pendiente (las En corrección sí) y a Aprobado no se pasa con observaciones abiertas; el mensaje dice cuántas y de qué tipo, y el detalle lo avisa antes de intentarlo. Subestado calculado (EN_PROCESO con observaciones abiertas, `apps/entregables/subestado.py`, con EXISTS y sin una consulta por fila) como texto en tarjeta, lista, detalle y calendario, y como opción del filtro de estado (tablero, lista, calendario) que no amplía la visibilidad | `test_observaciones.py` (RegistrarTests, CondicionesDeMoverTests, SubestadoTests, DetalleTests) |
+| RF-27 Historial de observaciones filtrable | S2-H3 | Hecho: `/observaciones/`, pestaña «Observaciones» de Entregables; parte de las observaciones de `entregables_visibles` y filtra por cliente, contrato, entregable (código o título), responsable, estado y tipo de error, con chips, HTMX y páginas de 50; las opciones solo muestran lo visible y los valores no válidos se ignoran (sin error 500); cada fila lleva a la sección Observaciones del detalle | `test_observaciones.py` (HistorialDeObservacionesTests) |
+| RF-28 a RF-38 | S2-H4 a S2-H12 | Pendiente | — |
 
 ### Base común (S2-H2)
 
@@ -121,6 +124,8 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | 14 | El calendario filtra por cliente y estado sin ampliar la visibilidad y muestra al responsable | `test_filtros_y_responsable.py` (FiltrosDeEventosTests, EventoConResponsableTests, PaginaConFiltrosTests) |
 | 15 | Con 5,2,1,0 el aviso de 24 h sale una sola vez y «Crítico» sigue empezando a 2 días | `test_aviso_24h.py` (AvisoDe24HorasTests, SegundoUmbralMayorTests y, con el valor por defecto de `settings.py`, ConfiguracionDeUmbralesTests y ValorPorDefectoTests) |
 | 16 | Las columnas muestran las etiquetas de HU-04 y los códigos guardados no cambian | `test_etiquetas.py`, `test_recepcion.py` (MigracionDeRellenoTests) |
+| 17 | Observar en revisión devuelve a En proceso, muestra «Con correcciones pendientes» y avisa al junior | `test_observaciones.py` (RegistrarTests.test_caso_17_observar_en_revision_devuelve_marca_el_subestado_y_avisa_al_junior, test_una_sola_en_revision_usa_los_textos_del_sprint_1) |
+| 18 | No se resuelve una observación sin acción correctiva; no se aprueba con observaciones abiertas | `test_observaciones.py` (RevisarTests.test_caso_18_no_se_resuelve_sin_accion_correctiva, CorregirTests.test_exige_texto, CondicionesDeMoverTests) |
 | 29 | Regresión: pasan las pruebas del Sprint 1 y `migrate` funciona sobre una base del Sprint 1 | Suite completa; `migrate` (y su reversa) probado sobre una copia de la base del `seed_demo` del Sprint 1 y sobre una base vacía (en el S2-H1 y otra vez en el S2-H2, con `alertas/0004`: los 64 avisos de esa base quedan idénticos, y la reversa solo quita los avisos que el esquema del Sprint 1 no admite) |
 
 ### Hitos (§12)
@@ -130,7 +135,8 @@ las notificaciones sin entregable se muestran y enlazan bien, y ninguna prueba d
 | S2-H0 Wireframes y decisiones | Hecho: wireframes y decisiones aprobados el 2026-11-02 |
 | S2-H1 Cierre del Sprint 1 | Hecho; corregido y revisado en S2-H1-H2-ajustes (umbral por defecto 5,2,1,0 y datos de recepción y línea obligatorios siempre) |
 | S2-H2 Base común | Hecho, sin cambiar ninguna prueba del Sprint 1 (decisiones abajo); revisado en S2-H1-H2-ajustes |
-| S2-H3 a S2-H13 | Pendientes |
+| S2-H3 Observaciones y revisiones | Hecho: una observación no queda resuelta sin acción correctiva; observar en revisión devuelve el entregable y avisa al junior con el código. Ninguna prueba del Sprint 1 cambió (decisiones abajo) |
+| S2-H4 a S2-H13 | Pendientes |
 
 ### Ajustes a pruebas del Sprint 1 (§11.3)
 
@@ -197,6 +203,35 @@ prueba verifica y lo indica con un comentario en el código):
    calendario y avisos (cada persona solo ve y marca los suyos, 404 si no); filtros que parten de `entregables_visibles`; validación
    de `Notificacion.enlace`; CSRF; migraciones `clientes/0005`, `entregables/0003` y `alertas/0004` (con relleno y reversa, probadas
    otra vez sobre una copia de la base del Sprint 1 y una vacía); fechas locales de Lima en el código y la recepción.
+
+### Decisiones del S2-H3 (observaciones y revisiones)
+
+1. **Sin ajustes a pruebas del Sprint 1.** La fila «Sin observaciones pendientes para pasar a revisión o aprobar» de la §11.3 no
+   tuvo pruebas afectadas: ninguna prueba del Sprint 1 devuelve y vuelve a enviar sin resolver. Las pruebas nuevas del rechazo
+   están en `CondicionesDeMoverTests`. Se actualizaron dos pruebas del propio Sprint 2 (S2-H1): el título esperado de un evento
+   del calendario en proceso con observaciones abiertas (ahora lleva el subestado) y la lista de «pantallas futuras», de la que
+   sale `/observaciones/` porque ya existe.
+2. **Una sola puerta y sin duplicados.** `servicios.mover` acepta, además de `tipo_error` y `descripcion` (Sprint 1), una lista
+   `observaciones`; al devolver, valida y crea las observaciones dentro de su transacción. El servicio de registro, si el
+   entregable está en revisión, se las pasa a `mover` en lugar de crearlas él. Textos del Sprint 1 intactos para una sola
+   observación; con varias, «Devuelto con N observaciones (tipos)» y «… fue devuelto con N observaciones.».
+3. **Sincronía `estado` ⇔ `resuelta`.** En `save()` gana el campo que cambió desde la lectura (así el código del Sprint 1 que
+   marca `resuelta` sigue funcionando); las consultas de «abiertas» leen `resuelta=False` y las de «pendientes» además
+   `estado=PENDIENTE`, para que un `update()` directo de `resuelta` (como hacen pruebas del Sprint 1) no deje datos incoherentes.
+4. **Responsable posible:** el junior asignado (por defecto), el senior revisor o el senior responsable del contrato, es decir,
+   quien ya ve el entregable (los responsables de apoyo llegarán con el S2-H6). El junior asignado que no es el responsable de
+   una observación ve el entregable pero no registra su corrección (403).
+5. **Corrección rechazada.** Vuelve a Pendiente conservando el texto, el autor y la fecha de la corrección rechazada (se muestra
+   como «Corrección rechazada»); el motivo, opcional, queda en el historial. Los avisos de rechazo usan el tipo Observación.
+6. **`/observaciones/<id>/resolver/` (Sprint 1)** sigue igual para las pendientes (y acepta también una En corrección); ahora
+   registra quién la resolvió y cuándo, deja constancia en el historial y rechaza resolver otra vez una observación ya resuelta
+   (antes sobrescribía la solución). Redirige a la sección Observaciones del detalle (`#observaciones`).
+7. **Pestañas de Entregables con `aria-current="true"`.** La barra principal conserva el único `aria-current="page"` de la
+   sección (lo exige una prueba del Sprint 1); la pestaña activa es el elemento actual de su grupo.
+8. **Respuesta a HTMX con `HX-Redirect`** a `#observaciones`: registrar, corregir o revisar pueden cambiar el estado, el subestado
+   y lo que falta para avanzar, que están en otras partes del detalle.
+9. **Sin consultas por fila.** El tablero y la lista calculan el subestado con el conteo de abiertas que ya traían; el calendario
+   y el filtro usan EXISTS.
 
 ## Pendiente para cerrar el SDD
 

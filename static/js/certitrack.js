@@ -60,4 +60,24 @@
       salida.textContent = (opcion && opcion.dataset[salida.dataset.dato]) || "—";
     });
   });
+
+  // Filas repetibles (p. ej., «+ Otra observación»): <button data-agregar-fila="id de un <template>" data-destino="id">.
+  // Cada copia recibe identificadores propios (el marcador __n__ se reemplaza) para que cada etiqueta apunte a su campo.
+  let filasAgregadas = 0;
+  document.addEventListener("click", function (evento) {
+    const boton = evento.target.closest ? evento.target.closest("[data-agregar-fila]") : null;
+    if (!boton) return;
+    const plantilla = document.getElementById(boton.dataset.agregarFila);
+    const destino = document.getElementById(boton.dataset.destino);
+    if (!plantilla || !destino) return;
+    filasAgregadas += 1;
+    const copia = plantilla.content.cloneNode(true);
+    copia.querySelectorAll("[id], label[for]").forEach(function (elemento) {
+      if (elemento.id) elemento.id = elemento.id.replace("__n__", String(filasAgregadas));
+      if (elemento.htmlFor) elemento.htmlFor = elemento.htmlFor.replace("__n__", String(filasAgregadas));
+    });
+    destino.appendChild(copia);
+    const primero = destino.lastElementChild && destino.lastElementChild.querySelector("select, textarea, input");
+    if (primero) primero.focus();
+  });
 })();

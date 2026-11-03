@@ -316,7 +316,8 @@ class NavegacionTests(Base):
             self.client.force_login(usuario)
             for nombre in ("inicio", "tablero", "calendario", "entregables"):
                 html = self.client.get(reverse(nombre)).content.decode()
-                for ruta in ("/repositorio/", "/indicadores/", "/buscar/", "/fichas/", "/personal/", "/observaciones/",
+                # /observaciones/ ya existe (S2-H3): es la pestaña «Observaciones» de Entregables.
+                for ruta in ("/repositorio/", "/indicadores/", "/buscar/", "/fichas/", "/personal/",
                              "/entregas/", "/tiempos/", "/incorporacion/", "/procedimientos/"):
                     self.assertNotIn(f'href="{ruta}', html, f"{usuario.username} {nombre} {ruta}")
 

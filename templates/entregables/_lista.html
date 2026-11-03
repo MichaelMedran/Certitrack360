@@ -9,7 +9,7 @@
     <td>{% if e.id_tdr %}{{ e.id_tdr }}{% else %}<span aria-hidden="true">—</span><span class="sr-only">Sin ID-TDR</span>{% endif %}</td>
     <td>{{ e.plazo|date:"d/m/Y" }}</td>
     <td>{% if e.estado == 'HECHO' %}<span aria-hidden="true">—</span><span class="sr-only">No aplica</span>{% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</td>
-    <td>{{ e.get_estado_display }}</td><td>{{ e.junior_asignado.nombre }}</td>
+    <td>{{ e.get_estado_display }}{% if e.con_correcciones %} · <span class="etiqueta subestado">Con correcciones pendientes</span>{% endif %}</td><td>{{ e.junior_asignado.nombre }}</td>
   </tr>
   {% endfor %}</tbody>
 </table></div>

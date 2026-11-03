@@ -107,7 +107,32 @@ class Entregable(models.Model):
         return [(c["etiqueta"], self.datos.get(c["nombre"], "")) for c in self.plantilla.campos_requeridos]
 
 
+class ObservacionQuerySet(models.QuerySet):
+    def abiertas(self):
+        """PENDIENTE o EN_CORRECCION. Se lee de `resuelta`, que se mantiene sincronizado con `estado` (ver save())."""
+        return self.filter(resuelta=False)
+
+    def pendientes(self):
+        """Solo PENDIENTE: todavía sin acción correctiva (impiden pasar a Revisión senior)."""
+        return self.filter(resuelta=False, estado=Observacion.Estado.PENDIENTE)
+
+
 class Observacion(models.Model):
+    """Observación de la revisión (SDD del Sprint 2, RF-25 y §7.2).
+
+    Estados: PENDIENTE → EN_CORRECCION (se registró la acción correctiva) → RESUELTA (el senior la confirmó), con rechazo
+    EN_CORRECCION → PENDIENTE y resolución directa PENDIENTE → RESUELTA (Sprint 1). Las transiciones viven en
+    `apps/entregables/observaciones.py`. La acción correctiva es el campo `solucion` del Sprint 1 (no se duplica).
+    `resuelta` se conserva para lecciones, filtros y consolidado y se sincroniza en save(): RESUELTA ⇔ resuelta=True.
+    """
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        EN_CORRECCION = "EN_CORRECCION", "En corrección"
+        RESUELTA = "RESUELTA", "Resuelta"
+
+    ABIERTOS = (Estado.PENDIENTE, Estado.EN_CORRECCION)
+
     entregable = models.ForeignKey(Entregable, on_delete=models.CASCADE, related_name="observaciones")
     autor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     tipo_error = models.CharField("tipo de error", max_length=20, choices=TipoError.choices)
@@ -115,6 +140,26 @@ class Observacion(models.Model):
     solucion = models.TextField("solución", blank=True)
     resuelta = models.BooleanField(default=False)
     creada_en = models.DateTimeField(auto_now_add=True)
+    # Sprint 2 (RF-25). Todos opcionales en la base de datos: los existentes se rellenan en la migración 0004.
+    estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.PENDIENTE)
+    responsable = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="observaciones_a_cargo",
+        help_text="Quien registra la acción correctiva. Por defecto, el junior asignado al entregable.",
+    )
+    corregida_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+",
+    )
+    corregida_en = models.DateTimeField(null=True, blank=True)
+    revisada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+",
+    )
+    resuelta_en = models.DateTimeField(null=True, blank=True)
+    evidencia = models.ForeignKey(
+        "Adjunto", on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+        help_text="Versión de un adjunto del mismo entregable.",
+    )
+
+    objects = ObservacionQuerySet.as_manager()
 
     class Meta:
         ordering = ["-creada_en"]
@@ -122,6 +167,52 @@ class Observacion(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_error_display()} · {self.entregable}"
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instancia = super().from_db(db, field_names, values)
+        instancia._sincronia = (instancia.__dict__.get("estado"), instancia.__dict__.get("resuelta"))
+        return instancia
+
+    @property
+    def accion_correctiva(self):
+        """La acción correctiva de HU-12 es la «solución» del Sprint 1."""
+        return self.solucion
+
+    @property
+    def abierta(self):
+        return self.estado in self.ABIERTOS
+
+    def _sincronizar(self):
+        """RESUELTA ⇔ resuelta=True. Gana el campo que cambió: así el código del Sprint 1 que marca `resuelta=True` (o la
+        vuelve a False) sigue funcionando, y el del Sprint 2, que cambia `estado`, mantiene `resuelta` al día."""
+        estado_antes, resuelta_antes = getattr(self, "_sincronia", (None, None))
+        if self._state.adding or estado_antes is None:
+            resuelto = self.estado == self.Estado.RESUELTA or bool(self.resuelta)
+        elif self.estado != estado_antes:
+            resuelto = self.estado == self.Estado.RESUELTA
+        elif bool(self.resuelta) != bool(resuelta_antes):
+            resuelto = bool(self.resuelta)
+        else:
+            resuelto = self.estado == self.Estado.RESUELTA
+        self.resuelta = resuelto
+        if resuelto:
+            self.estado = self.Estado.RESUELTA
+        elif self.estado == self.Estado.RESUELTA:
+            self.estado = self.Estado.PENDIENTE
+
+    def save(self, *args, **kwargs):
+        self._sincronizar()
+        if self.responsable_id is None and self.entregable_id is not None:
+            self.responsable_id = self.entregable.junior_asignado_id
+        campos = kwargs.get("update_fields")
+        if campos is not None:
+            campos = set(campos)
+            if campos & {"estado", "resuelta"}:
+                campos |= {"estado", "resuelta"}
+            kwargs["update_fields"] = campos
+        super().save(*args, **kwargs)
+        self._sincronia = (self.estado, self.resuelta)
 
 
 class HistorialEstado(models.Model):

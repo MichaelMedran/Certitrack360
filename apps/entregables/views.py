@@ -7,16 +7,19 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count
-from django.http import FileResponse, Http404
+from django.core.paginator import Paginator
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.alertas.models import Notificacion
 from apps.clientes.models import PlantillaTDR
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import adjuntos, filtros, servicios
+from . import adjuntos, filtros, servicios, subestado
+from . import filtros_observaciones
+from . import observaciones as obs_servicio
 from .forms import AdjuntoForm, EntregableForm, ObservacionForm, contratos_para
 from .htmx import con_vary, es_htmx, pide_parcial
 from .models import Adjunto, Entregable, Observacion, TipoError
@@ -49,6 +52,8 @@ def _enriquecer(entregables):
         e.n_adjuntos = adjuntos_por.get(e.pk, 0)
         e.n_obs_abiertas = len(abiertas[e.pk])
         e.tipos_obs_abiertas = [etiquetas[t] for t in TipoError.values if t in abiertas[e.pk]]
+        # «Con correcciones pendientes» (RF-26): En proceso con observaciones abiertas, sin consultas adicionales.
+        e.con_correcciones = subestado.aplica(e, e.n_obs_abiertas > 0)
     return entregables
 
 
@@ -201,9 +206,32 @@ def _contexto_detalle(usuario, e):
     ]
     puede_subir = adjuntos.puede_subir(usuario, e)
 
+    # Observaciones con sus estados (RF-25): cada una sabe si el usuario puede registrar su corrección o revisarla.
+    observaciones = list(e.observaciones.select_related(
+        "autor", "responsable", "corregida_por", "revisada_por", "evidencia"
+    ))
+    for o in observaciones:
+        o.puede_corregir = o.estado == Observacion.Estado.PENDIENTE and obs_servicio.puede_corregir(usuario, o, e)
+        o.puede_revisar = o.estado == Observacion.Estado.EN_CORRECCION and es_senior
+        o.puede_resolver = o.estado == Observacion.Estado.PENDIENTE and es_senior
+    abiertas = [o for o in observaciones if o.abierta]
+
+    # Qué falta para pasar a Revisión senior (datos, adjuntos y observaciones pendientes) o a Aprobado, antes de intentarlo.
+    falta_para_verificar = None
+    if e.estado == E.EN_PROCESO:
+        motivos = [servicios.requisitos_para_verificacion(e),
+                   servicios.observaciones_que_impiden(e, E.VERIFICACION_SENIOR)]
+        falta_para_verificar = " ".join(m for m in motivos if m) or None
+    falta_para_aprobar = (
+        servicios.observaciones_que_impiden(e, E.LISTO_PARA_ENTREGA) if e.estado == E.VERIFICACION_SENIOR else None
+    )
+
     return {
         "e": e, "es_senior": es_senior, "siguientes": siguientes,
-        "observaciones": e.observaciones.select_related("autor"),
+        "observaciones": observaciones,
+        "con_correcciones": subestado.aplica(e, bool(abiertas)), "etiqueta_subestado": subestado.ETIQUETA,
+        "responsables_obs": servicios.responsables_posibles(e) if es_senior else [],
+        "evidencias": obs_servicio.evidencias_posibles(e) if any(o.puede_corregir for o in observaciones) else [],
         "historial": e.historial.select_related("usuario"),
         # Dos formularios iguales en la misma página: identificadores distintos para que cada etiqueta apunte al suyo.
         "form_obs": ObservacionForm(auto_id="ob_%s"), "form_devolver": ObservacionForm(auto_id="dv_%s"),
@@ -213,8 +241,7 @@ def _contexto_detalle(usuario, e):
         "estados_de_subida": " o ".join(f"«{E(estado).label}»" for estado in adjuntos.ESTADOS_INICIALES),
         "form_adjunto": AdjuntoForm(),
         "extensiones": ", ".join(adjuntos.extensiones_permitidas()), "tamano_max": f"{settings.MEDIA_MAX_UPLOAD_MB:g}",
-        # Qué falta para pasar a verificación (datos y adjuntos), a la vista antes de intentarlo.
-        "falta_para_verificar": servicios.requisitos_para_verificacion(e) if e.estado == E.EN_PROCESO else None,
+        "falta_para_verificar": falta_para_verificar, "falta_para_aprobar": falta_para_aprobar,
     }
 
 
@@ -271,41 +298,152 @@ def adjunto_eliminar(request, adjunto_id):
 
 # ------------------------------------------------------------------ observaciones
 
+def _volver_al_detalle(request, e):
+    """Después de una acción sobre observaciones se vuelve a la sección Observaciones del detalle, con el mensaje.
+
+    Desde HTMX se responde con HX-Redirect (htmx carga el detalle completo): la acción puede cambiar el estado, el
+    subestado y lo que falta para avanzar, que están en otras partes de la página.
+    """
+    destino = reverse("entregable_detalle", args=[e.pk]) + "#observaciones"
+    if es_htmx(request):
+        respuesta = HttpResponse("")
+        respuesta["HX-Redirect"] = destino
+        return respuesta
+    return redirect(destino)
+
+
+def _observacion_visible(usuario, obs_id):
+    """La observación solo existe para quien puede ver su entregable (si no, 404). Devuelve (observación, entregable)."""
+    obs = get_object_or_404(obs_servicio.visibles(usuario), pk=obs_id)
+    e = _base(usuario).get(pk=obs.entregable_id)
+    obs.entregable = e  # mismo objeto, ya con su contrato y responsables
+    return obs, e
+
+
+def _filas_de_observaciones(request, e):
+    """Las filas del formulario «Registrar observaciones»: parámetros repetidos tipo_error / descripcion / responsable.
+
+    Una fila sin tipo ni descripción se ignora (filas vacías que agregó el botón «+ Otra observación»). Un responsable
+    que no es una de las personas permitidas se rechaza en el servicio; uno que no es un id válido, aquí.
+    """
+    tipos, descripciones = request.POST.getlist("tipo_error"), request.POST.getlist("descripcion")
+    responsables = request.POST.getlist("responsable")
+    permitidos = {u.pk: u for u in servicios.responsables_posibles(e)}
+    filas = []
+    for i in range(max(len(tipos), len(descripciones))):
+        tipo = tipos[i] if i < len(tipos) else ""
+        descripcion = descripciones[i] if i < len(descripciones) else ""
+        valor = responsables[i] if i < len(responsables) else ""
+        if not tipo and not descripcion.strip():
+            continue
+        responsable = None
+        if valor:
+            rid = filtros.entero(valor)
+            responsable = permitidos.get(rid) if rid is not None else None
+            if responsable is None:
+                raise ValidationError("El responsable debe ser el junior asignado o un senior del entregable.")
+        filas.append({"tipo_error": tipo, "descripcion": descripcion, "responsable": responsable})
+    return filas
+
+
 @login_required
 @require_POST
 def registrar_observacion(request, pk):
+    """Registra una o varias observaciones (RF-26). Si el entregable está en Revisión senior, vuelve a En proceso."""
     e = get_object_or_404(_base(request.user), pk=pk)
-    if not es_senior_del_entregable(request.user, e):
+    if not obs_servicio.puede_registrar(request.user, e):
         raise PermissionDenied
-    form = ObservacionForm(request.POST)
-    if form.is_valid():
-        Observacion.objects.create(
-            entregable=e, autor=request.user, tipo_error=form.cleaned_data["tipo_error"],
-            descripcion=form.cleaned_data["descripcion"],
-        )
-        Notificacion.objects.create(
-            usuario=e.junior_asignado, entregable=e, tipo=Notificacion.Tipo.OBSERVACION,
-            mensaje=servicios.texto_observacion(e),
-        )
-        messages.success(request, "Observación registrada.")
+    try:
+        filas = _filas_de_observaciones(request, e)
+        if not filas:
+            raise ValidationError("Complete el tipo de error y la descripción de la observación.")
+        creadas, devuelto = obs_servicio.registrar(e, request.user, filas)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
     else:
-        messages.error(request, "Complete el tipo de error y la descripción de la observación.")
-    return redirect("entregable_detalle", pk=e.pk)
+        n = len(creadas)
+        texto = "Observación registrada." if n == 1 else f"Se registraron {n} observaciones."
+        if devuelto:
+            texto += (f" El entregable volvió a «{E.EN_PROCESO.label}» con «{subestado.ETIQUETA}» y se avisó al junior.")
+        else:
+            texto += " Se avisó al junior."
+        messages.success(request, texto)
+    return _volver_al_detalle(request, e)
+
+
+@login_required
+@require_POST
+def corregir_observacion(request, obs_id):
+    """Registra la acción correctiva (PENDIENTE → EN_CORRECCION) y avisa al senior revisor."""
+    obs, e = _observacion_visible(request.user, obs_id)
+    if not obs_servicio.puede_corregir(request.user, obs, e):
+        raise PermissionDenied
+    try:
+        obs_servicio.corregir(obs, request.user, request.POST.get("accion_correctiva", ""),
+                              request.POST.get("evidencia") or None)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+    else:
+        messages.success(request, f"Se registró la corrección: la observación quedó «{obs.get_estado_display()}» "
+                                  "y se avisó al senior revisor.")
+    return _volver_al_detalle(request, e)
+
+
+@login_required
+@require_POST
+def revisar_observacion(request, obs_id):
+    """Confirma (RESUELTA) o rechaza (vuelve a PENDIENTE y avisa al responsable) la corrección registrada."""
+    obs, e = _observacion_visible(request.user, obs_id)
+    if not obs_servicio.puede_revisar(request.user, e):
+        raise PermissionDenied
+    decision = request.POST.get("decision")
+    try:
+        if decision == "confirmar":
+            obs_servicio.confirmar(obs, request.user)
+            mensaje = "Corrección confirmada: la observación quedó «Resuelta»."
+        elif decision == "rechazar":
+            obs_servicio.rechazar(obs, request.user, request.POST.get("motivo", ""))
+            mensaje = "Corrección rechazada: la observación volvió a «Pendiente» y se avisó al responsable."
+        else:
+            raise ValidationError("Elija si confirma o rechaza la corrección.")
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+    else:
+        messages.success(request, mensaje)
+    return _volver_al_detalle(request, e)
 
 
 @login_required
 @require_POST
 def resolver_observacion(request, obs_id):
-    # La observación solo existe para quien puede ver su entregable (si no, 404).
-    obs = get_object_or_404(Observacion.objects.filter(entregable__in=entregables_visibles(request.user)), pk=obs_id)
-    e = _base(request.user).get(pk=obs.entregable_id)
-    if not es_senior_del_entregable(request.user, e):
+    """Ruta del Sprint 1: el senior resuelve directamente con la solución (la acción correctiva)."""
+    obs, e = _observacion_visible(request.user, obs_id)
+    if not obs_servicio.puede_revisar(request.user, e):
         raise PermissionDenied
-    solucion = request.POST.get("solucion", "").strip()
-    if not solucion:
-        messages.error(request, "Escriba la solución aplicada para marcar la observación como resuelta.")
+    try:
+        obs_servicio.resolver(obs, request.user, request.POST.get("solucion", ""))
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
     else:
-        obs.solucion, obs.resuelta = solucion, True
-        obs.save(update_fields=["solucion", "resuelta"])
         messages.success(request, "Observación resuelta.")
-    return redirect("entregable_detalle", pk=e.pk)
+    return _volver_al_detalle(request, e)
+
+
+# ------------------------------------------------------------------ historial de observaciones (RF-27)
+
+@login_required
+def historial_observaciones(request):
+    """Pestaña «Observaciones» de Entregables: historial filtrable sobre los entregables visibles."""
+    resultado = filtros_observaciones.aplicar(obs_servicio.visibles(request.user), request.GET)
+    paginador = Paginator(resultado.queryset, 50)
+    pagina = paginador.get_page(request.GET.get("pagina"))
+    resto = request.GET.copy()
+    resto.pop("pagina", None)
+    opciones = filtros_observaciones.opciones(request.user)
+    contexto = {
+        "pagina": pagina, "observaciones": pagina.object_list, "total": paginador.count,
+        "opciones": opciones, "filtros_activos": resultado.activos, "n_filtros": len(resultado.activos),
+        "chips": filtros_observaciones.chips(request.GET, resultado.activos, opciones),
+        "consulta_sin_pagina": resto.urlencode(), "pestana": "observaciones",
+    }
+    return _respuesta(request, "entregables/observaciones.html", "entregables/_observaciones_lista.html", contexto)

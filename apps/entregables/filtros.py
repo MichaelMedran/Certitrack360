@@ -12,6 +12,7 @@ from django.utils import timezone
 from apps.clientes.models import Cliente, Contrato, LineaServicio
 from apps.cuentas.models import Usuario
 
+from . import subestado
 from . import urgencia as urg
 from .models import Entregable, Observacion, TipoError
 from .visibilidad import entregables_visibles
@@ -62,6 +63,9 @@ def aplicar(qs, params, hoy=None):
     estado = params.get("estado")
     if estado in Entregable.Estado.values:
         qs = qs.filter(estado=estado)
+        activos["estado"] = estado
+    elif estado == subestado.VALOR:  # «Con correcciones pendientes» (RF-26): En proceso con observaciones abiertas
+        qs = qs.filter(subestado.condicion())
         activos["estado"] = estado
 
     linea = entero(params.get("linea"))  # línea de servicio del contrato (SDD del Sprint 2, RF-24)
@@ -129,7 +133,7 @@ def opciones(usuario):
         "responsables": Usuario.objects.filter(
             Q(entregables_asignados__in=visibles) | Q(entregables_a_revisar__in=visibles)
         ).distinct().order_by("first_name", "last_name", "username"),
-        "estados": Entregable.Estado.choices,
+        "estados": subestado.estados_con_subestado(),
         "lineas": LineaServicio.objects.filter(contratos__entregables__in=visibles).distinct(),
         "urgencias": urg.CHOICES,
         "tipos_observacion": TipoError.choices,

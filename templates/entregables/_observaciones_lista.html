@@ -1,0 +1,27 @@
+{% include "entregables/_chips.html" %}
+{% if observaciones %}
+<p class="suave">{{ total }} observaci{{ total|pluralize:"ón,ones" }}.</p>
+<div class="tabla"><table>
+  <thead><tr><th>Fecha</th><th>Entregable</th><th>Cliente · contrato</th><th>Tipo</th><th>Descripción</th><th>Responsable</th><th>Estado</th><th>Atendida</th></tr></thead>
+  <tbody>{% for o in observaciones %}
+  <tr>
+    <td>{{ o.creada_en|date:"d/m/Y" }}</td>
+    <td class="codigo"><a href="{% url 'entregable_detalle' o.entregable_id %}#observaciones" title="{{ o.entregable.titulo }}">{{ o.entregable.codigo|default:o.entregable.titulo }}</a></td>
+    <td>{{ o.entregable.contrato.cliente }} · {{ o.entregable.contrato.numero_contrato }}</td>
+    <td>{{ o.get_tipo_error_display }}</td>
+    <td>{{ o.descripcion|truncatechars:80 }}</td>
+    <td>{{ o.responsable.nombre|default:"—" }}</td>
+    <td><span class="etiqueta obs-{{ o.estado|lower }}">{{ o.get_estado_display }}</span></td>
+    <td>{% if o.corregida_en %}{{ o.corregida_en|date:"d/m/Y" }}{% elif o.resuelta_en %}{{ o.resuelta_en|date:"d/m/Y" }}{% else %}<span aria-hidden="true">—</span><span class="sr-only">Sin atender</span>{% endif %}</td>
+  </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% if pagina.has_other_pages %}
+<nav class="acciones" aria-label="Páginas">
+  {% if pagina.has_previous %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span class="suave">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}<p class="tarjeta">No hay observaciones para mostrar con estos filtros.</p>{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}
