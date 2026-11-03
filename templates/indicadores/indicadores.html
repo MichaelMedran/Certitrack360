@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block titulo %}Indicadores{% endblock %}
+{% block contenido %}
+<h1>Indicadores de desempeño</h1>
+<p class="suave">{{ nota_alcance }}</p>
+
+<details class="filtros" open>
+  <summary>Filtros {% if n_filtros %}<span class="chip">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}</summary>
+  <form method="get" action="{% url 'indicadores' %}">
+    <div class="filtros-grid">
+      <div>
+        <label for="f-desde">Desde</label>
+        <input id="f-desde" type="date" name="desde" value="{{ filtros_activos.desde|date:'Y-m-d' }}">
+      </div>
+      <div>
+        <label for="f-hasta">Hasta</label>
+        <input id="f-hasta" type="date" name="hasta" value="{{ filtros_activos.hasta|date:'Y-m-d' }}">
+      </div>
+      <div>
+        <label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente">
+          <option value="">Todos</option>
+          {% for c in opciones.clientes %}
+          <option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-plantilla">Tipo de entregable</label>
+        <select id="f-plantilla" name="plantilla">
+          <option value="">Todos</option>
+          {% for p in opciones.plantillas %}
+          <option value="{{ p.pk }}"{% if filtros_activos.plantilla == p.pk %} selected{% endif %}>{{ p.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-responsable">Responsable</label>
+        <select id="f-responsable" name="responsable">
+          <option value="">Todos</option>
+          {% for u in opciones.responsables %}
+          <option value="{{ u.pk }}"{% if filtros_activos.responsable == u.pk %} selected{% endif %}>{{ u.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="acciones">
+      <button class="boton" type="submit">Aplicar</button>
+      <a class="boton sec" href="{% url 'indicadores' %}">Limpiar</a>
+    </div>
+  </form>
+</details>
+
+{% if chips %}
+<div class="chips" aria-label="Filtros activos">
+  {% for c in chips %}
+  <span class="chip">{{ c.texto }} <a href="{{ c.quitar }}" aria-label="Quitar {{ c.texto }}">×</a></span>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="contadores">
+  <div class="contador">
+    Entregados a tiempo
+    <b>{% if a_tiempo_pct is not None %}{{ a_tiempo_pct }} %{% else %}—{% endif %}</b>
+    <span>{{ a_tiempo_num }} de {{ entregados_total }}</span>
+    <details>
+      <summary>¿Cómo se calcula?</summary>
+      <p class="suave">{{ formula_a_tiempo }}</p>
+    </details>
+  </div>
+  <div class="contador">
+    Con reproceso
+    <b>{% if reproceso_pct is not None %}{{ reproceso_pct }} %{% else %}—{% endif %}</b>
+    <span>{{ reproceso_num }} de {{ revisados_total }}</span>
+    <details>
+      <summary>¿Cómo se calcula?</summary>
+      <p class="suave">{{ formula_reproceso }}</p>
+    </details>
+  </div>
+  <div class="contador">
+    Tiempo promedio de elaboración
+    <b>{% if dias_promedio is not None %}{{ dias_promedio_texto }} días{% else %}—{% endif %}</b>
+    <span>{% if horas_promedio is not None %}{{ horas_promedio_texto }} h registradas{% else %}— h registradas{% endif %}</span>
+    <details>
+      <summary>¿Cómo se calcula?</summary>
+      <p class="suave">{{ formula_tiempo }}</p>
+    </details>
+  </div>
+  <div class="contador">
+    Observaciones
+    <b>{{ observaciones_total }}</b>
+    <span>en el periodo</span>
+    <details>
+      <summary>¿Cómo se calcula?</summary>
+      <p class="suave">{{ formula_observaciones }}</p>
+    </details>
+  </div>
+</div>
+
+<h2>Tiempo promedio por tipo de entregable</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Tipo de entregable (plantilla)</th>
+        <th class="num">Entregados</th>
+        <th class="num">Días promedio</th>
+        <th class="num">Horas registradas promedio</th>
+        <th class="num">% a tiempo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in por_plantilla %}
+      <tr>
+        <td>{{ fila.nombre }}</td>
+        <td class="num">{{ fila.entregados }}</td>
+        <td class="num">{{ fila.dias_promedio_texto }}</td>
+        <td class="num">{{ fila.horas_promedio_texto }}</td>
+        <td class="num">{% if fila.a_tiempo_pct is not None %}{{ fila.a_tiempo_pct }} %{% else %}—{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">No hay entregables en el periodo seleccionado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Observaciones por tipo de error</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:25%">Tipo</th>
+        <th class="num" style="width:10%">Cantidad</th>
+        <th>Proporción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in por_tipo_error %}
+      <tr>
+        <td>{{ fila.etiqueta }}</td>
+        <td class="num">{{ fila.cantidad }}</td>
+        <td><div class="barra-carga" aria-hidden="true"><i style="width:{{ fila.porcentaje }}%"></i></div></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">Sin observaciones en el periodo seleccionado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if mostrar_por_responsable %}
+<h2>Por responsable</h2>
+<div class="tabla">
+  <table>
+    <thead>
+      <tr>
+        <th>Responsable</th>
+        <th class="num">Entregados</th>
+        <th class="num">% a tiempo</th>
+        <th class="num">% con reproceso</th>
+        <th class="num">Observaciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in por_responsable %}
+      <tr>
+        <td>{{ fila.nombre }}</td>
+        <td class="num">{{ fila.entregados }}</td>
+        <td class="num">{% if fila.a_tiempo_pct is not None %}{{ fila.a_tiempo_pct }} %{% else %}—{% endif %}</td>
+        <td class="num">{% if fila.reproceso_pct is not None %}{{ fila.reproceso_pct }} %{% else %}—{% endif %}</td>
+        <td class="num">{{ fila.observaciones }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">Sin datos de responsables en el periodo seleccionado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

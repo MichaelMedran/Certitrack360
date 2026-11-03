@@ -19,6 +19,7 @@
     <a href="{% url 'tablero' %}"{% if seccion == 'tablero' %} aria-current="page"{% endif %}>Tablero</a>
     <a href="{% url 'calendario' %}"{% if seccion == 'calendario' %} aria-current="page"{% endif %}>Calendario</a>
     <a href="{% url 'entregables' %}"{% if seccion == 'entregables' %} aria-current="page"{% endif %}>Entregables</a>
+    <a href="{% url 'indicadores' %}"{% if seccion == 'indicadores' %} aria-current="page"{% endif %}>Indicadores</a>
     <a href="{% url 'asistente' %}"{% if seccion == 'asistente' %} aria-current="page"{% endif %}>Asistente</a>
     {% if user.es_gerente_o_admin %}
     <a href="{% url 'consolidado' %}"{% if seccion == 'consolidado' %} aria-current="page"{% endif %}>Consolidado</a>

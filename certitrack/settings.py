@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "apps.conocimiento",
     "apps.reportes",
     "apps.levantamiento",
+    "apps.indicadores",
 ]
 
 MIDDLEWARE = [
