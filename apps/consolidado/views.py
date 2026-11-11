@@ -1,10 +1,12 @@
 from django.shortcuts import render
 
 from apps.cuentas.permisos import solo_gestion
+from apps.clientes.models import Cliente
 from apps.entregables import filtros
 from apps.entregables.models import Entregable
 
-from .servicios import datos_consolidado
+from .graficos import armar_graficos
+from .servicios import datos_consolidado, datos_graficos
 
 
 @solo_gestion  # sin sesión: al ingreso; junior y senior: 403. Además el servicio vuelve a comprobarlo.
@@ -19,7 +21,10 @@ def consolidado(request):
         for p in personas:
             p["porcentaje"] = round(100 * p["activos"] / tope)
 
+    graficos = datos_graficos(request.user, request.GET)  # RF-49: SVG dibujado aquí, sin JavaScript
+
     return render(request, "consolidado/consolidado.html", {
         **datos, "opciones": filtros.opciones(request.user), "estados": Entregable.Estado.choices,
+        "sectores": Cliente.Sector.choices, "graficos": armar_graficos(graficos), "texto_filtro": graficos["texto_filtro"],
         "etiqueta_cerrado": Entregable.Estado.HECHO.label,
     })

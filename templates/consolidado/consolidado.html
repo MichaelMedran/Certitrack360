@@ -12,6 +12,9 @@
       <div><label for="f-cliente">Cliente</label>
         <select id="f-cliente" name="cliente"><option value="">Todos</option>
           {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-sector">Sector del cliente</label>
+        <select id="f-sector" name="sector"><option value="">Todos</option>
+          {% for valor, etiqueta in sectores %}<option value="{{ valor }}"{% if filtros.sector == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
       <div><label for="f-contrato">Contrato</label>
         <select id="f-contrato" name="contrato"><option value="">Todos</option>
           {% for c in opciones.contratos %}<option value="{{ c.pk }}"{% if filtros.contrato == c.pk %} selected{% endif %}>{{ c.numero_contrato }} · {{ c.cliente }}</option>{% endfor %}</select></div>
@@ -87,6 +90,28 @@
     <div class="carga"><span class="nombre">{{ p.usuario.nombre }}</span>
       <div class="barra-carga" aria-hidden="true"><i style="width:{{ p.porcentaje }}%"></i></div><b>{{ p.activos }}</b></div>
     {% empty %}<p class="suave">No hay seniors.</p>{% endfor %}</div>
+</div>
+
+<h2 id="graficos">Gráficos gerenciales</h2>
+<p class="suave">Se calculan al abrir la página con lo registrado en la plataforma, en este servidor y sin enviar datos a otros sitios.
+  Respetan los filtros de cliente, sector, contrato y plazo (el filtro de estado no cambia los gráficos).</p>
+<div class="graficos">
+  {% for g in graficos %}
+  <section class="grafico tarjeta" aria-labelledby="{{ g.id }}-t">
+    <h3 id="{{ g.id }}-t">{{ g.titulo }}</h3>
+    <p class="suave">{{ g.pregunta }}</p>
+    <p class="filtro-aplicado"><strong>{{ texto_filtro }}</strong></p>
+    {% if g.svg %}{{ g.svg }}
+    <details class="datos-grafico"><summary>Ver tabla de datos</summary>
+      <div class="tabla"><table>
+        <caption class="sr-only">{{ g.titulo }}. {{ texto_filtro }}</caption>
+        <thead><tr>{% for c in g.columnas %}<th scope="col"{% if not forloop.first %} class="num"{% endif %}>{{ c }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for fila in g.filas %}<tr>{% for v in fila %}<td{% if not forloop.first %} class="num"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table></div>
+    </details>
+    {% else %}<p class="sin-datos">{{ g.vacio }}</p>{% endif %}
+  </section>
+  {% endfor %}
 </div>
 
 <p class="suave" style="margin-top:1.5rem">Pantalla de solo lectura. La exportación y los reportes avanzados llegan en la fase 3.</p>
