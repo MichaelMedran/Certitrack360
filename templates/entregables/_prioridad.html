@@ -1,0 +1,2 @@
+{# Insignia de prioridad (RF-42): siempre con texto; el color solo la refuerza. Un entregable Entregado no tiene prioridad. #}
+{% if e.prioridad %}<span class="prioridad prioridad-{{ e.prioridad|lower }}">Prioridad: {{ e.prioridad_etiqueta }}</span>{% else %}<span class="prioridad prioridad-ninguna">Sin prioridad (entregado)</span>{% endif %}

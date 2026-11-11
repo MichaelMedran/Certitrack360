@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from apps.alertas.models import Notificacion
-from apps.entregables import urgencia
+from apps.entregables import prioridad, urgencia
 from apps.entregables.models import Entregable
 from apps.entregables.visibilidad import entregables_visibles
 from apps.equipo.servicios import incorporacion_activa_de
@@ -45,7 +45,8 @@ def inicio(request):
         "dias_proximo": dias_proximo,
         "en_verificacion": qs.filter(estado=Entregable.Estado.VERIFICACION_SENIOR).count(),
         "etiqueta_revision": Entregable.Estado.VERIFICACION_SENIOR.label,
-        "proximos": activos.order_by("plazo")[:6],
+        # Pendientes por prioridad (RF-42): vencidos y urgentes primero.
+        "proximos": prioridad.enriquecer(prioridad.ordenar(activos)[:6]),
         "recientes": Notificacion.objects.filter(usuario=request.user).select_related("entregable")[:5],
         "mi_incorporacion": incorporacion_activa_de(request.user),
     }

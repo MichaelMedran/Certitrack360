@@ -6,4 +6,6 @@ class EntregablesConfig(AppConfig):
     name = 'apps.entregables'
 
     def ready(self):
-        from . import signals  # noqa: F401  (registra la limpieza de archivos de adjuntos)
+        from . import extensiones, prioridad, signals  # noqa: F401  (signals: limpieza de archivos de adjuntos)
+
+        extensiones.registrar_tarjeta(prioridad.enriquecer_tarjetas)  # insignia de prioridad (RF-42)

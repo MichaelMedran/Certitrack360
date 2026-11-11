@@ -13,6 +13,8 @@
   <div class="tarjeta"><div class="suave">Urgencia</div>
     {% if e.estado == 'HECHO' %}<strong>No aplica</strong> <span class="suave">(entregado)</span>
     {% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</div>
+  <div class="tarjeta"><div class="suave">Prioridad</div>{% include "entregables/_prioridad.html" %}
+    {% if e.alerta_urgente %}<br><span class="suave">Por alerta urgente abierta</span>{% endif %}</div>
   <div class="tarjeta"><div class="suave">Responsables</div>Junior: {{ e.junior_asignado.nombre }}<br>Senior: {{ e.senior_revisor.nombre }}</div>
 </div>
 

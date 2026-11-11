@@ -12,6 +12,9 @@
       <div><label for="f-responsable">Responsable</label>
         <select id="f-responsable" name="responsable"><option value="">Todos</option>
           {% for u in opciones.responsables %}<option value="{{ u.pk }}"{% if filtros_activos.responsable == u.pk %} selected{% endif %}>{{ u.nombre }} ({{ u.get_rol_display }})</option>{% endfor %}</select></div>
+      <div><label for="f-prioridad">Prioridad</label>
+        <select id="f-prioridad" name="prioridad"><option value="">Todas</option>
+          {% for valor, etiqueta in opciones.prioridades %}<option value="{{ valor }}"{% if filtros_activos.prioridad == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
       <div><label for="f-urgencia">Urgencia</label>
         <select id="f-urgencia" name="urgencia"><option value="">Todas</option>
           {% for valor, etiqueta in opciones.urgencias %}<option value="{{ valor }}"{% if filtros_activos.urgencia == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>

@@ -28,10 +28,10 @@
 <h2>Próximos plazos</h2>
 {% if proximos %}
 <div class="tabla"><table>
-  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Estado</th></tr></thead>
+  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Prioridad</th><th>Estado</th></tr></thead>
   <tbody>{% for e in proximos %}
   <tr><td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
-  <td>{{ e.plazo|date:"d/m/Y" }}</td><td>{{ e.get_estado_display }}</td></tr>
+  <td>{{ e.plazo|date:"d/m/Y" }}</td><td>{% include "entregables/_prioridad.html" %}</td><td>{{ e.get_estado_display }}</td></tr>
   {% endfor %}</tbody>
 </table></div>
 {% else %}<p class="tarjeta">No tiene entregables pendientes.</p>{% endif %}
