@@ -1,1 +1,25 @@
-/* Estilos del Sprint 3 (s3-gerencia). */
+/* Estilos del Sprint 3 (s3-gerencia): gráficos gerenciales (RF-49) y reportes de avance (RF-50). */
+
+/* Gráficos del consolidado: SVG dibujado en el servidor. */
+.graficos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:1rem;margin-bottom:1rem}
+.grafico h3{margin:0 0 .25rem}
+.grafico .filtro-aplicado{margin:.25rem 0 .5rem;font-size:.9rem}
+.grafico-svg{display:block;width:100%;height:auto;max-height:420px}
+.datos-grafico{margin-top:.5rem}
+.datos-grafico summary{cursor:pointer;color:var(--primario)}
+.sin-datos{padding:.75rem;background:#f3f4f6;border-radius:6px;margin:0}
+
+/* Reportes de avance. */
+.reporte-meta{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-bottom:1rem}
+.reporte-config .filtros-grid{margin-bottom:.5rem}
+.reporte-pantalla table td.num,.reporte-pantalla table th.num{text-align:right}
+.reporte-pantalla .total-fila{font-weight:700;background:#f3f4f6}
+
+@media print{
+  .barra,.pestanas,.saltar,.no-imprimir,.aviso,#franja-urgente,.franja-urgente{display:none !important}
+  body{background:#fff}
+  .contenedor{max-width:none;padding:0;margin:0}
+  .reporte-pantalla .tabla{overflow:visible}
+  .reporte-pantalla table{font-size:10pt}
+  .reporte-pantalla a{color:inherit;text-decoration:none}
+}
