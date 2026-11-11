@@ -1,0 +1,15 @@
+<h2 id="extraer-datos">Extraer datos de un documento</h2>
+<div class="tarjeta">
+  <p class="suave">Lee un adjunto (PDF o imagen) y propone los datos de «{{ e.plantilla.nombre }}». Usted revisa la propuesta antes de aplicarla: nada se guarda hasta confirmar.</p>
+  {% if s.adjuntos %}
+  <form method="post" action="{% url 'extraccion_nueva' %}">{% csrf_token %}
+    <input type="hidden" name="entregable" value="{{ e.pk }}">
+    <label for="extr-adjunto">Adjunto</label>
+    <select id="extr-adjunto" name="adjunto">{% for a in s.adjuntos %}<option value="{{ a.pk }}">{{ a.get_tipo_display }} v{{ a.version }} · {{ a.nombre_original }}</option>{% endfor %}</select>
+    <div class="acciones"><button class="boton sec">Extraer datos</button></div>
+  </form>
+  {% else %}
+  <p class="suave">Suba primero un PDF o una imagen como adjunto para poder extraer sus datos.</p>
+  {% endif %}
+  {% with motores=s.motores %}{% include "extraccion/_motores.html" %}{% endwith %}
+</div>

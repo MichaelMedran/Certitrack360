@@ -19,6 +19,7 @@ from apps.cuentas.models import Usuario
 from apps.cuentas.permisos import solo_senior_o_superior
 from apps.etiquetas import servicios as etiquetas_srv
 from apps.etiquetas.models import Etiqueta
+from apps.extraccion import servicios as extraccion_srv
 
 from . import adjuntos, entregas, extensiones, filtros, personal, prioridad, servicios, subestado, tiempos
 from . import filtros_entregas, filtros_observaciones, filtros_tiempos
@@ -187,6 +188,8 @@ def crear(request):
     if pid is not None:
         plantilla = plantillas.filter(pk=pid).first()
 
+    # «Prellenar desde un documento» (RF-48): la extracción ya confirmada da los valores iniciales y su archivo se adjunta como TDR.
+    extraccion = extraccion_srv.pendiente_para_crear(usuario, request.POST.get("extraccion") or request.GET.get("extraccion"))
     form = None
     if plantilla:
         if request.method == "POST":
@@ -195,15 +198,17 @@ def crear(request):
                 with transaction.atomic():  # el entregable (con su código), su historial y el aviso, o nada
                     entregable = form.guardar(usuario)
                     servicios.registrar_creacion(entregable, usuario)
+                    extraccion_srv.adjuntar_al_crear(extraccion, entregable, usuario)
                 messages.success(request, f"El entregable {entregable.codigo} se creó y se asignó al junior.")
                 return redirect("entregable_detalle", pk=entregable.pk)
         else:
-            form = EntregableForm(usuario, plantilla)
+            form = EntregableForm(usuario, plantilla, initial=extraccion_srv.valores_iniciales(extraccion) if extraccion else None)
     elif request.method == "POST":
         messages.error(request, "Primero elija una plantilla de TDR.")
     return render(request, "entregables/crear.html", {
         "plantillas": plantillas, "plantilla": plantilla, "form": form,
         "hay_contratos": contratos_para(usuario).exists(),
+        "extraccion": extraccion, "ocr_max_paginas": settings.OCR_MAX_PAGINAS, "motores": extraccion_srv.estado_de_motores(),
         "puede_crear_etiquetas": etiquetas_srv.puede_crear(usuario), "colores_etiqueta": Etiqueta.Color.choices,
         # Ejemplo del formato del código que se asignará al guardar (p. ej. CT-2026-00031).
         "ejemplo_codigo": f"{settings.CODIGO_PREFIJO}-{timezone.localdate().year}-00031",

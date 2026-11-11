@@ -1,0 +1,9 @@
+/* Extracción de datos (RF-48): vista previa editable. Lo dudoso se distingue por color Y por texto, nunca solo por color. */
+.extr-tabla td{vertical-align:top}
+.extr-tabla input,.extr-tabla select,.extr-tabla textarea{max-width:none}
+.extr-dudoso{background:#fffbeb}
+.extr-dudoso td:first-child{border-left:4px solid #d97706}
+.extr-dudoso .extr-origen{font-weight:700;color:#78350f}
+.extr-error{color:#7f1d1d;font-weight:600;margin:.2rem 0 0}
+.extr-prellenar{margin-bottom:1rem}
+.extr-prellenar .acciones{margin-top:.6rem}
