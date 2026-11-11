@@ -1,0 +1,52 @@
+{# Sección «Factura» del detalle (SDD del Sprint 3, §7.7). Recibe `s` (verificacion.seccion) y `e`. #}
+<h2 id="factura">Factura</h2>
+<div class="tarjeta">
+  {% if s.vigente %}
+    {% if s.vigente.correcta %}
+    <div class="aviso aviso-success" role="status">Factura {{ s.vigente.numero }}: <strong>{{ s.vigente.get_resultado_display }}</strong>. {{ s.mensaje }}</div>
+    {% elif s.vigente.justificada %}
+    <div class="aviso aviso-warning" role="status">Factura {{ s.vigente.numero }}: <strong>{{ s.vigente.get_resultado_display }}</strong>, justificada por
+      {{ s.vigente.justificada_por.nombre }} el {{ s.vigente.justificada_en|date:"d/m/Y H:i" }}. El entregable puede aprobarse.</div>
+    {% else %}
+    <div class="aviso aviso-warning" role="status">Resultado: <strong>{{ s.vigente.resultado }}</strong> — {{ s.mensaje }}
+      El entregable no pasa a «Aprobado» hasta verificar un número correcto o hasta que un senior justifique.</div>
+    {% endif %}
+  {% else %}
+  <p class="suave">Sin número de factura verificado: el entregable no exige nada. Si lo ingresa, debe quedar correcto para aprobar.</p>
+  {% endif %}
+
+  {% if s.puede %}
+  <form method="post" action="{% url 'entregable_factura' e.pk %}">{% csrf_token %}
+    <input type="hidden" name="accion" value="verificar">
+    <label for="factura-numero">Número de factura o correlativo</label>
+    <input id="factura-numero" name="numero" maxlength="50" required placeholder="F001-00123" value="{{ s.vigente.numero|default:'' }}">
+    <button class="boton">Verificar</button>
+    <span class="suave">Solo lectura contra la facturación.</span>
+  </form>
+  {% endif %}
+
+  {% if s.puede_justificar %}
+  <form method="post" action="{% url 'entregable_factura' e.pk %}">{% csrf_token %}
+    <input type="hidden" name="accion" value="justificar">
+    <label for="factura-justificacion">Justificación del senior (obligatoria)</label>
+    <textarea id="factura-justificacion" name="justificacion" rows="2" required></textarea>
+    <button class="boton">Justificar</button>
+    <span class="suave">Solo senior del entregable, gerente o admin.</span>
+  </form>
+  {% endif %}
+
+  {% if s.verificaciones %}
+  <h3>Verificaciones</h3>
+  <table class="tabla">
+    <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Número</th><th>Resultado</th><th>Justificación</th></tr></thead>
+    <tbody>
+    {% for v in s.verificaciones %}
+    <tr><td>{{ v.fecha|date:"d/m/Y H:i" }}</td><td>{{ v.usuario.nombre }}</td><td>{{ v.numero }}</td>
+      <td><span class="etiqueta {% if v.correcta %}cumple{% else %}falta{% endif %}">{{ v.get_resultado_display }}</span></td>
+      <td>{% if v.justificada %}{{ v.justificacion }} <span class="suave">({{ v.justificada_por.nombre }}, {{ v.justificada_en|date:"d/m/Y H:i" }})</span>{% else %}—{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="suave">El número vigente es el de la última verificación.</p>
+  {% endif %}
+</div>
