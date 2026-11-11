@@ -1,1 +1,4 @@
 /* Estilos del Sprint 3 (s3-documentos). */
+
+/* Exportar (RF-47): los botones desactivados se distinguen por el atributo y por el aviso con el texto de lo que falta. */
+.exportar button.boton[disabled]{opacity:.55;cursor:not-allowed}
