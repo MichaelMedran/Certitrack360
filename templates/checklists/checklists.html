@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Checklists por TDR{% endblock %}
+{% block contenido %}
+<h1>Entregables</h1>
+{% include "entregables/_pestanas.html" %}
+<h2 style="margin-top:0">Checklists por TDR</h2>
+
+<details class="filtros"{% if n_filtros %} open{% endif %}>
+  <summary>Filtros <span class="chip" id="resumen-filtros">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span></summary>
+  <form method="get" action="{{ request.path }}" data-filtros
+        hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
+    <div class="filtros-grid">
+      <div><label for="f-cliente">Cliente</label>
+        <select id="f-cliente" name="cliente"><option value="">Todos</option>
+          {% for c in opciones.clientes %}<option value="{{ c.pk }}"{% if filtros_activos.cliente == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+      <div><label for="f-contrato">Contrato</label>
+        <select id="f-contrato" name="contrato"><option value="">Todos</option>
+          {% for c in opciones.contratos %}<option value="{{ c.pk }}"{% if filtros_activos.contrato == c.pk %} selected{% endif %}>{{ c.numero_contrato }} · {{ c.cliente }}</option>{% endfor %}</select></div>
+      <div><label for="f-tdr">ID-TDR</label>
+        <input id="f-tdr" name="id_tdr" type="search" maxlength="50" value="{{ filtros_activos.id_tdr|default:'' }}"></div>
+    </div>
+    <div class="acciones">
+      <button class="boton">Aplicar</button>
+      <a class="boton sec" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true">Limpiar</a>
+    </div>
+  </form>
+  <p class="suave">Solo se muestran los checklists de los entregables que usted puede ver.</p>
+</details>
+
+<div id="resultados" aria-live="polite">
+  {% include "checklists/_checklists_lista.html" %}
+</div>
+{% endblock %}

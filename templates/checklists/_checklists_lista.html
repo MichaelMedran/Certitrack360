@@ -1,0 +1,25 @@
+{% include "entregables/_chips.html" %}
+{% if filas %}
+<p class="suave">{{ total }} entregable{{ total|pluralize }} con checklist.</p>
+<div class="tabla"><table>
+  <thead><tr><th>Entregable</th><th>Cliente · contrato</th><th>ID-TDR</th><th>Estado</th><th class="num">Cumplimiento</th><th class="num">Obligatorios pendientes</th></tr></thead>
+  <tbody>{% for e in filas %}
+  <tr>
+    <td class="codigo"><a href="{% url 'entregable_detalle' e.pk %}#checklist-tdr" title="{{ e.titulo }}">{{ e.codigo|default:e.titulo }}</a><br><span class="suave">{{ e.titulo }}</span></td>
+    <td>{{ e.contrato.cliente }} · {{ e.contrato.numero_contrato }}</td>
+    <td>{{ e.id_tdr|default:"—" }}</td>
+    <td>{{ e.get_estado_display }}</td>
+    <td class="num">{{ e.porcentaje }} % <span class="suave">({{ e.n_cumplidos }} de {{ e.n_items }})</span></td>
+    <td class="num">{% if e.n_obligatorios_pendientes %}<span class="etiqueta falta">{{ e.n_obligatorios_pendientes }} pendiente{{ e.n_obligatorios_pendientes|pluralize }}</span>{% else %}<span class="etiqueta cumple">Ninguno</span>{% endif %}</td>
+  </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% if pagina.has_other_pages %}
+<nav class="acciones" aria-label="Páginas">
+  {% if pagina.has_previous %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+  <span class="suave">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a class="boton sec" href="?{% if consulta_sin_pagina %}{{ consulta_sin_pagina }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}<p class="tarjeta">No hay checklists para mostrar con estos filtros.</p>{% endif %}
+{% if es_htmx %}<span class="chip" id="resumen-filtros" hx-swap-oob="true">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span>{% endif %}

@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 import certitrack.settings as modulo_settings
+from apps.entregables.testing import aprobar
 from apps.alertas.models import Notificacion
 from apps.clientes.models import Contrato
 from apps.cuentas.models import Ausencia, Usuario
@@ -173,7 +174,7 @@ class Caso22ApoyoYReasignacionTests(Base):
             servicios.mover(self.e1, E.LISTO_PARA_ENTREGA, self.s2)
 
         # El senior del entregable (s1) sí puede aprobar.
-        servicios.mover(self.e1, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(self.e1, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         self.e1.refresh_from_db()
         self.assertEqual(self.e1.estado, E.LISTO_PARA_ENTREGA)
 

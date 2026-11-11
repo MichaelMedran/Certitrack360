@@ -16,6 +16,7 @@ from django.db.models import F
 from django.test import Client, override_settings
 from django.urls import reverse
 
+from apps.entregables.testing import aprobar
 from apps.alertas import programador
 from apps.alertas.models import Notificacion
 from apps.alertas.servicios import generar_alertas_acta
@@ -483,7 +484,7 @@ class EntregaDelCicloActualTests(EntregasBase):
         for o in e.observaciones.abiertas():
             obs_servicio.resolver(o, self.s1, "Se ajustó el anexo")
         servicios.mover(e, E.VERIFICACION_SENIOR, self.j1)
-        servicios.mover(e, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(e, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         with self.assertRaises(ValidationError) as ctx:
             servicios.mover(e, E.HECHO, self.s1)  # la entrega n.º 1 ya está cerrada: hace falta registrar otra
         self.assertIn("falta el cargo de recepción", ctx.exception.messages[0])
@@ -1124,7 +1125,7 @@ class DetalleDeEntregasTests(EntregasBase):
             o.solucion, o.resuelta = "Corregido", True
             o.save()
         servicios.mover(e, E.VERIFICACION_SENIOR, self.j1)
-        servicios.mover(e, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(e, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         self.registrar(e)
         self.client.force_login(self.s1)
         html = self.client.get(reverse("entregable_detalle", args=[e.pk])).content.decode()

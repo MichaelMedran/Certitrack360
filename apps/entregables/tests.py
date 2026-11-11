@@ -12,7 +12,7 @@ from apps.clientes.models import Cliente, Contrato, PlantillaTDR
 from apps.cuentas.models import Usuario
 from apps.entregables import servicios
 from apps.entregables.models import Entregable, HistorialEstado, Observacion
-from apps.entregables.testing import MediaTemporal, entregar
+from apps.entregables.testing import MediaTemporal, aprobar, entregar
 
 E = Entregable.Estado
 
@@ -161,7 +161,7 @@ class FlujoTests(Base):
     def test_camino_feliz_registra_historial(self):
         servicios.mover(self.e1, E.EN_PROCESO, self.j1)
         servicios.mover(self.e1, E.VERIFICACION_SENIOR, self.j1)
-        servicios.mover(self.e1, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(self.e1, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         entregar(self.e1, self.gerente)  # ajuste derivado de RF-29: pasar a Entregado exige el cargo (SDD §11.3)
         # Las cuatro transiciones; el cargo y la versión final ficticia que crea el ayudante son otras líneas del historial.
         cambios = HistorialEstado.objects.filter(entregable=self.e1).exclude(estado_anterior=F("estado_nuevo"))

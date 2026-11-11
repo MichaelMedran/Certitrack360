@@ -19,7 +19,7 @@ from apps.conocimiento.models import LeccionAprendida
 from apps.entregables import adjuntos, filtros, servicios, subestado
 from apps.entregables import observaciones as obs_servicio
 from apps.entregables.models import Entregable, HistorialEstado, Observacion
-from apps.entregables.testing import entregar
+from apps.entregables.testing import aprobar, entregar
 from apps.entregables.tests import Base
 from apps.entregables.visibilidad import entregables_visibles
 
@@ -140,7 +140,7 @@ class CondicionesDeMoverTests(ObsBase):
         obs_servicio.corregir(self.obs, self.j1, "Títulos corregidos")
         servicios.mover(self.proc, E.VERIFICACION_SENIOR, self.j1)
         obs_servicio.confirmar(self.obs, self.s1)
-        servicios.mover(self.proc, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(self.proc, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         self.assertEqual(self.proc.estado, E.LISTO_PARA_ENTREGA)
 
     def test_los_motivos_de_datos_y_de_observaciones_se_dicen_juntos(self):
@@ -396,7 +396,7 @@ class RevisarTests(ObsBase):
     def test_las_lecciones_salen_de_las_resueltas_al_cerrar(self):
         servicios.mover(self.proc, E.VERIFICACION_SENIOR, self.j1)
         obs_servicio.confirmar(self.obs, self.s1)
-        servicios.mover(self.proc, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(self.proc, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         entregar(self.proc, self.s1)
         leccion = LeccionAprendida.objects.get(observacion_origen=self.obs)
         self.assertEqual(leccion.solucion, "Títulos corregidos")

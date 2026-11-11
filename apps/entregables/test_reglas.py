@@ -8,7 +8,7 @@ from apps.alertas.models import Notificacion
 from apps.clientes.models import LineaServicio, PlantillaTDR
 from apps.entregables import adjuntos, servicios
 from apps.entregables.models import Entregable, Observacion
-from apps.entregables.testing import entregar
+from apps.entregables.testing import aprobar, entregar
 from apps.entregables.tests import Base
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import F
@@ -74,7 +74,7 @@ class HistorialTests(Base):
     def test_cada_transicion_valida_queda_registrada_con_usuario_y_fecha(self):
         servicios.mover(self.e1, E.EN_PROCESO, self.j1)
         servicios.mover(self.e1, E.VERIFICACION_SENIOR, self.j1)
-        servicios.mover(self.e1, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(self.e1, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         filas = list(self.e1.historial.order_by("id"))
         self.assertEqual([(h.estado_anterior, h.estado_nuevo, h.usuario) for h in filas], [
             (E.A_REALIZAR, E.EN_PROCESO, self.j1),
@@ -276,7 +276,7 @@ class AdjuntosYDatosEnElFlujoCompletoTests(Base):
         servicios.mover(e, E.VERIFICACION_SENIOR, self.j1)
         with self.assertRaises(PermissionDenied):
             servicios.mover(e, E.LISTO_PARA_ENTREGA, self.j1)  # el junior no aprueba
-        servicios.mover(e, E.LISTO_PARA_ENTREGA, self.s1)
+        aprobar(e, self.s1)  # Sprint 3 (RF-45): con la revisión de calidad conforme
         self.assertEqual(e.historial.filter(estado_anterior__in=E.values).count(), 4)  # 3 transiciones + 1 subida
         self.assertEqual(e.historial.exclude(detalle="").count(), 1)
         # Ajuste derivado de RF-29 (SDD §11.3): pasar a Entregado exige el cargo, así que se cierra con el ayudante

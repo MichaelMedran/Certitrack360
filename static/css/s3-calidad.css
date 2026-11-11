@@ -1,1 +1,13 @@
 /* Estilos del Sprint 3 (s3-calidad). */
+.cl-pendiente td{background:#fff7ed}
+.cl-pendiente{border-left:3px solid #c2410c}
+.cl-cumplido{background:#dcfce7;color:#14532d;border:1px solid #86efac}
+.cl-en_revision{background:#fef9c3;color:#713f12;border:1px solid #fde047}
+.cl-pendiente.etiqueta,.etiqueta.cl-pendiente{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
+.cl-form{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
+.cl-form select{max-width:11rem}
+.cal-item{border:1px solid var(--borde);border-radius:6px;margin:0 0 .7rem;padding:.5rem .8rem}
+.cal-item legend{font-weight:600;padding:0 .3rem}
+.cal-item label{margin-right:1rem}
+.cal-item textarea{display:block;width:100%;max-width:40rem}
+.cal-revision{margin:.3rem 0}

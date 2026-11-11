@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Checklist de calidad{% endblock %}
+{% block contenido %}
+{% if user.es_gerente_o_admin %}{% include "clientes/_pestanas.html" %}{% else %}<h1>Checklist de calidad</h1>{% endif %}
+<h2>Checklist de control de calidad</h2>
+<p class="suave">Ítems que el senior verifica antes de aprobar un entregable. A cada entregable le aplican los ítems generales y los de
+  su cliente. Un ítem no se borra: se desmarca «Activo».{% if not puede_generales %} Usted puede configurar los ítems de los clientes de sus contratos.{% endif %}</p>
+
+<form method="post" action="{% url 'calidad' %}" class="tarjeta" style="margin-bottom:1rem">{% csrf_token %}
+  <h3 style="margin-top:0">{% if editando %}Editar ítem{% else %}Nuevo ítem{% endif %}</h3>
+  {% if editando %}<input type="hidden" name="item" value="{{ editando.pk }}">{% endif %}
+  <div class="filtros-grid">
+    <div><label for="ic-texto">Qué se verifica</label>
+      <input id="ic-texto" name="texto" type="text" maxlength="300" required value="{{ editando.texto|default:'' }}"></div>
+    <div><label for="ic-cliente">Cliente</label>
+      {% if editando %}<input id="ic-cliente" type="text" disabled value="{{ editando.cliente|default:'Todos los clientes' }}">
+      {% else %}<select id="ic-cliente" name="cliente"{% if not puede_generales %} required{% endif %}>
+        {% if puede_generales %}<option value="">Todos los clientes (general)</option>{% endif %}
+        {% for c in clientes %}<option value="{{ c.pk }}">{{ c.nombre }}</option>{% endfor %}</select>{% endif %}</div>
+    <div><label for="ic-categoria">Categoría</label>
+      <select id="ic-categoria" name="categoria">{% for valor, etiqueta in categorias %}<option value="{{ valor }}"{% if editando.categoria == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
+    <div><label for="ic-obligatorio"><input id="ic-obligatorio" name="obligatorio" type="checkbox"{% if not editando or editando.obligatorio %} checked{% endif %}> Obligatorio</label>
+      <label for="ic-activo"><input id="ic-activo" name="activo" type="checkbox"{% if not editando or editando.activo %} checked{% endif %}> Activo</label></div>
+  </div>
+  <div class="acciones"><button class="boton">Guardar</button>{% if editando %}<a class="boton sec" href="{% url 'calidad' %}">Cancelar</a>{% endif %}</div>
+</form>
+
+{% for g in grupos %}
+<h3>{{ g.titulo }}</h3>
+<div class="tabla"><table>
+  <thead><tr><th>Qué se verifica</th><th>Categoría</th><th>Obligatorio</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>{% for i in g.items %}
+  <tr><td>{{ i.texto }}</td><td>{{ i.get_categoria_display }}</td><td>{{ i.obligatorio|yesno:"Sí,No" }}</td><td>{{ i.activo|yesno:"Activo,Inactivo" }}</td>
+    <td>{% if g.editable %}<a href="{% url 'calidad' %}?editar={{ i.pk }}">Editar<span class="sr-only"> {{ i.texto }}</span></a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5">Sin ítems propios.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endfor %}
+{% endblock %}

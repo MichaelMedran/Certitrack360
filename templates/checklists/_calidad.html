@@ -1,0 +1,50 @@
+{# Sección «Checklist de calidad» del detalle (SDD del Sprint 3, §7.6). Recibe `s` (calidad.seccion) y `e`. #}
+<h2 id="checklist-calidad">Checklist de calidad</h2>
+<div class="tarjeta">
+  {% if s.en_revision %}
+    {% if s.vigente %}
+    <div class="aviso {% if s.vigente.conforme %}aviso-success{% else %}aviso-warning{% endif %}" role="status">
+      Revisión de esta ronda: <strong>{{ s.vigente.get_resultado_display }}</strong> · {{ s.vigente.revisor.nombre }} ·
+      {{ s.vigente.fecha|date:"d/m/Y H:i" }}.{% if s.vigente.conforme %} El entregable ya se puede aprobar.{% endif %}
+    </div>
+    {% elif s.items %}
+    <div class="aviso aviso-warning" role="status">Para aprobar el entregable, todos los ítems obligatorios deben quedar en «Conforme».</div>
+    {% endif %}
+
+    {% if not s.items %}
+    <p class="suave">No hay ítems de calidad configurados para este cliente: el entregable se aprueba sin checklist.</p>
+    {% elif s.puede_revisar %}
+    <form method="post" action="{% url 'entregable_calidad' e.pk %}">{% csrf_token %}
+      {% for i in s.items %}
+      <fieldset class="cal-item">
+        <legend>{{ i.texto }} {% if i.obligatorio %}<span class="etiqueta">Obligatorio</span>{% endif %}
+          <span class="suave">{{ i.get_categoria_display }}{% if i.cliente_id %} · {{ e.contrato.cliente }}{% endif %}</span></legend>
+        <label><input type="radio" name="r_{{ i.pk }}" value="{{ s.CONFORME }}" required> Conforme</label>
+        <label><input type="radio" name="r_{{ i.pk }}" value="{{ s.NO_CONFORME }}"> No conforme</label>
+        <label for="cal-o-{{ i.pk }}" class="suave">Observación (obligatoria si no es conforme)</label>
+        <textarea id="cal-o-{{ i.pk }}" name="o_{{ i.pk }}" rows="2"></textarea>
+      </fieldset>
+      {% endfor %}
+      <button class="boton">Registrar revisión de calidad</button>
+      <p class="suave">Un ítem no conforme registra su observación, devuelve el entregable a «En proceso» y avisa al junior.</p>
+    </form>
+    {% else %}
+    <ul>{% for i in s.items %}<li>{{ i.texto }}{% if i.obligatorio %} <span class="etiqueta">Obligatorio</span>{% endif %}</li>{% endfor %}</ul>
+    <p class="suave">Lo aplica el senior del entregable durante la revisión.</p>
+    {% endif %}
+    {% if s.puede_configurar %}<p><a href="{% url 'calidad' %}">Configurar los ítems del checklist</a></p>{% endif %}
+  {% endif %}
+
+  {% if s.revisiones %}
+  <h3>Revisiones de calidad</h3>
+  {% for r in s.revisiones %}
+  <details class="cal-revision">
+    <summary>{{ r.fecha|date:"d/m/Y H:i" }} · {{ r.revisor.nombre }} ·
+      <span class="etiqueta {% if r.conforme %}cumple{% else %}falta{% endif %}">{{ r.get_resultado_display }}</span></summary>
+    <ul>{% for x in r.respuestas.all %}
+      <li>{{ x.texto }}: <strong>{{ x.get_resultado_display }}</strong>{% if x.observacion %} — {{ x.observacion }}{% endif %}</li>
+    {% endfor %}</ul>
+  </details>
+  {% endfor %}
+  {% endif %}
+</div>

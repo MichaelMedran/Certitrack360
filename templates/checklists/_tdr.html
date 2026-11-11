@@ -1,0 +1,67 @@
+{# Sección «Checklist por TDR» del detalle (SDD del Sprint 3, §7.5). Recibe `s` (tdr.seccion) y `e`. #}
+<h2 id="checklist-tdr">Checklist por TDR</h2>
+<div class="tarjeta">
+  {% if s.total %}
+  <p><strong>{{ s.porcentaje }} % de cumplimiento</strong> <span class="suave">({{ s.cumplidos }} de {{ s.total }} ítems cumplidos)</span></p>
+  <div class="barra-carga" role="img" aria-label="{{ s.porcentaje }} % de cumplimiento"><i style="width:{{ s.porcentaje }}%"></i></div>
+  {% if s.obligatorios_pendientes %}
+  <div class="aviso aviso-warning" role="status" style="margin-top:.7rem">
+    <strong>{{ s.obligatorios_pendientes|length }} ítem{{ s.obligatorios_pendientes|length|pluralize }} obligatorio{{ s.obligatorios_pendientes|length|pluralize }} sin cumplir.</strong>
+    Si envía el entregable a revisión así, se le pedirá confirmarlo.
+  </div>
+  {% endif %}
+  <div class="tabla"><table>
+    <thead><tr><th>Ítem</th><th>Tipo</th><th>Estado</th><th>Sustento</th><th>Marcado por</th>{% if s.puede %}<th>Cambiar</th>{% endif %}</tr></thead>
+    <tbody>{% for i in s.items %}
+    <tr{% if i.obligatorio and not i.cumplido %} class="cl-pendiente"{% endif %}>
+      <td>{{ i.texto }}
+        {% if i.obligatorio %}<span class="etiqueta {% if i.cumplido %}cumple{% else %}falta{% endif %}">Obligatorio{% if not i.cumplido %} pendiente{% endif %}</span>{% endif %}
+        {% if i.origen == 'MANUAL' %}<span class="suave">(agregado a mano)</span>{% endif %}</td>
+      <td>{{ i.get_tipo_display }}</td>
+      <td><span class="etiqueta cl-{{ i.estado|lower }}">{{ i.get_estado_display }}</span></td>
+      <td>{% if i.adjunto %}<a href="{% url 'adjunto_descargar' i.adjunto.pk %}">{{ i.adjunto.nombre_original }}</a>{% else %}<span class="suave">Sin documento</span>{% endif %}</td>
+      <td>{% if i.marcado_por %}{{ i.marcado_por.nombre }}<br><span class="suave">{{ i.marcado_en|date:"d/m/Y H:i" }}</span>{% else %}<span class="suave">Sin marcar</span>{% endif %}</td>
+      {% if s.puede %}
+      <td>
+        <form method="post" action="{% url 'entregable_checklist' e.pk %}" class="cl-form">{% csrf_token %}
+          <input type="hidden" name="accion" value="marcar"><input type="hidden" name="item" value="{{ i.pk }}">
+          <label class="sr-only" for="cl-estado-{{ i.pk }}">Estado de «{{ i.texto }}»</label>
+          <select id="cl-estado-{{ i.pk }}" name="estado">
+            {% for valor, etiqueta in s.estados %}<option value="{{ valor }}"{% if i.estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select>
+          <label class="sr-only" for="cl-adj-{{ i.pk }}">Documento que sustenta «{{ i.texto }}»</label>
+          <select id="cl-adj-{{ i.pk }}" name="adjunto"><option value="">— Sin documento —</option>
+            {% for a in s.adjuntos %}<option value="{{ a.pk }}"{% if i.adjunto_id == a.pk %} selected{% endif %}>{{ a.get_tipo_display }} v{{ a.version }} · {{ a.nombre_original }}</option>{% endfor %}</select>
+          <button class="boton sec">Guardar</button>
+        </form>
+      </td>
+      {% endif %}
+    </tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <p class="suave">Este entregable todavía no tiene checklist.</p>
+  {% endif %}
+
+  {% if s.puede %}
+  <div class="acciones">
+    {% if s.hay_ficha %}
+    <form method="post" action="{% url 'entregable_checklist' e.pk %}" class="en-linea">{% csrf_token %}
+      <input type="hidden" name="accion" value="generar"><button class="boton sec">Generar desde el TDR</button>
+    </form>
+    {% else %}<span class="suave">El contrato no tiene una ficha de levantamiento confirmada: agregue los ítems a mano.</span>{% endif %}
+  </div>
+  <details>
+    <summary>Agregar un ítem</summary>
+    <form method="post" action="{% url 'entregable_checklist' e.pk %}">{% csrf_token %}
+      <input type="hidden" name="accion" value="agregar">
+      <div class="filtros-grid">
+        <div><label for="cl-texto">Requisito, documento o formato</label><input id="cl-texto" name="texto" type="text" maxlength="300" required></div>
+        <div><label for="cl-tipo">Tipo</label>
+          <select id="cl-tipo" name="tipo">{% for valor, etiqueta in s.tipos %}<option value="{{ valor }}">{{ etiqueta }}</option>{% endfor %}</select></div>
+        <div><label for="cl-obligatorio"><input id="cl-obligatorio" name="obligatorio" type="checkbox"> Obligatorio</label></div>
+      </div>
+      <button class="boton">Agregar</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
