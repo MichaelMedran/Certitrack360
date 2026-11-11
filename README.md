@@ -25,6 +25,12 @@ Abrir http://127.0.0.1:8000/. Pruebas: `.\.venv\Scripts\python manage.py test` (
 Si ya tenía datos de una versión anterior, `migrate` los conserva; `seed_demo --reset` los reemplaza por los de demostración
 (**borra todos los clientes, contratos, plantillas, fichas, entregables, adjuntos, entregas, tiempos, documentos del repositorio, procedimientos, planes de incorporación y lecciones**, más los usuarios de demostración).
 
+### Servidor de producción (RF-51)
+
+`python manage.py servir` reemplaza a `runserver` fuera del desarrollo: arranca waitress (`--host`, `--puerto`, `--hilos`; por defecto `SERVIDOR_PUERTO` y `SERVIDOR_HILOS`)
+y recopila los estáticos que sirve WhiteNoise. Toda respuesta lleva `Content-Security-Policy` (solo el propio servidor y, si se configura, `FILEDOC_URL`) y el ingreso se
+bloquea tras `LOGIN_MAX_INTENTOS` fallos. Guía completa de instalación, respaldos y programador: [`docs/despliegue.md`](docs/despliegue.md).
+
 ### Tareas programadas
 
 `python manage.py programador` deja corriendo (en otra terminal) las alertas de vencimiento y de actas pendientes, cada hora, y la indexación de lecciones y procedimientos vigentes del
@@ -115,8 +121,8 @@ docker compose exec web python manage.py seed_demo
 ```
 
 Servicios: `db` (PostgreSQL), `web`, `programador` y `ollama` (sin puertos publicados: solo la web lo alcanza). Volúmenes: base de datos, `media` y modelos de Ollama.
-**Escrito pero sin probar** (no había Docker disponible al prepararlo). El contenedor usa el servidor de desarrollo de Django, adecuado para una demostración en red local;
-servir en producción con gunicorn y WhiteNoise es la decisión abierta n.º 8 del SDD y está pendiente de confirmar.
+**Escrito pero sin probar** (no había Docker disponible al prepararlo). Desde el Sprint 3 (RF-51) el contenedor arranca con `python manage.py servir`
+(waitress y WhiteNoise), no con el servidor de desarrollo. La instalación en un servidor propio está en [`docs/despliegue.md`](docs/despliegue.md).
 
 ## Demostración remota (temporal)
 
@@ -175,7 +181,7 @@ templates/ static/ docs/ (wireframes, hoja de ruta, trazabilidad)   media/ (adju
 
 SQLite en desarrollo y PostgreSQL con `DATABASE_URL` · umbrales 5, 2, 1 y 0 días (el de 1 día lo sumó el Sprint 2) · plantillas de ejemplo con 2 o 3 campos y adjuntos distintos ·
 10 MB y los siete formatos del SDD · crean entregables el senior (solo sus contratos), el gerente y el admin · asistente como pantalla aparte ·
-`llama3.2:3b` y `nomic-embed-text` · servidor de desarrollo en Docker hasta confirmar gunicorn y WhiteNoise · sesión de 60 minutos.
+`llama3.2:3b` y `nomic-embed-text` · servidor de producción `manage.py servir` (waitress y WhiteNoise, Sprint 3) · sesión de 60 minutos.
 Todo es configurable o fácil de cambiar.
 
 ## Dependencias

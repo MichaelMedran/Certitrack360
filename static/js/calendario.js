@@ -1,0 +1,34 @@
+// Calendario de plazos. Antes era un <script> en línea; la política de contenido (RF-51) solo admite scripts del propio servidor.
+// Los datos llegan por atributos data-* del elemento #calendario y del formulario de filtros.
+document.addEventListener('DOMContentLoaded', function(){
+  var elemento = document.getElementById('calendario');
+  if (!elemento) return;
+  // En pantallas angostas la cuadrícula del mes no alcanza para el texto de los eventos: se parte de la vista de lista.
+  var angosto = window.matchMedia('(max-width: 700px)');
+  var calendario = new FullCalendar.Calendar(elemento, {
+    initialView: angosto.matches ? 'listMonth' : 'dayGridMonth', firstDay: 1, height: 'auto',
+    buttonText: {today:'Hoy', month:'Mes', week:'Semana', list:'Lista'},
+    headerToolbar: {left:'prev,next today', center:'title', right:'dayGridMonth,dayGridWeek,listMonth'},
+    events: elemento.dataset.eventos + elemento.dataset.consulta, eventTimeFormat: {hour:'2-digit', minute:'2-digit'},
+    noEventsContent: 'No hay plazos en este período', locale: 'es'
+  });
+  calendario.render();
+  angosto.addEventListener('change', function(){ calendario.changeView(angosto.matches ? 'listMonth' : 'dayGridMonth'); });
+
+  // Filtros: se aplican sin recargar la página y sin perder el mes que se está mirando. El servidor los vuelve a
+  // aplicar sobre lo que el usuario puede ver, así que nunca muestran plazos ajenos.
+  var filtros = document.getElementById('filtros-calendario');
+  function aplicar(evento){
+    if (evento) evento.preventDefault();
+    var parametros = new URLSearchParams();
+    new FormData(filtros).forEach(function(valor, clave){ if (valor) parametros.append(clave, valor); });
+    var consulta = parametros.toString() ? '?' + parametros.toString() : '';
+    window.history.replaceState(null, '', filtros.getAttribute('action') + consulta);
+    calendario.getEventSources().forEach(function(fuente){ fuente.remove(); });
+    calendario.addEventSource(filtros.dataset.eventos + consulta);
+    var activos = Array.from(parametros.keys()).length;
+    document.getElementById('resumen-filtros').textContent = activos + ' activo' + (activos === 1 ? '' : 's');
+  }
+  filtros.addEventListener('change', aplicar);
+  filtros.addEventListener('submit', aplicar);
+});

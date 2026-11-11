@@ -1,4 +1,5 @@
-"""Datos de navegación para la barra superior: qué sección está activa."""
+"""Datos de navegación para la barra superior (qué sección está activa) y de la plataforma."""
+from django.conf import settings
 
 # nombre de la URL -> sección de la barra
 SECCIONES = {
@@ -24,6 +25,11 @@ SECCIONES = {
     "checklists": "entregables", "etiquetas": "gestion", "calidad": "gestion", "reportes": "consolidado",
     "reporte_generar": "consolidado", "reporte_detalle": "consolidado", "reporte_pdf": "consolidado",
 }
+
+
+def plataforma(request):
+    """Dirección de Filedoc (RF-51), el único origen externo permitido; vacía si no está configurada."""
+    return {"filedoc_url": settings.FILEDOC_URL}
 
 
 def navegacion(request):

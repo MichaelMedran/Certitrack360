@@ -157,7 +157,7 @@ class PaginaConFiltrosTests(CalendarioBase):
         r = self.ver(self.gerente)
         self.assertContains(r, '<details class="filtros">')
         self.assertContains(r, '<span class="chip" id="resumen-filtros">0 activos</span>')
-        self.assertContains(r, f'events: "{API}",')
+        self.assertContains(r, f'data-eventos="{API}" data-consulta=""')
 
     def test_los_tres_filtros_con_su_etiqueta_y_el_boton_limpiar(self):
         html = self.ver(self.gerente).content.decode()
@@ -176,7 +176,7 @@ class PaginaConFiltrosTests(CalendarioBase):
         self.assertContains(r, f'<option value="{self.cliente2.pk}" selected>Segundo Cliente</option>')
         self.assertContains(r, '<option value="EN_PROCESO" selected>')
         self.assertEqual(r.context["consulta"], f"?cliente={self.cliente2.pk}&estado=EN_PROCESO")  # solo los del calendario
-        self.assertContains(r, f'events: "{API}?cliente\\u003D{self.cliente2.pk}\\u0026estado\\u003DEN_PROCESO"')
+        self.assertContains(r, f'data-consulta="?cliente={self.cliente2.pk}&amp;estado=EN_PROCESO"')
 
     def test_las_opciones_solo_traen_lo_que_el_usuario_ve(self):
         r = self.ver(self.j2)

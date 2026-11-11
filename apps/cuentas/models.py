@@ -83,3 +83,21 @@ class Ausencia(models.Model):
 
     def __str__(self):
         return f"{self.usuario.nombre}: {self.desde:%d/%m/%Y} a {self.hasta:%d/%m/%Y} · {self.motivo}"
+
+
+class IntentoIngreso(models.Model):
+    """Cada intento de ingreso resuelto (acertado o fallido). Sirve para el bloqueo temporal (RF-51)."""
+
+    usuario_texto = models.CharField("usuario escrito", max_length=150)
+    ip = models.CharField("dirección", max_length=45, blank=True, default="")
+    fecha = models.DateTimeField("fecha", auto_now_add=True)
+    exitoso = models.BooleanField("exitoso", default=False)
+
+    class Meta:
+        ordering = ["-fecha", "-id"]
+        verbose_name = "intento de ingreso"
+        verbose_name_plural = "intentos de ingreso"
+        indexes = [models.Index(fields=["usuario_texto", "ip", "fecha"], name="intento_ingreso_busqueda")]
+
+    def __str__(self):
+        return f"{self.usuario_texto} desde {self.ip or '?'} · {'acertado' if self.exitoso else 'fallido'}"
