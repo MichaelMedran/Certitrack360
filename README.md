@@ -8,6 +8,9 @@ local: sin APIs externas, sin CDNs, sin telemetría. **Solo se usan datos simula
   adjuntos en el detalle, filtros y urgencia en tablero y lista, Kanban con HTMX, Consolidado, editor de plantillas y notificaciones.
 - **Sprint 2:** especificación en [`docs/sdd-sprint-2.md`](docs/sdd-sprint-2.md) y wireframes en [`docs/wireframes/sprint-2.html`](docs/wireframes/sprint-2.html)
   (aprobados el 2026-11-02). Completado en los hitos S2-H1 a S2-H13; la trazabilidad completa está en [`docs/trazabilidad.md`](docs/trazabilidad.md).
+- **Sprint 3:** especificación en [`docs/sdd-sprint-3.md`](docs/sdd-sprint-3.md) y wireframes en `docs/wireframes/`. Hitos S3-H1 a S3-H13: etiquetas, prioridad calculada,
+  alerta urgente, checklists por TDR y de calidad, verificación de factura, exportación a PDF y Excel, extracción de datos, gráficos gerenciales, reportes de avance y
+  plataforma independiente. Trazabilidad en [`docs/trazabilidad.md`](docs/trazabilidad.md); guion de demostración más abajo.
 
 ## Puesta en marcha (desarrollo)
 
@@ -16,14 +19,16 @@ python -m venv .venv
 .\.venv\Scripts\pip install -r requirements.txt
 copy .env.example .env                                  # opcional: los valores por defecto sirven para desarrollo
 .\.venv\Scripts\python manage.py migrate
-.\.venv\Scripts\python manage.py seed_demo --reset      # datos simulados (Sprint 1 + Sprint 2)
+.\.venv\Scripts\python manage.py seed_demo --reset      # datos simulados (Sprints 1, 2 y 3)
 .\.venv\Scripts\python manage.py runserver
 ```
 
 Abrir http://127.0.0.1:8000/. Pruebas: `.\.venv\Scripts\python manage.py test` (menos de un minuto).
 
 Si ya tenía datos de una versión anterior, `migrate` los conserva; `seed_demo --reset` los reemplaza por los de demostración
-(**borra todos los clientes, contratos, plantillas, fichas, entregables, adjuntos, entregas, tiempos, documentos del repositorio, procedimientos, planes de incorporación y lecciones**, más los usuarios de demostración).
+(**borra todos los clientes, contratos, plantillas, fichas, entregables, adjuntos, entregas, tiempos, documentos del repositorio, procedimientos, planes de incorporación, lecciones, etiquetas
+personalizadas, alertas urgentes, checklists, facturas simuladas, extracciones y reportes de avance**, más los usuarios de demostración). Al terminar, el comando imprime qué entregable usar
+para cada paso del guion del Sprint 3 (códigos, usuarios y números de factura).
 
 ### Servidor de producción (RF-51)
 
@@ -33,8 +38,9 @@ bloquea tras `LOGIN_MAX_INTENTOS` fallos. Guía completa de instalación, respal
 
 ### Tareas programadas
 
-`python manage.py programador` deja corriendo (en otra terminal) las alertas de vencimiento y de actas pendientes, cada hora, y la indexación de lecciones y procedimientos vigentes del
-asistente, a diario a las 02:00 (hora de Lima). Se pueden lanzar a mano: `generar_alertas` e `indexar_lecciones`. En Docker es el servicio `programador`.
+`python manage.py programador` deja corriendo (en otra terminal) las alertas de vencimiento y de actas pendientes, cada hora; en esa misma pasada revisa si toca el reporte de avance
+automático (a lo sumo uno por periodo, según la periodicidad que el gerente guarda en *Consolidado → Reportes*), y a diario a las 02:00 (hora de Lima) indexa las lecciones y procedimientos vigentes del
+asistente. Se pueden lanzar a mano: `generar_alertas` e `indexar_lecciones`. En Docker es el servicio `programador`.
 
 ## Usuarios de prueba (contraseña `demo1234`, solo para este prototipo)
 
@@ -42,7 +48,7 @@ asistente, a diario a las 02:00 (hora de Lima). Se pueden lanzar a mano: `genera
 |---|---|---|
 | `admin_demo` | Administrador | Todo, más el panel técnico en `/admin/` |
 | `gerente_demo` | Gerente de Proyectos | Todos los proyectos; gestiona clientes, contratos, plantillas, personal, procedimientos y planes de incorporación |
-| `senior1`, `senior2` | Senior | Los contratos a su cargo |
+| `senior1`, `senior2` | Senior | Los contratos a su cargo (`senior2` queda marcado «de guardia» para las alertas urgentes) |
 | `junior1`, `junior2`, `junior3` | Junior | Solo lo que tienen asignado |
 
 ## Guion de demostración
@@ -77,6 +83,45 @@ Recorre las pantallas y reglas nuevas del Sprint 2 sobre los datos de `seed_demo
 9. **Asistente ampliado con procedimientos y valoración (`/asistente/`, RF-37).** En *Asistente*, preguntar por ejemplo «cómo presentar el cargo de entrega en mesa de partes» o «falta el periodo reportado en el informe»: responde citando tanto `[Procedimiento N]` (procedimientos vigentes aprobados) como `[Caso N]` (lecciones aprendidas; si provienen de un entregable no visible para el usuario, muestran el cliente pero sin enlace). Valorar la respuesta con «¿Le sirvió esta respuesta? Sí / No» y revisar la tabla «Mis consultas anteriores» (exclusiva de cada usuario). Como `gerente_demo`, gestionar el catálogo en `/procedimientos/`.
 10. **Plan de incorporación (`/incorporacion/`, RF-38).** Entrar como `junior3`: en *Inicio* aparece la tarjeta «Mi incorporación» con su barra de progreso (5 de 11 actividades completadas) y enlace a `/incorporacion/`. En `/incorporacion/`, marcar las actividades pendientes como «Completada» y comprobar que los materiales enlazan siempre a la versión vigente del repositorio o al procedimiento aprobado. Entrar luego como `senior1` (su responsable asignado): una vez que todas las actividades están completadas, el botón «Confirmar finalización del plan» cierra la incorporación. Como `gerente_demo`, administrar los planes y asignaciones en `/incorporacion/planes/`.
 
+## Guion de demostración del Sprint 3
+
+Recorre lo nuevo del Sprint 3 sobre los datos de `seed_demo --reset`. Al terminar, el comando imprime los códigos de los entregables que sirven para cada paso (los llamo «el de la alerta»,
+«el de checklist pendiente», etc.). Todo es ficticio.
+
+1. **Prioridad calculada (RF-42).** Entrar como `gerente_demo`: *Entregables* y *Tablero* muestran en cada tarjeta y fila la prioridad en texto («Alta», «Media», «Baja»), y la lista llega ordenada por prioridad
+   (primero las altas y, entre ellas, la que tiene alerta urgente abierta). En «Filtros» elegir *Prioridad → Baja*: quedan solo los de clientes ocasionales o con plazo holgado. En *Inicio* los próximos plazos siguen el mismo orden.
+   La prioridad no se guarda: al cambiar el plazo de un entregable o el tipo de su cliente (*Gestión → Clientes*, «Estratégico», «Regular», «Ocasional») cambia sola.
+2. **Etiquetas (RF-41).** Como `gerente_demo`: *Gestión → Etiquetas* muestra las cinco etiquetas de las líneas de servicio y las dos personalizadas («Auditoría externa», «Cliente en observación»); aquí se crean con nombre y color
+   (los colores van siempre con su nombre escrito) y solo el gerente o el admin dan de baja una etiqueta. Como `senior1`: abrir un entregable; la sección «Etiquetas» permite marcarlas, *Guardar etiquetas* y *Crear una etiqueta nueva*
+   (un senior crea y asigna en sus entregables; un junior no, y `/etiquetas/` le responde 403). En *Entregables* y *Tablero*, «Filtros → Etiqueta» deja solo lo etiquetado (propio o del contrato) y nunca muestra entregables que el rol no ve.
+3. **Alerta urgente fuera de horario (RF-43).** Entrar como `senior2` (de guardia) o `senior1`: sobre todas las pantallas aparece la franja «URGENTE» de la alerta abierta (la activó `gerente_demo` sobre «el de la alerta»), con
+   «Confirmar lectura» y «Aceptar el caso». Confirmar la lectura: quedan quién y cuándo, y el detalle del entregable dice cuántos de los avisados ya leyeron y quiénes faltan. Entrar como el junior de ese entregable: ya había leído.
+   Aceptar el caso con `senior2` cierra la alerta (solo una persona la acepta; la segunda recibe «El caso ya fue aceptado por…»). El segundo caso del seed ya está aceptado y se activó un sábado por la noche («fuera de horario»).
+   Para activar una nueva: detalle de un entregable en proceso, sección «Alerta urgente → Activar y avisar» (naturaleza y plazo esperado futuros obligatorios); *Gestión → Personal* marca o quita la guardia.
+4. **Checklist por TDR (RF-44).** Como `senior1`: *Entregables → Checklists* lista los checklists con su % de cumplimiento (0 %, 25 %, 50 %, 75 %, 100 %…) y filtra por cliente, contrato e ID-TDR. En el detalle del primer
+   contrato (ficha confirmada) la sección «Checklist por TDR» se generó desde la ficha; en los demás se agregaron a mano. Marcar un ítem como «En revisión» o «Cumplido» y elegir el documento que lo sustenta (un adjunto del mismo entregable);
+   cada cambio guarda quién y cuándo. Como el junior del «de checklist pendiente»: enviarlo a «Revisión senior» con obligatorios sin cumplir muestra el aviso «El checklist por TDR tiene N ítems obligatorios sin cumplir… ¿Enviar de todos modos?»;
+   al confirmar queda en el historial. No bloquea: solo advierte.
+5. **Checklist de calidad como condición para aprobar (RF-45).** Como `senior1`: abrir un entregable en «Revisión senior» sin revisión (el que imprime el seed como «sin revisión»): intentar pasarlo a «Aprobado» responde que falta el checklist
+   de calidad de esta revisión. Completar la sección «Checklist de calidad» con todo «Conforme» y *Registrar revisión de calidad*: ahora sí se aprueba. Marcar un ítem «No conforme» sin observación se rechaza; con observación, el entregable vuelve a
+   «En proceso» con «Con correcciones pendientes» (así quedó el que imprime el seed como no conforme). Cada revisión queda con revisor, fecha, hora y resultado, y nunca se edita. *Gestión → Checklist de calidad* (o el enlace «Configurar los ítems del checklist» de esa sección, que también ve el senior)
+   configura los ítems por cliente (hay uno propio de Banco Andino y otro de Telecom Pacífico, además de los cuatro generales).
+6. **Verificación de factura (RF-46).** Como el junior que imprime el seed para «verificar en vivo»: en el detalle de ese entregable, sección «Factura», escribir `F001-00104` y *Verificar* («Correcta»); luego `F001-00105` («Pertenece a otro cliente»),
+   `F001-00106` («Correcta», pagada) y un número cualquiera («No existe»): cada consulta queda en el historial y la última es la vigente. En los entregables de «Revisión senior» ya hay una correcta (`F001-00101`), una de otro cliente justificada por el senior
+   (`F001-00102`) y una anulada sin justificar (`F001-00103`): esa última impide aprobar hasta que el senior (nunca el junior) escriba su justificación en la misma sección. La plataforma solo lee la base simulada; nunca la modifica.
+7. **Exportación a PDF y Excel (RF-47).** Abrir el entregable «Aprobado» que imprime el seed para las exportaciones: la sección «Exportar» muestra un PDF y un Excel ya guardados como versiones 1 y 2 («Exportaciones anteriores», con quién y cuándo).
+   *Exportar a PDF* o *Exportar a Excel* crea la versión 3, sin sobrescribir las anteriores, y queda en el historial. Si a un entregable le falta un dato obligatorio (ID-TDR, fecha de recepción o un campo de la plantilla), la exportación se rechaza y dice exactamente cuáles faltan.
+8. **Extracción de datos (RF-48).** Entrar como el junior que imprime el seed: el entregable en proceso tiene una extracción pendiente («solicitud_cliente_demo.pdf»). Abrir su sección «Extraer datos de un documento» y la vista previa: los campos
+   encontrados traen su valor, origen y confianza; el que falta («Descripción del riesgo») aparece vacío y marcado «no encontrado». Editar un valor y *Aplicar a los datos* completa la plantilla del entregable (nada se guarda antes de confirmar; *Descartar* la borra).
+   En *Entregables → Nuevo entregable*, «Prellenar desde un documento» hace lo mismo con un PDF o imagen; sin Tesseract instalado la pantalla avisa que solo se lee el texto del PDF.
+9. **Gráficos gerenciales (RF-49).** Como `gerente_demo`: *Consolidado → Gráficos gerenciales* dibuja, en el servidor y sin JavaScript, «Entregables activos por persona», «Entregables cumplidos dentro del plazo» (por mes, con entregas tardías),
+   «Tiempo promedio de atención por cliente» y «Observaciones por tipo de error», con filtros de cliente, sector, contrato y fechas. Cada barra lleva su valor escrito. Un senior o un junior reciben «sin permiso».
+10. **Reportes de avance (RF-50).** Como `gerente_demo`: *Consolidado → Reportes* lista dos reportes (uno automático y otro a pedido) y *Generar reporte* crea uno nuevo con el PDF guardado; el detalle muestra totales del área y el desglose por cliente y contrato, y *Imprimir* o
+    el enlace al PDF lo abren. Cada reporte avisa a los gerentes en *Avisos*. «Generación automática» guarda la periodicidad (diaria, semanal, mensual o desactivada) y la hora; el programador genera a lo sumo uno por periodo. Un senior o un junior reciben 403.
+11. **Plataforma independiente (RF-51).** `python manage.py servir` arranca el servidor de producción. En las herramientas del navegador, cada respuesta lleva `Content-Security-Policy` con `default-src 'self'` y sin orígenes externos (solo `FILEDOC_URL`, si se configura);
+    ninguna pantalla carga fuentes, scripts ni imágenes de otro sitio. Probar el bloqueo: fallar la contraseña cinco veces seguidas con un usuario (`LOGIN_MAX_INTENTOS`) y al sexto intento, aun con la clave correcta, el ingreso queda bloqueado durante `LOGIN_BLOQUEO_MINUTOS`.
+    Instalación, respaldos y programador: [`docs/despliegue.md`](docs/despliegue.md).
+
 ## Configuración (`.env`, ver `.env.example`)
 
 | Variable | Uso | Por defecto |
@@ -99,6 +144,14 @@ Recorre las pantallas y reglas nuevas del Sprint 2 sobre los datos de `seed_demo
 | `SESSION_IDLE_MINUTES` | Cierre de sesión por inactividad | `60` |
 | `OLLAMA_URL`, `OLLAMA_MODEL`, `EMBED_MODEL` | Asistente (fase 2) | `http://localhost:11434`, `llama3.2:3b`, `nomic-embed-text` |
 | `ASSISTANT_MIN_SIMILARITY` | Similitud mínima (0 a 1) para dar por relevante una lección o procedimiento | `0.5` |
+| `PRIORIDAD_DIAS_ESTRATEGICO` | Días para que un entregable normal de cliente Estratégico sea de prioridad Media (RF-42) | `10` |
+| `HORARIO_LABORAL` | Días (1 = lunes) y horas laborales; fuera de ellos la alerta urgente se marca «fuera de horario» (RF-43) | `1-5,09:00-18:00` |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_FROM` | Servidor de correo **local** opcional para la alerta urgente; vacío: no se envía correo | vacío, `25`, `certitrack@localhost` |
+| `FACTURACION_CONECTOR` | Conector de solo lectura a facturación (RF-46); el simulado lee la tabla local | `apps.facturacion.conector.ConectorSimulado` |
+| `TESSERACT_CMD`, `OCR_IDIOMAS`, `OCR_CONFIANZA_MINIMA`, `OCR_MAX_PAGINAS` | Extracción con OCR local (RF-48): programa, idiomas, confianza media mínima y páginas por documento | `tesseract`, `spa+eng`, `60`, `10` |
+| `FILEDOC_URL` | Único origen externo permitido por la política de contenido (RF-51); vacío: ninguno | vacío |
+| `LOGIN_MAX_INTENTOS`, `LOGIN_BLOQUEO_MINUTOS` | Intentos fallidos de ingreso antes del bloqueo y duración del bloqueo | `5`, `15` |
+| `SERVIDOR_PUERTO`, `SERVIDOR_HILOS` | Puerto y hilos de `manage.py servir` | `8000`, `8` |
 
 ## Asistente de lecciones aprendidas y procedimientos (fase 2 y Sprint 2)
 
@@ -161,6 +214,9 @@ Solo con datos simulados.
 `/buscar/` · `/asistente/` · `/asistente/valorar/<id>/` · `/procedimientos/` (gerente y admin) ·
 `/incorporacion/` · `/incorporacion/planes/` (gerente y admin) ·
 `/consolidado/` (gerente y admin) · `/gestion/` · `/clientes/` · `/contratos/` · `/plantillas/` · `/lineas-servicio/` · `/personal/` (gerente y admin) ·
+Sprint 3: `/etiquetas/` · `/etiquetas/nueva/` · `/etiquetas/<id>/` · `/entregables/<id>/etiquetas/` · `/entregables/<id>/urgencia/` · `/urgencias/<id>/leer/` · `/urgencias/<id>/aceptar/` ·
+`/entregables/<id>/checklist/` · `/checklists/` · `/calidad/` · `/entregables/<id>/calidad/` · `/entregables/<id>/factura/` · `/entregables/<id>/exportar/<formato>/` ·
+`/extraccion/nueva/` · `/extraccion/<id>/` · `/reportes/` · `/reportes/generar/` · `/reportes/<id>/` · `/reportes/<id>/pdf/` (gerente y admin) ·
 `/admin/` (panel técnico, solo admin).
 
 ## Estructura

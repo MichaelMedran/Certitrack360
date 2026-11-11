@@ -1,8 +1,10 @@
-"""Datos simulados para la demostración (SDD §16 y SDD Sprint 2 §12.1). Nada de esto corresponde a empresas o personas reales."""
+"""Datos simulados para la demostración (SDD §16, SDD Sprint 2 §12.1 y SDD Sprint 3 §12.1). Nada de esto corresponde a empresas o personas reales."""
 import datetime
 import random
+from decimal import Decimal
 
 from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -11,12 +13,15 @@ from faker import Faker
 
 from apps.alertas.models import Notificacion
 from apps.alertas.servicios import generar_alertas
+from apps.checklists import calidad as calidad_srv
+from apps.checklists import tdr as tdr_srv
+from apps.checklists.models import ItemCalidad, ItemChecklistTDR, RevisionCalidad
 from apps.clientes.models import LINEAS_INICIALES, Cliente, Contrato, LineaServicio, PlantillaTDR
 from apps.conocimiento.models import ConsultaAsistente, LeccionAprendida, Procedimiento
 from apps.conocimiento.servicios import generar_lecciones, indexar_embeddings
 from apps.cuentas.models import Ausencia, Usuario
 from apps.entregables import adjuntos, servicios
-from apps.entregables.demo_archivos import contenido_demo
+from apps.entregables.demo_archivos import contenido_demo, pdf_minimo
 from apps.entregables.models import (
     Adjunto,
     Entrega,
@@ -28,12 +33,25 @@ from apps.entregables.models import (
 )
 from apps.equipo import servicios as equipo_srv
 from apps.equipo.models import ActividadPlan, AvanceActividad, Incorporacion, PlanIncorporacion
+from apps.etiquetas import servicios as etiquetas_srv
+from apps.etiquetas.models import Etiqueta
+from apps.etiquetas.signals import crear_etiqueta_de_linea
+from apps.exportacion import servicios as exportacion_srv
+from apps.extraccion import servicios as extraccion_srv
+from apps.extraccion.models import Extraccion
+from apps.facturacion import verificacion as factura_srv
+from apps.facturacion.models import FacturaSimulada
 from apps.levantamiento.models import FichaLevantamiento, ItemFicha
 from apps.repositorio import servicios as repo_srv
+from apps.reportes import servicios as reportes_srv
+from apps.reportes.models import ConfiguracionReporte, ReporteAvance
 from apps.repositorio.models import DocumentoRepositorio, RegistroAccesoDocumento, VersionDocumento
+from apps.urgencias import servicios as urgencias_srv
+from apps.urgencias.models import AlertaUrgente
 
 CLAVE = "demo1234"
 E = Entregable.Estado
+TC = Cliente.Tipo
 
 USUARIOS = [
     ("admin_demo", "ADMIN", "Alicia", "Administradora", "Administradora de la plataforma"),
@@ -45,10 +63,11 @@ USUARIOS = [
     ("junior3", "JUNIOR", "Jimena", "Jara", "Asistente junior de Proyectos"),
 ]
 
+# nombre, sector, tipo de cliente (Sprint 3: pesa en la prioridad calculada)
 CLIENTES = [
-    ("Banco Andino Ficticio", "BANCA"), ("Financiera Costa Sur (demo)", "BANCA"),
-    ("Telecom Pacífico Demo", "TELECOM"), ("Redes Altiplano (demo)", "TELECOM"),
-    ("Municipalidad Provincial Ficticia", "PUBLICO"), ("Instituto Regional de Prueba", "PUBLICO"),
+    ("Banco Andino Ficticio", "BANCA", TC.ESTRATEGICO), ("Financiera Costa Sur (demo)", "BANCA", TC.REGULAR),
+    ("Telecom Pacífico Demo", "TELECOM", TC.ESTRATEGICO), ("Redes Altiplano (demo)", "TELECOM", TC.OCASIONAL),
+    ("Municipalidad Provincial Ficticia", "PUBLICO", TC.REGULAR), ("Instituto Regional de Prueba", "PUBLICO", TC.OCASIONAL),
 ]
 
 # nombre, formato, plazo por defecto, adjuntos obligatorios, índice de cliente (None = genérica), campos
@@ -110,6 +129,24 @@ OBSERVACIONES_RESUELTAS = [
     ("DATO_FALTANTE", "No figuraba la fecha de la reunión.", "Se agregó la fecha tomada de la convocatoria."),
     ("PLAZO", "La fecha de entrega estaba mal copiada.", "Se corrigió con el plazo de la ficha del contrato."),
 ]
+
+# Requisitos y documentos de la ficha confirmada del primer contrato: una línea cada uno, de ahí sale el checklist por TDR.
+REQUERIMIENTOS_FICHA = (
+    "Presentar el informe técnico mensual dentro del plazo\n"
+    "Acta de conformidad firmada por el cliente\n"
+    "Anexos de datos validados por el senior"
+)
+DOCUMENTOS_FICHA = "TDR firmado\nCronograma base\nDirectorio de contactos del cliente"
+
+# Checklist por TDR agregado a mano en los entregables de contratos sin ficha confirmada: (texto, tipo, obligatorio)
+ITEMS_TDR_MANUALES = [
+    ("Carátula con el periodo y el responsable del cliente", "REQUISITO", True),
+    ("TDR vigente adjunto al entregable", "DOCUMENTO", True),
+    ("Anexo técnico con la fecha de versión", "DOCUMENTO", True),
+    ("Entrega en PDF de hasta 10 MB", "FORMATO", False),
+]
+# Avance objetivo del checklist por TDR, repetido en ese orden entre los entregables que lo tienen
+AVANCES_TDR = [0.34, 1.0, 0.5, 0.0, 0.67, 1.0]
 
 PROCEDIMIENTOS_DEMO = [
     (
@@ -203,7 +240,7 @@ class Command(BaseCommand):
             u[username] = obj
         seniors, juniors = [u["senior1"], u["senior2"]], [u["junior1"], u["junior2"], u["junior3"]]
 
-        clientes = [Cliente.objects.create(nombre=n, sector=s) for n, s in CLIENTES]
+        clientes = [Cliente.objects.create(nombre=n, sector=s, tipo=t) for n, s, t in CLIENTES]
         plantillas = [self._plantilla(p, clientes) for p in PLANTILLAS]
         lineas = self._lineas()
 
@@ -228,7 +265,7 @@ class Command(BaseCommand):
             contrato = contratos[i % len(contratos)]
             candidatas = [p for p in plantillas if p.cliente_id in (None, contrato.cliente_id)]
             plantilla = candidatas[i % len(candidatas)]
-            plazo = hoy - datetime.timedelta(days=30) if estado == E.HECHO else hoy + datetime.timedelta(days=PLAZOS[i % len(PLAZOS)])
+            plazo = hoy - datetime.timedelta(days=30 + 28 * (i % 3)) if estado == E.HECHO else hoy + datetime.timedelta(days=PLAZOS[i % len(PLAZOS)])
             e = Entregable.objects.create(  # el código CT-AAAA-NNNNN lo asigna el modelo al crearlo
                 contrato=contrato, plantilla=plantilla, titulo=f"{TITULO_BASE[plantilla.nombre]} {i + 1:02d}",
                 datos={c["nombre"]: self._valor(c, fake, rnd, hoy) for c in plantilla.campos_requeridos},
@@ -251,6 +288,7 @@ class Command(BaseCommand):
         self._procedimientos_e_incorporacion(lineas, docs_repo, u, hoy)
         self._notificaciones(entregables)
         generar_alertas(hoy)
+        demo3 = self._sprint_3(u, clientes, contratos, entregables, hoy)
 
         bloqueados = ", ".join(f"«{e.titulo}» ({e.junior_asignado.username})" for e in sin_adjuntos)
         return (
@@ -261,7 +299,8 @@ class Command(BaseCommand):
             f"{PlanIncorporacion.objects.count()} planes de incorporación, "
             f"{Notificacion.objects.count()} notificaciones y {LeccionAprendida.objects.count()} lecciones. "
             f"Contraseña de prueba: {CLAVE}\n"
-            f"Para ver el bloqueo por adjuntos faltantes, mueva a «{E.VERIFICACION_SENIOR.label}»: {bloqueados}."
+            f"Para ver el bloqueo por adjuntos faltantes, mueva a «{E.VERIFICACION_SENIOR.label}»: {bloqueados}.\n"
+            f"{demo3}"
         )
 
     @staticmethod
@@ -493,12 +532,12 @@ class Command(BaseCommand):
             "cliente": c0.cliente.nombre,
             "id_tdr": "TDR-BAF-2026-001",
             "nombre_archivo_tdr": "tdr_demo_2026_001.pdf",
-            "requerimientos": "Presentación de informes técnicos mensuales y actas de conformidad firmadas.",
-            "formatos": "PDF con firma digital y anexos en hoja de cálculo",
+            "requerimientos": REQUERIMIENTOS_FICHA,
+            "formatos": "PDF con firma digital; anexos en hoja de cálculo",
             "frecuencia_reportes": "Mensual",
             "penalidades": "1 UIT por cada día útil de retraso injustificado",
             "responsable": c0.senior_responsable.nombre,
-            "documentos_disponibles": "TDR firmado, cronograma base y directorio de contactos",
+            "documentos_disponibles": DOCUMENTOS_FICHA,
             "documentos_faltantes": "Matriz de escalamiento actualizada del cliente",
             "formato_esperado": "Informe PDF (máx. 10 MB)",
             "fecha_limite": (hoy + datetime.timedelta(days=30)).isoformat(),
@@ -509,13 +548,13 @@ class Command(BaseCommand):
             id_tdr="TDR-BAF-2026-001",
             archivo_tdr=ContentFile(pdf_c0, name="tdr_demo_2026_001.pdf"),
             nombre_archivo_tdr="tdr_demo_2026_001.pdf",
-            requerimientos=foto_inicial["requerimientos"],
+            requerimientos=REQUERIMIENTOS_FICHA,
             formatos=foto_inicial["formatos"],
             frecuencia_reportes="Mensual",
             penalidades=foto_inicial["penalidades"],
             responsable=c0.senior_responsable,
-            documentos_disponibles="TDR firmado, cronograma base, directorio y matriz de escalamiento recibida",
-            documentos_faltantes="Ninguno",
+            documentos_disponibles=DOCUMENTOS_FICHA + "\nMatriz de escalamiento recibida",
+            documentos_faltantes="",
             formato_esperado=foto_inicial["formato_esperado"],
             fecha_limite=hoy + datetime.timedelta(days=30),
             estado=FichaLevantamiento.Estado.CONFIRMADA,
@@ -748,12 +787,210 @@ class Command(BaseCommand):
                 mensaje=servicios.texto_observacion(o.entregable),
             )
 
+    # ------------------------------------------------------------------ Sprint 3 (SDD del Sprint 3, §12.1)
+
+    def _sprint_3(self, u, clientes, contratos, entregables, hoy):
+        """Deja demostrable todo el Sprint 3 usando los servicios de cada app (no filas a mano, salvo la base de
+        facturación simulada, que es un dato de entrada). Devuelve las líneas de orientación que imprime el comando."""
+        en_proceso = [e for e in entregables if e.estado == E.EN_PROCESO]
+        listos = [e for e in en_proceso if not adjuntos.faltantes_requeridos(e)]  # con todos sus adjuntos requeridos
+        en_revision = [e for e in entregables if e.estado == E.VERIFICACION_SENIOR]
+        aprobados = [e for e in entregables if e.estado == E.LISTO_PARA_ENTREGA]
+        notas = [self._etiquetas(u, contratos, entregables)]
+        notas.append(self._urgencias(u, en_proceso))
+        notas.append(self._checklists_tdr(entregables, contratos, listos))
+        notas.append(self._calidad_y_facturas(u, clientes, en_revision, listos, hoy))
+        notas.append(self._exportaciones(aprobados[0]))
+        notas.append(self._extraccion(listos[1]))
+        notas.append(self._reportes(u))
+        return "\n".join(notas)
+
+    @staticmethod
+    def _etiquetas(u, contratos, entregables):
+        """Etiquetas de las cinco líneas (una por contrato) y dos personalizadas, en contratos y en entregables (RF-41)."""
+        gerente, senior1 = u["gerente_demo"], u["senior1"]
+        for linea in LineaServicio.objects.filter(activa=True):
+            crear_etiqueta_de_linea(linea)  # si la migración ya la creó, no hace nada
+        auditoria = etiquetas_srv.crear(gerente, "Auditoría externa", Etiqueta.Color.AMBAR)
+        observado = etiquetas_srv.crear(senior1, "Cliente en observación", Etiqueta.Color.ROJO)
+        for n, c in enumerate(contratos):
+            propias = [t for t in (etiquetas_srv.etiqueta_de_linea(c),) if t is not None]
+            if n % 4 == 0:
+                propias.append(auditoria)
+            etiquetas_srv.asignar_a_contrato(gerente, c, propias)
+        for n, e in enumerate(x for x in entregables if x.estado != E.HECHO):
+            elegidas = {0: [auditoria], 1: [observado], 2: [auditoria, observado]}.get(n % 6, [])
+            if elegidas:
+                etiquetas_srv.asignar(e.senior_revisor, e, elegidas)
+        return "Etiquetas: «Auditoría externa» y «Cliente en observación» en contratos y entregables; filtre por etiqueta en Tablero y Entregables."
+
+    @staticmethod
+    def _urgencias(u, en_proceso):
+        """Una persona de guardia, una alerta urgente abierta (con una lectura) y otra aceptada fuera de horario (RF-43)."""
+        guardia = u["senior2"]
+        urgencias_srv.marcar_guardia(u["gerente_demo"], guardia, True)
+        # La abierta la activa el gerente sobre un entregable que no es de la persona de guardia: así avisa a tres personas.
+        abierta_e = next(e for e in en_proceso[2:] if e.senior_revisor_id != guardia.pk)
+        aceptada_e = next(e for e in en_proceso[2:] if e.pk != abierta_e.pk)
+        ahora = timezone.now()
+        abierta = urgencias_srv.activar(
+            u["gerente_demo"], abierta_e,
+            "El cliente pide el informe de cierre fuera de horario por una auditoría del regulador.",
+            ahora + datetime.timedelta(hours=20),
+        )
+        urgencias_srv.confirmar_lectura(abierta_e.junior_asignado, abierta)  # los demás destinatarios siguen sin leerla
+        # La aceptada se activó el último sábado por la noche (fuera de horario) y la aceptó la persona de guardia.
+        local = timezone.localtime(ahora)
+        sabado = (local - datetime.timedelta(days=(local.weekday() - 5) % 7 or 7)).replace(hour=21, minute=30, second=0, microsecond=0)
+        aceptada = urgencias_srv.activar(
+            aceptada_e.senior_revisor, aceptada_e, "Caída del enlace del cliente: necesita el acta firmada el domingo.",
+            sabado + datetime.timedelta(hours=14), ahora=sabado,
+        )
+        urgencias_srv.aceptar(guardia, aceptada, ahora=sabado + datetime.timedelta(minutes=40))
+        AlertaUrgente.objects.filter(pk=aceptada.pk).update(activada_en=sabado)
+        Notificacion.objects.filter(entregable=aceptada_e, tipo=Notificacion.Tipo.URGENTE).update(leida=True)
+        return (
+            f"Alerta urgente abierta: {abierta_e.codigo} («{abierta_e.titulo}», junior {abierta_e.junior_asignado.username}); "
+            f"aceptada fuera de horario: {aceptada_e.codigo}. De guardia: {guardia.username}."
+        )
+
+    @staticmethod
+    def _checklists_tdr(entregables, contratos, listos):
+        """Checklist por TDR con avances distintos: desde la ficha confirmada en el primer contrato, a mano en los demás (RF-44)."""
+        con_lista = [e for e in entregables if e.estado != E.HECHO]
+        de_ficha = [e for e in con_lista if e.contrato_id == contratos[0].pk]
+        manuales = [e for e in con_lista if e.contrato_id != contratos[0].pk][:9]
+        for e in de_ficha:
+            tdr_srv.generar(e, e.senior_revisor)
+        for e in manuales:
+            for texto, tipo, obligatorio in ITEMS_TDR_MANUALES:
+                tdr_srv.agregar(e, e.junior_asignado, texto, tipo, obligatorio)
+        pendiente = listos[0]  # En proceso, con obligatorios sin cumplir: el envío a revisión pide confirmación
+        for n, e in enumerate(de_ficha + manuales):
+            if e.estado == E.LISTO_PARA_ENTREGA:
+                objetivo = 1.0
+            elif e.pk == pendiente.pk:
+                objetivo = AVANCES_TDR[0]
+            else:
+                objetivo = AVANCES_TDR[n % len(AVANCES_TDR)]
+            items = list(e.checklist_tdr.all())
+            cumplir = len(items) if objetivo >= 1 else round(objetivo * len(items))
+            sustento = e.adjuntos.order_by("id").first()
+            for item in items[:cumplir]:
+                tdr_srv.marcar(item, e.junior_asignado, ItemChecklistTDR.Estado.CUMPLIDO,
+                               sustento if item.tipo == ItemChecklistTDR.Tipo.DOCUMENTO else None)
+            if cumplir < len(items) and n % 2 == 0:
+                tdr_srv.marcar(items[cumplir], e.junior_asignado, ItemChecklistTDR.Estado.EN_REVISION)
+        return (
+            f"Checklists por TDR en {len(de_ficha) + len(manuales)} entregables, con 0 % a 100 % de cumplimiento; "
+            f"{pendiente.codigo} tiene obligatorios pendientes (al enviarlo a «{E.VERIFICACION_SENIOR.label}» pide confirmación)."
+        )
+
+    def _calidad_y_facturas(self, u, clientes, en_revision, listos, hoy):
+        """Ítems de calidad por cliente, revisiones conformes y no conforme (RF-45) y facturas simuladas (RF-46)."""
+        gerente, senior1 = u["gerente_demo"], u["senior1"]
+        C = ItemCalidad.Categoria
+        calidad_srv.guardar_item(gerente, cliente=clientes[0], categoria=C.FORMATO,
+                                 texto="El informe lleva el código de riesgo operacional exigido por Banco Andino.")
+        calidad_srv.guardar_item(senior1, cliente=clientes[2], categoria=C.CONSISTENCIA, obligatorio=False,
+                                 texto="Los indicadores de disponibilidad coinciden con el reporte del cliente.")
+        v0, v1, v2, v3, v4 = en_revision[:5]
+        R = RevisionCalidad.Resultado
+        for v in (v0, v2, v3):
+            calidad_srv.registrar_conforme(v, v.senior_revisor)
+        # v4: un ítem no conforme registra su observación y lo devuelve a En proceso (RF-26).
+        items = calidad_srv.items_aplicables(v4)
+        respuestas = {i.pk: (R.CONFORME, "") for i in items}
+        respuestas[items[0].pk] = (R.NO_CONFORME, "Faltan los anexos de datos que pide el TDR.")
+        calidad_srv.registrar(v4, v4.senior_revisor, respuestas)
+        Notificacion.objects.filter(entregable=v4, tipo=Notificacion.Tipo.VERIFICACION).delete()  # ya no está en revisión
+
+        # Base de facturación simulada y verificaciones por los servicios (el conector es de solo lectura).
+        def factura(numero, e, estado=FacturaSimulada.Estado.EMITIDA, otro_cliente=False, monto="1180.00"):
+            contrato = e.contrato
+            if otro_cliente:
+                contrato = Contrato.objects.exclude(cliente=e.contrato.cliente_id).order_by("pk").first()
+            return FacturaSimulada.objects.create(
+                numero=numero, cliente_nombre=contrato.cliente.nombre, contrato_numero=contrato.numero_contrato,
+                estado=estado, fecha_emision=hoy - datetime.timedelta(days=12), monto=Decimal(monto),
+            )
+
+        factura("F001-00101", v0)
+        factura_srv.verificar(v0, v0.junior_asignado, "F001-00101")  # correcta
+        factura("F001-00102", v2, otro_cliente=True, monto="2360.00")
+        factura_srv.verificar(v2, v2.junior_asignado, "F001-00102")  # de otro cliente...
+        factura_srv.justificar(
+            v2, v2.senior_revisor, "El cliente confirmó por correo que la factura se emitió a su casa matriz; el número es correcto."
+        )
+        factura("F001-00103", v3, estado=FacturaSimulada.Estado.ANULADA, monto="590.00")
+        factura_srv.verificar(v3, v3.junior_asignado, "F001-00103")  # anulada y sin justificar: impide aprobar
+        libre = listos[0]
+        factura("F001-00104", libre, monto="1475.00")
+        factura("F001-00105", libre, otro_cliente=True, monto="3100.00")
+        factura("F001-00106", libre, estado=FacturaSimulada.Estado.PAGADA, monto="885.00")
+        return (
+            f"Calidad: {v0.codigo}, {v2.codigo} y {v3.codigo} con revisión conforme; {v1.codigo} sin revisión (no se puede aprobar); "
+            f"{v4.codigo} con revisión no conforme (devuelto a En proceso).\n"
+            f"Facturas: {v0.codigo} correcta (F001-00101); {v2.codigo} de otro cliente y justificada (F001-00102); "
+            f"{v3.codigo} anulada sin justificar (F001-00103). Para verificar en vivo en {libre.codigo} "
+            f"(junior {libre.junior_asignado.username}): F001-00104 (correcta), F001-00105 (otro cliente), F001-00106 (pagada) o un número inexistente."
+        )
+
+    @staticmethod
+    def _exportaciones(e):
+        """Dos exportaciones del mismo entregable aprobado, guardadas como versiones 1 y 2 (RF-47)."""
+        exportacion_srv.exportar(e, e.senior_revisor, exportacion_srv.PDF)
+        exportacion_srv.exportar(e, e.senior_revisor, exportacion_srv.EXCEL)
+        return f"Exportaciones: {e.codigo} tiene un PDF y un Excel guardados como versiones 1 y 2 (tipo Exportación)."
+
+    @staticmethod
+    def _valor_extraido(campo):
+        tipo = campo["tipo"]
+        if tipo == "fecha":
+            return "05/11/2026"
+        if tipo == "numero":
+            return "3"
+        if tipo == "opcion":
+            return campo["opciones"][0]
+        if tipo == "texto_largo":
+            return "Revisión de anexos pendiente"
+        return "Octubre 2026"
+
+    def _extraccion(self, e):
+        """Una extracción pendiente de confirmar, leída de un PDF con texto: el último campo queda sin encontrar (RF-48)."""
+        lineas = [f"{c['etiqueta']}: {self._valor_extraido(c)}" for c in e.plantilla.campos_requeridos[:-1]]
+        archivo = SimpleUploadedFile(
+            "solicitud_cliente_demo.pdf", pdf_minimo("Solicitud del cliente (documento ficticio)", lineas),
+            content_type="application/pdf",
+        )
+        extraccion = extraccion_srv.extraer(e.junior_asignado, archivo, entregable=e)
+        return (
+            f"Extracción pendiente: {e.junior_asignado.username} tiene «{extraccion.nombre_original}» sobre {e.codigo}; "
+            f"en la vista previa falta «{e.plantilla.campos_requeridos[-1]['etiqueta']}»."
+        )
+
+    @staticmethod
+    def _reportes(u):
+        """Un reporte de avance automático y otro a pedido, con su PDF y aviso al gerente (RF-50)."""
+        ConfiguracionReporte.cargar()
+        reportes_srv.generar(ReporteAvance.Origen.AUTOMATICO)
+        reportes_srv.generar(ReporteAvance.Origen.MANUAL, u["gerente_demo"])
+        return "Reportes: dos reportes de avance generados (uno automático y otro a pedido); abra «Reportes» como gerente_demo."
+
     # ------------------------------------------------------------------ limpieza
 
     @staticmethod
     def _borrar():
         PlantillaTDR.objects.update(documento_formato=None)
+        for extraccion in Extraccion.objects.all():
+            extraccion.archivo.delete(save=False)  # el archivo de una extracción no tiene señal que lo borre
+        Extraccion.objects.all().delete()
         for modelo in (
+            ReporteAvance,  # su PDF se borra del disco al confirmar la transacción (ver reportes/signals)
+            AlertaUrgente,
+            RevisionCalidad,
+            ItemChecklistTDR,
+            FacturaSimulada,
             AvanceActividad,
             Incorporacion,
             ActividadPlan,
@@ -780,4 +1017,5 @@ class Command(BaseCommand):
             Cliente,
         ):
             modelo.objects.all().delete()  # los archivos en disco se borran al confirmar la transacción (ver signals)
+        Etiqueta.objects.filter(linea_servicio__isnull=True).delete()  # las de línea de servicio las crea la migración
         Usuario.objects.filter(username__in=[x[0] for x in USUARIOS]).delete()

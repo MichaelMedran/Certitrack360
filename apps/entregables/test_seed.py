@@ -81,7 +81,9 @@ class SeedDemoTests(MediaTemporal, TestCase):
         self.assertFalse(Observacion.objects.filter(resuelta=True, solucion="").exists())
 
     def test_notificaciones_de_ejemplo_de_cada_tipo(self):
-        self.assertEqual({n.tipo for n in Notificacion.objects.all()}, {"VENCIMIENTO", "OBSERVACION", "ASIGNACION", "VERIFICACION"})
+        # Ajuste del Sprint 3: la alerta urgente, la verificación de factura y el reporte de avance también dejan avisos.
+        self.assertEqual({n.tipo for n in Notificacion.objects.all()},
+                         {"VENCIMIENTO", "OBSERVACION", "ASIGNACION", "VERIFICACION", "URGENTE", "FACTURA", "REPORTE"})
         self.assertTrue(Notificacion.objects.filter(leida=False).exists())
         self.assertTrue(Notificacion.objects.filter(leida=True).exists())
 
@@ -104,7 +106,7 @@ class SeedDemoTests(MediaTemporal, TestCase):
     def test_los_tipos_de_adjunto_son_variados(self):
         # Ajuste derivado de RF-29 (SDD §11.3): el seed crea el cargo y el acta de los entregables cerrados.
         self.assertEqual(set(Adjunto.objects.values_list("tipo", flat=True)),
-                         {"TDR", "BORRADOR", "VERSION_FINAL", "EVIDENCIA", "CARGO_RECEPCION", "ACTA_CONFORMIDAD"})
+                         {"TDR", "BORRADOR", "VERSION_FINAL", "EVIDENCIA", "CARGO_RECEPCION", "ACTA_CONFORMIDAD", "EXPORTACION"})
 
     def test_ningun_entregable_en_verificacion_o_despues_incumple_los_adjuntos_requeridos(self):
         for e in Entregable.objects.filter(estado__in=[E.VERIFICACION_SENIOR, E.LISTO_PARA_ENTREGA, E.HECHO]):
@@ -281,6 +283,165 @@ class SeedDemoTests(MediaTemporal, TestCase):
         )
 
 
+class SeedSprint3Tests(MediaTemporal, TestCase):
+    """Con `seed_demo --reset` sobre una base vacía queda demostrable todo el Sprint 3 (SDD del Sprint 3, §12.1)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        with mock.patch.object(ollama, "_post", sin_ollama):
+            cls.salida = io.StringIO()
+            call_command("seed_demo", "--reset", stdout=cls.salida)
+
+    def test_clientes_de_los_tres_tipos_y_entregables_de_las_tres_prioridades(self):
+        from apps.entregables import prioridad
+
+        self.assertEqual({c.tipo for c in Cliente.objects.all()}, {"ESTRATEGICO", "REGULAR", "OCASIONAL"})
+        niveles = {
+            prioridad.calcular(e.plazo, e.estado, e.contrato.cliente.tipo, e.alertas_urgentes.abiertas().exists())
+            for e in Entregable.objects.exclude(estado=E.HECHO).select_related("contrato__cliente")
+        }
+        self.assertEqual(niveles, {prioridad.ALTA, prioridad.MEDIA, prioridad.BAJA})
+
+    def test_etiquetas_en_contratos_y_entregables(self):
+        from apps.etiquetas.models import Etiqueta
+
+        self.assertEqual(Etiqueta.objects.filter(linea_servicio__isnull=False).count(), 5)
+        self.assertEqual(set(Etiqueta.objects.filter(linea_servicio__isnull=True).values_list("nombre", flat=True)),
+                         {"Auditoría externa", "Cliente en observación"})
+        self.assertEqual(Etiqueta.contratos.through.objects.values("contrato_id").distinct().count(), 10)
+        self.assertGreaterEqual(Etiqueta.entregables.through.objects.values("entregable_id").distinct().count(), 8)
+        self.client.login(username="gerente_demo", password="demo1234")
+        etiqueta = Etiqueta.objects.get(nombre="Auditoría externa")
+        r = self.client.get(reverse("entregables"), {"etiqueta": etiqueta.pk})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Auditoría externa")
+
+    def test_guardia_y_alertas_urgentes_abierta_y_aceptada(self):
+        from apps.urgencias.models import AlertaUrgente
+
+        self.assertEqual(list(Usuario.objects.filter(de_guardia=True).values_list("username", flat=True)), ["senior2"])
+        abierta = AlertaUrgente.objects.abiertas().get()
+        self.assertGreaterEqual(abierta.destinatarios.count(), 3)
+        self.assertEqual(abierta.lecturas.count(), 1)  # solo leyó el junior: los demás siguen pendientes
+        aceptada = AlertaUrgente.objects.exclude(aceptada_por=None).get()
+        self.assertEqual(aceptada.aceptada_por.username, "senior2")
+        self.assertTrue(aceptada.fuera_de_horario)
+        self.assertIsNotNone(aceptada.cerrada_en)
+        self.assertTrue(Notificacion.objects.filter(tipo="URGENTE", leida=False).exists())
+
+    def test_checklists_por_tdr_con_distintos_porcentajes_y_un_envio_con_advertencia(self):
+        from apps.checklists import tdr
+
+        porcentajes = {tdr.resumen(e)["porcentaje"] for e in Entregable.objects.all() if e.checklist_tdr.exists()}
+        self.assertIn(0, porcentajes)
+        self.assertIn(100, porcentajes)
+        self.assertGreaterEqual(len(porcentajes), 5)
+        self.assertTrue(any(e.checklist_tdr.filter(origen="FICHA").exists() for e in Entregable.objects.all()))
+        self.assertTrue(any(e.checklist_tdr.filter(origen="MANUAL").exists() for e in Entregable.objects.all()))
+        # El entregable En proceso con obligatorios pendientes pide confirmación al enviarlo a revisión.
+        codigo = self.salida.getvalue().split("Checklists por TDR")[1].split(" tiene obligatorios")[0].split()[-1]
+        e = Entregable.objects.get(codigo=codigo)
+        self.assertEqual(e.estado, E.EN_PROCESO)
+        self.assertTrue(tdr.obligatorios_pendientes(e).exists())
+        self.assertEqual(adjuntos.faltantes_requeridos(e), [])
+
+    def test_revisiones_de_calidad_conforme_y_no_conforme(self):
+        from apps.checklists import calidad
+        from apps.checklists.models import ItemCalidad, RevisionCalidad
+
+        self.assertEqual(set(RevisionCalidad.objects.values_list("resultado", flat=True)), {"CONFORME", "NO_CONFORME"})
+        self.assertTrue(ItemCalidad.objects.filter(cliente__isnull=False).exists())
+        no_conforme = RevisionCalidad.objects.get(resultado="NO_CONFORME")
+        self.assertTrue(no_conforme.respuestas.exclude(observacion="").exists())
+        self.assertEqual(no_conforme.entregable.estado, E.EN_PROCESO)  # lo devolvió a En proceso
+        # En revisión quedan unos con su revisión conforme (aprobables) y uno al que le falta la revisión.
+        en_revision = list(Entregable.objects.filter(estado=E.VERIFICACION_SENIOR))
+        con_revision = [e for e in en_revision if calidad.revision_vigente(e) is not None]
+        sin_revision = [e for e in en_revision if calidad.revision_vigente(e) is None]
+        self.assertTrue(con_revision and sin_revision)
+        self.assertEqual(calidad.condicion(sin_revision[0], E.LISTO_PARA_ENTREGA, None, {}), calidad.MOTIVO_SIN_REVISION)
+        self.assertIsNone(calidad.condicion(con_revision[0], E.LISTO_PARA_ENTREGA, None, {}))
+
+    def test_facturas_simuladas_correcta_de_otro_cliente_justificada_y_anulada(self):
+        from apps.facturacion import verificacion
+        from apps.facturacion.models import FacturaSimulada, VerificacionFactura
+
+        self.assertEqual(FacturaSimulada.objects.count(), 6)
+        self.assertEqual(set(FacturaSimulada.objects.values_list("estado", flat=True)), {"EMITIDA", "ANULADA", "PAGADA"})
+        resultados = dict(VerificacionFactura.objects.values_list("resultado", "justificacion"))
+        self.assertEqual(set(resultados), {"CORRECTA", "OTRO_CLIENTE", "ANULADA"})
+        self.assertTrue(resultados["OTRO_CLIENTE"])  # justificada por el senior
+        self.assertFalse(resultados["ANULADA"])  # sin justificar: impide aprobar
+        anulada = VerificacionFactura.objects.get(resultado="ANULADA").entregable
+        self.assertIn("anulada", verificacion.condicion(anulada, E.LISTO_PARA_ENTREGA, None, {}).lower())
+
+    def test_dos_exportaciones_guardadas_como_versiones(self):
+        exportaciones = list(Adjunto.objects.filter(tipo="EXPORTACION").order_by("version"))
+        self.assertEqual([a.version for a in exportaciones], [1, 2])
+        self.assertEqual(len({a.entregable_id for a in exportaciones}), 1)
+        self.assertEqual([a.nombre_original.rsplit(".", 1)[1] for a in exportaciones], ["pdf", "xlsx"])
+        for a in exportaciones:
+            self.assertTrue(os.path.exists(a.archivo.path))
+
+    def test_extraccion_pendiente_con_un_campo_sin_encontrar(self):
+        from apps.extraccion.models import Extraccion
+
+        extraccion = Extraccion.objects.get()
+        self.assertIsNone(extraccion.aplicada_en)
+        self.assertTrue(os.path.exists(extraccion.archivo.path))
+        estados = {c["estado"] for c in extraccion.campos}
+        self.assertIn("ok", estados)
+        self.assertIn("no_encontrado", estados)
+        self.client.login(username=extraccion.usuario.username, password="demo1234")
+        self.assertEqual(self.client.get(reverse("extraccion_vista", args=[extraccion.pk])).status_code, 200)
+
+    def test_datos_para_los_cuatro_graficos(self):
+        from apps.consolidado.servicios import datos_graficos
+
+        datos = datos_graficos(Usuario.objects.get(username="gerente_demo"))
+        self.assertGreaterEqual(len(datos["activos_por_persona"]), 3)
+        self.assertGreaterEqual(len(datos["cumplidos_por_mes"]), 3)  # varios meses
+        self.assertGreaterEqual(len(datos["atencion_por_cliente"]), 3)
+        self.assertGreaterEqual(len(datos["observaciones_por_tipo"]), 3)
+        self.assertTrue(any(m["porcentaje"] < 100 for m in datos["cumplidos_por_mes"]))  # hay entregas tardías
+
+    def test_reportes_de_avance_automatico_y_a_pedido_con_aviso_al_gerente(self):
+        from apps.reportes.models import ConfiguracionReporte, ReporteAvance
+
+        self.assertEqual(set(ReporteAvance.objects.values_list("origen", flat=True)), {"AUTOMATICO", "MANUAL"})
+        for reporte in ReporteAvance.objects.all():
+            with reporte.archivo.open("rb") as f:
+                self.assertTrue(f.read().startswith(b"%PDF"))
+        gerente = Usuario.objects.get(username="gerente_demo")
+        self.assertEqual(Notificacion.objects.filter(usuario=gerente, tipo="REPORTE").count(), 2)
+        self.assertEqual(ConfiguracionReporte.objects.count(), 1)
+
+    def test_el_resumen_orienta_la_demostracion(self):
+        salida = self.salida.getvalue()
+        for texto in ("Alerta urgente abierta", "Checklists por TDR", "F001-00104", "Exportaciones", "Extracción pendiente", "Reportes:"):
+            self.assertIn(texto, salida)
+
+    def test_cada_pantalla_del_sprint_3_responde_con_cada_rol(self):
+        """Recorrido con los datos de demostración: nada responde 500 ni falla una plantilla."""
+        from apps.reportes.models import ReporteAvance
+
+        entregable = Entregable.objects.exclude(estado=E.HECHO).filter(etiquetas_asignadas__isnull=False).first()
+        rutas = [reverse(n) for n in ("inicio", "tablero", "entregables", "etiquetas", "checklists", "calidad", "consolidado",
+                                      "reportes", "entregable_nuevo")]
+        rutas += [reverse("entregable_detalle", args=[entregable.pk]),
+                  reverse("reporte_detalle", args=[ReporteAvance.objects.first().pk])]
+        for usuario in ("gerente_demo", "senior1", "junior1"):
+            self.client.login(username=usuario, password="demo1234")
+            for ruta in rutas:
+                r = self.client.get(ruta)
+                self.assertIn(r.status_code, (200, 403, 404), f"{usuario} {ruta} -> {r.status_code}")
+                if ruta.startswith(("/reportes", "/consolidado")) and usuario != "gerente_demo":
+                    self.assertEqual(r.status_code, 403, f"{usuario} {ruta}")
+                elif usuario == "gerente_demo":
+                    self.assertEqual(r.status_code, 200, f"{usuario} {ruta}")
+            self.client.logout()
+
+
 class SeedIdempotenciaTests(MediaTemporal, TestCase):
     def sembrar(self, *args):
         salida = io.StringIO()
@@ -323,3 +484,23 @@ class SeedIdempotenciaTests(MediaTemporal, TestCase):
     def test_reset_sin_datos_previos_funciona(self):
         self.sembrar("--reset")
         self.assertEqual(Usuario.objects.count(), 7)
+
+    def test_reset_repetido_deja_los_mismos_datos_del_sprint_3_y_sin_archivos_huerfanos(self):
+        from apps.extraccion.models import Extraccion
+        from apps.facturacion.models import FacturaSimulada
+        from apps.reportes.models import ReporteAvance
+        from apps.urgencias.models import AlertaUrgente
+
+        def cifras_s3():
+            return (FacturaSimulada.objects.count(), AlertaUrgente.objects.count(), ReporteAvance.objects.count(),
+                    Extraccion.objects.count(), Adjunto.objects.filter(tipo="EXPORTACION").count(),
+                    Usuario.objects.filter(de_guardia=True).count())
+
+        self.sembrar("--reset")
+        antes = cifras_s3()
+        rutas = {r.archivo.path for r in ReporteAvance.objects.all()} | {x.archivo.path for x in Extraccion.objects.all()}
+        with self.captureOnCommitCallbacks(execute=True):
+            self.sembrar("--reset")
+        self.assertEqual(cifras_s3(), antes)
+        self.assertEqual(antes, (6, 2, 2, 1, 2, 1))
+        self.assertFalse(any(os.path.exists(r) for r in rutas))

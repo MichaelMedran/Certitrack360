@@ -394,5 +394,6 @@ class SeedConRecepcionTests(MediaTemporal, TestCase):
                          {"BPO", "Custodia", "Digitalización", "Banca", "Estado"})
 
     def test_los_avisos_de_la_demo_llevan_el_codigo(self):
-        for n in Notificacion.objects.select_related("entregable"):
+        # Ajuste del Sprint 3: el aviso de reporte no es de un entregable y el «URGENTE» se redacta con el cliente (SDD §7.4).
+        for n in Notificacion.objects.filter(entregable__isnull=False).exclude(tipo="URGENTE").select_related("entregable"):
             self.assertIn(n.entregable.codigo, n.mensaje, n.mensaje)

@@ -1,7 +1,8 @@
-# Trazabilidad frente al SDD v1.0 y al SDD del Sprint 2
+# Trazabilidad frente al SDD v1.0 y a los SDD de los Sprints 2 y 3
 
-Estado de cada requisito, su hito y lo que lo prueba. Las pruebas se corren con `python manage.py test` (868 hoy: las 445 del
-Sprint 1 y 423 del Sprint 2). El Sprint 2 (`docs/sdd-sprint-2.md`) está más abajo, en [Sprint 2](#sprint-2-docssdd-sprint-2md).
+Estado de cada requisito, su hito y lo que lo prueba. Las pruebas se corren con `python manage.py test` (868 al cerrar el Sprint 2: las 445 del
+Sprint 1 y 423 del Sprint 2; 1214 al cerrar el Sprint 3). El Sprint 2 (`docs/sdd-sprint-2.md`) está más abajo, en [Sprint 2](#sprint-2-docssdd-sprint-2md),
+y el Sprint 3 (`docs/sdd-sprint-3.md`), con RF-40 a RF-51, en [Sprint 3](#sprint-3-docssdd-sprint-3md).
 
 **Leyenda.** *Hecho*: implementado y probado. *Parcial*: lo esencial está hecho y se indica lo que falta. *Sin probar*: escrito, pero no se pudo ejecutar en este entorno.
 
@@ -352,6 +353,74 @@ Pruebas en `apps/entregables/test_observaciones.py` (CorreccionesDeLaRevisionTes
    Sprint 1 «—» solo introduce la urgencia: una prueba del Sprint 1 (`apps/calendario/tests.py`,
    test_lo_normal_y_lo_hecho_no_llevan_etiqueta_de_urgencia) exige que un evento sin urgencia no lo tenga y que termine en el
    título, y ningún requisito explícito del SDD obliga a cambiarla.
+
+## Sprint 3 (`docs/sdd-sprint-3.md`)
+
+Se construyó hito por hito (SDD del Sprint 3, §12). Cada historia vive en su propia app y se integra con el detalle y la máquina de estados por los puntos de extensión de
+`apps/entregables/extensiones.py` (RNF-17). Las decisiones D1 a D11 del SDD (§15) se usaron con el valor propuesto y siguen **por ratificar por el equipo**.
+
+### Requisitos
+
+| Id | HU | Hito | Estado | Código | Dónde se prueba |
+|---|---|---|---|---|---|
+| RF-40 Cierre de brechas de tiempo por etapa e indicadores | HU-11, HU-13 | S3-H1 | Hecho: la auditoría recorrió cada criterio de Trello de HU-11 y HU-13 de punta a punta en pantalla y no encontró brechas que corregir en el código | (sin cambios de código: `apps/entregables/tiempos.py`, `apps/indicadores/servicios.py`) | `apps/entregables/test_auditoria_s3.py` (AuditoriaHU11Tests), `apps/indicadores/test_auditoria_s3.py` (AuditoriaHU13Tests) |
+| RF-41 Etiquetas de colores para contratos y entregables, con filtro | HU-23 | S3-H2 | Hecho: ocho colores con nombre siempre escrito; una etiqueta por línea de servicio (migración y señal) y personalizadas que crean senior, gerente y admin; baja solo del gerente o admin; asignación a entregables (el senior del entregable) y a contratos (gerente y admin); filtro por etiqueta en tablero y lista sobre `entregables_visibles` | `apps/etiquetas/models.py`, `apps/etiquetas/servicios.py`, `apps/etiquetas/views.py`, `apps/etiquetas/forms.py`, `apps/etiquetas/signals.py`, `apps/etiquetas/secciones.py`, `templates/etiquetas/lista.html`, `templates/etiquetas/_seccion.html`, `static/css/s3-prioridad.css` | `apps/etiquetas/tests.py` (LineaDeServicioTests, TarjetaYListaTests, AsignarTests, CrearEntregableConEtiquetasTests, FiltroTests, CrearEtiquetaTests) |
+| RF-42 Prioridad calculada (Alta, Media, Baja) y orden por defecto | HU-29 | S3-H3 | Hecho: se calcula al leer, no se guarda (cambia sola al cambiar el plazo, el tipo de cliente o la alerta urgente); orden por prioridad en tablero, lista e inicio y filtro «Prioridad»; `PRIORIDAD_DIAS_ESTRATEGICO` configurable | `apps/entregables/prioridad.py`, `apps/clientes/models.py` (`Cliente.Tipo`), `templates/entregables/_prioridad.html`, `templates/entregables/_filtros.html` | `apps/entregables/test_prioridad.py` (NivelTests, OrdenPorDefectoTests, FiltroPrioridadTests, VistasTests) |
+| RF-43 Alerta de urgencia fuera de horario con aviso «URGENTE», lectura y aceptación | HU-28 | S3-H4 | Hecho: la activan el senior del entregable, el gerente y el admin; avisa una sola vez a la guardia (marca «de guardia» por usuario, D4), a los seniors y al junior; marca «fuera de horario» según `HORARIO_LABORAL`; lectura y aceptación quedan con usuario y hora; solo una persona acepta; se cierra al aceptar o al entregar; franja en todas las pantallas; correo solo con servidor local (D3) | `apps/urgencias/models.py`, `apps/urgencias/servicios.py`, `apps/urgencias/views.py`, `apps/urgencias/forms.py`, `apps/urgencias/context_processors.py`, `apps/urgencias/secciones.py`, `templates/urgencias/_franja.html`, `templates/urgencias/_seccion.html` | `apps/urgencias/tests.py` (ActivarTests, AvisoTests, FueraDeHorarioTests, LecturaTests, FranjaTests, AceptarTests, CierreAlEntregarTests, DetalleTests, DatosParaLaPrioridadTests, RestriccionesTests, CrearEntregableUrgenteTests, PersonalGuardiaTests) |
+| RF-44 Checklist por TDR con estados, sustento, % de cumplimiento y aviso antes de la revisión | HU-25 | S3-H5 | Hecho: se genera desde la ficha de levantamiento confirmada sin duplicar (o se agrega a mano), cada ítem guarda quién y cuándo lo marcó y el adjunto que lo sustenta; % de cumplimiento; enviar a revisión con obligatorios pendientes advierte y pide confirmación, sin bloquear (D8), y queda en el historial; consulta `/checklists/` con filtros | `apps/checklists/models.py` (`ItemChecklistTDR`), `apps/checklists/tdr.py`, `apps/checklists/views.py`, `templates/checklists/_tdr.html`, `templates/checklists/checklists.html` | `apps/checklists/tests.py` (GeneracionTests, MarcadoTests, CumplimientoTests, Caso34AvisoAntesDeRevisionTests, ConsultaTests) |
+| RF-45 Checklist de control de calidad por cliente, condición para aprobar y revisiones registradas | HU-26 | S3-H6 | Hecho: cuatro ítems generales (migración) y los de cada cliente; no se aprueba sin una revisión conforme del ciclo de revisión actual (cambio deliberado D6 de la regla `VERIFICACION_SENIOR → LISTO_PARA_ENTREGA`); un «No conforme» exige su observación y devuelve el entregable a En proceso como en RF-26; cada revisión guarda revisor, fecha, hora y resultado y nunca se edita | `apps/checklists/models.py` (`ItemCalidad`, `RevisionCalidad`, `RespuestaCalidad`), `apps/checklists/calidad.py`, `apps/checklists/views.py`, `apps/entregables/testing.py` (`aprobar`), `templates/checklists/_calidad.html`, `templates/checklists/calidad.html` | `apps/checklists/tests.py` (ConfiguracionTests, Caso35RevisionTests, PantallaDeCalidadTests); ajustes de pruebas del Sprint 1 y 2 con el ayudante `aprobar` en `apps/entregables/tests.py`, `apps/entregables/test_reglas.py`, `apps/entregables/test_entregas.py`, `apps/entregables/test_observaciones.py` y `apps/entregables/test_personal.py` |
+| RF-46 Verificación del número de factura contra una base simulada, con historial y justificación del senior | HU-30 | S3-H7 | Hecho: conector de solo lectura configurable (`FACTURACION_CONECTOR`); resultados correcta, no existe, otro cliente, otro contrato, anulada y sin conexión; el historial no se edita; una verificación observada impide aprobar salvo justificación del senior del entregable (el junior no justifica); un fallo del conector no tumba la pantalla | `apps/facturacion/models.py`, `apps/facturacion/conector.py`, `apps/facturacion/verificacion.py`, `apps/facturacion/views.py`, `templates/facturacion/_factura.html` | `apps/facturacion/tests.py` (ConectorTests, VerificacionTests, Caso36AprobacionTests, VistaTests) |
+| RF-47 Exportación del entregable a PDF y Excel, registrada y guardada como versión | HU-27 | S3-H8 | Hecho: valida los obligatorios (ID-TDR, fecha de recepción y campos de la plantilla) y nombra los que faltan; genera PDF (`reportlab`) y Excel (`openpyxl`, con marcadores en el `.xlsx` de la plantilla del cliente si existe, D11); cada exportación es una versión nueva del tipo Exportación, sin sobrescribir, y queda en el historial | `apps/exportacion/servicios.py`, `apps/exportacion/pdf.py`, `apps/exportacion/excel.py`, `apps/exportacion/views.py`, `templates/exportacion/_seccion.html` | `apps/exportacion/tests.py` (PermisosYValidacionTests, DatosConsolidadosTests, PdfTests, ExcelTests, VersionadoEHistorialTests) |
+| RF-48 Extracción de datos (OCR local) con vista previa editable y aviso de ilegibilidad | HU-24 | S3-H9 | Hecho: texto del PDF con `pypdf` y OCR con Tesseract (páginas escaneadas e imágenes; sin Tesseract avisa y sigue a mano, D2); la lectura es solo una propuesta y nada se guarda hasta confirmar; marca lo poco legible y lo no encontrado; funciona sobre un entregable y en «Nuevo entregable» (adjunta el documento como TDR) | `apps/extraccion/models.py`, `apps/extraccion/motores.py`, `apps/extraccion/campos.py`, `apps/extraccion/servicios.py`, `apps/extraccion/views.py`, `apps/extraccion/testing.py`, `templates/extraccion/vista.html`, `templates/extraccion/_seccion.html`, `templates/extraccion/_prellenar.html` | `apps/extraccion/tests.py` (TextoDelPdfTests, OcrSimuladoTests, SinOcrTests, NadaSeGuardaSinConfirmarTests, SobreUnEntregableTests, PermisosTests) |
+| RF-49 Gráficos gerenciales en el consolidado | HU-22 | S3-H10 | Hecho: cuatro gráficos (activos por persona, cumplidos dentro del plazo por mes, atención promedio por cliente y observaciones por tipo de error) dibujados como SVG en el servidor, con el valor escrito y texto alternativo; filtros por cliente, sector, contrato y fechas; solo gerente y admin | `apps/consolidado/graficos.py`, `apps/consolidado/servicios.py` (`datos_graficos`), `apps/consolidado/views.py`, `templates/consolidado/consolidado.html`, `static/css/s3-gerencia.css` | `apps/consolidado/test_graficos.py` (AccesoGraficosTests, CifrasGraficosTests, FiltrosGraficosTests, PantallaGraficosTests, FuncionesSvgTests) |
+| RF-50 Reportes de avance automáticos y a pedido, guardados, en PDF, con aviso al gerente | HU-31 | S3-H11 | Hecho: cifras calculadas de los registros por cliente y contrato; a pedido y automático (periodicidad diaria, semanal o mensual en `ConfiguracionReporte`); el automático lo revisa la tarea programada cada hora (§7.11) y sale una sola vez por periodo, aunque corra varias veces o a la vez; PDF guardado fuera de la URL pública y descargable solo por gerente y admin; avisa a los gerentes | `apps/reportes/models.py`, `apps/reportes/servicios.py`, `apps/reportes/pdf.py`, `apps/reportes/views.py`, `apps/reportes/signals.py`, `apps/alertas/programador.py` (`tarea_reporte`), `templates/reportes/lista.html`, `templates/reportes/detalle.html` | `apps/reportes/tests.py` (CifrasTests, GeneracionAPedidoTests, PermisosTests, ConfiguracionTests, MomentoProgramadoTests, ReporteAutomaticoTests, TareaProgramadaTests) |
+| RF-51 Plataforma independiente: servidor de producción, política de contenido, bloqueo de ingreso y guía de despliegue | HU-09 | S3-H12 | Hecho: `manage.py servir` (waitress y WhiteNoise); cabecera `Content-Security-Policy` en toda respuesta (solo el propio servidor y `FILEDOC_URL`); ningún script en línea ni manejador `on…=` en las plantillas; bloqueo tras `LOGIN_MAX_INTENTOS` fallos por usuario y dirección durante `LOGIN_BLOQUEO_MINUTOS`; guía de instalación, respaldos y programador | `apps/cuentas/management/commands/servir.py`, `apps/cuentas/middleware.py`, `apps/cuentas/bloqueo.py`, `apps/cuentas/backends.py`, `apps/cuentas/models.py` (`IntentoIngreso`), `docs/despliegue.md` | `apps/cuentas/test_plataforma.py` (BloqueoDeIngresoTests, PoliticaDeContenidoTests, SinOrigenesExternosTests, EnlaceFiledocTests, ServidorDeProduccionTests) |
+
+### Requisitos no funcionales del Sprint 3 (§4)
+
+| Id | Estado | Cómo se cumple / se prueba |
+|---|---|---|
+| RNF-15 Dependencias locales | Hecho: `openpyxl`, `reportlab`, `pypdf`, `pypdfium2`, `Pillow`, `waitress` y `whitenoise` trabajan en el servidor sin conectarse; los gráficos son SVG del servidor, sin JavaScript nuevo | `requirements.txt`; `apps/consolidado/test_graficos.py` (FuncionesSvgTests) |
+| RNF-16 Sin salida de datos | Hecho: una prueba recorre plantillas y estáticos buscando otros orígenes, scripts en línea y manejadores `on…=`, y la cabecera de política de contenido lo impone | `apps/cuentas/test_plataforma.py` (PoliticaDeContenidoTests, SinOrigenesExternosTests) |
+| RNF-17 Módulos independientes | Hecho: cada historia nueva vive en su app y se integra con `apps/entregables/extensiones.py` sin editar `servicios.mover` | `apps/entregables/extensiones.py`; las pruebas de cada app |
+
+### Casos clave (§13)
+
+| # | Prueba |
+|---|---|
+| 31 | `apps/etiquetas/tests.py` (CrearEtiquetaTests, AsignarTests, FiltroTests) |
+| 32 | `apps/entregables/test_prioridad.py` (NivelTests, OrdenPorDefectoTests, VistasTests) |
+| 33 | `apps/urgencias/tests.py` (AvisoTests, LecturaTests, AceptarTests) |
+| 34 | `apps/checklists/tests.py` (GeneracionTests, Caso34AvisoAntesDeRevisionTests) |
+| 35 | `apps/checklists/tests.py` (Caso35RevisionTests) |
+| 36 | `apps/facturacion/tests.py` (Caso36AprobacionTests) |
+| 37 | `apps/exportacion/tests.py` (PermisosYValidacionTests, PdfTests, ExcelTests, VersionadoEHistorialTests) |
+| 38 | `apps/extraccion/tests.py` (NadaSeGuardaSinConfirmarTests, OcrSimuladoTests, SinOcrTests) |
+| 39 | `apps/consolidado/test_graficos.py` (AccesoGraficosTests, CifrasGraficosTests) |
+| 40 | `apps/reportes/tests.py` (ReporteAutomaticoTests, PermisosTests) |
+| 41 | `apps/cuentas/test_plataforma.py` (SinOrigenesExternosTests, PoliticaDeContenidoTests, BloqueoDeIngresoTests) |
+| 42 | La suite completa (`python manage.py test`) y `makemigrations --check`: las pruebas de los sprints 1 y 2 pasan; las migraciones del Sprint 3 son aditivas |
+
+### Hitos (§12)
+
+| Hito | Estado |
+|---|---|
+| S3-H0 Wireframes, SDD y base | Hecho: SDD, wireframes (`docs/wireframes/sprint-3.html`), puntos de extensión, apps nuevas y configuración |
+| S3-H1 a S3-H12 | Hechos, ver la tabla de requisitos |
+| S3-H13 Datos, documentación y recorrido | Hecho: `seed_demo --reset` deja demostrable todo el Sprint 3 (§12.1) usando los servicios de cada app: clientes de los tres tipos y entregables de las tres prioridades; etiquetas de línea y dos personalizadas en contratos y entregables; guardia, una alerta urgente abierta (con una lectura) y otra aceptada fuera de horario; checklists por TDR con 0 % a 100 %, uno con obligatorios pendientes; ítems de calidad por cliente, revisiones conformes y una no conforme; base de facturas simuladas y verificaciones (correcta, de otro cliente justificada y anulada); dos exportaciones como versiones; una extracción pendiente; datos para los cuatro gráficos (entregas en varios meses, algunas tardías) y dos reportes de avance. Guion de demostración en `README.md`. Recorrido del Sprint 3 con los tres roles sin errores de plantilla |
+
+Pruebas del seed: `apps/entregables/test_seed.py` (SeedSprint3Tests y SeedIdempotenciaTests). Ajustes de pruebas del Sprint 2 derivados de §12.1: el seed ahora también deja avisos de tipo
+Urgente, Factura y Reporte y adjuntos de tipo Exportación, y los plazos de los entregados abarcan varios meses (para el gráfico de cumplimiento).
+
+### Comprobaciones del cierre (S3-H13)
+
+- **Reportes periódicos y programador:** `apps/alertas/programador.py` llama a `tarea_reporte()` dentro de `tarea_alertas`, que corre cada hora (SDD §7.11: «la tarea programada existente revisa cada hora si corresponde generar uno»);
+  `generar_si_corresponde` decide por la periodicidad guardada y reclama el periodo con un `UPDATE` condicional, así que a lo sumo sale uno por periodo. Lo dicho en `docs/despliegue.md` es correcto.
+- **Política de contenido estricta:** con `script-src 'self'` ninguna plantilla (incluidas las del Sprint 3) tiene `<script>` sin `src` ni manejadores `on…=`; lo comprueba `apps/cuentas/test_plataforma.py` (PoliticaDeContenidoTests).
+- **Defecto corregido en el recorrido:** la ficha de un reporte de avance en el panel técnico (`/admin/`) fallaba con «This file is not accessible via a URL» porque mostraba el PDF como enlace y los
+  archivos no tienen URL pública; ahora muestra la ubicación en texto, como el panel de adjuntos (`apps/reportes/admin.py`). Lo detecta `apps/cuentas/test_admin.py` (PanelTecnicoHumoTests) sobre los datos del seed.
+- **Navegación del senior a Etiquetas:** la pestaña «Etiquetas» de Gestión solo se ve con rol gerente o admin (Gestión no está en la barra del senior); el senior crea y asigna etiquetas desde la sección «Etiquetas» del entregable
+  y llega a `/etiquetas/` por la dirección. Se deja como está (cumple RF-41); queda para decidir si se le agrega un acceso.
 
 ## Pendiente para cerrar el SDD
 

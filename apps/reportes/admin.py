@@ -6,7 +6,13 @@ from .models import ConfiguracionReporte, ReporteAvance
 @admin.register(ReporteAvance)
 class ReporteAvanceAdmin(admin.ModelAdmin):
     list_display = ("datos_al", "origen", "generado_por", "generado_en")
-    readonly_fields = ("origen", "generado_por", "generado_en", "datos_al", "datos", "archivo")
+    # El PDF no tiene URL pública (MEDIA_URL es None): el panel muestra su ubicación en texto, no un enlace.
+    exclude = ("archivo",)
+    readonly_fields = ("origen", "generado_por", "generado_en", "datos_al", "datos", "ruta_en_disco")
+
+    @admin.display(description="Ubicación en el servidor")
+    def ruta_en_disco(self, obj):
+        return obj.archivo.name
 
     def has_add_permission(self, request):
         return False
