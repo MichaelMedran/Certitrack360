@@ -22,6 +22,7 @@ SECCIONES = {
     "notificaciones": "avisos",
     # Sprint 3 (SDD del Sprint 3, §9): todo lo nuevo vive en pestañas de secciones existentes.
     "checklists": "entregables", "etiquetas": "gestion", "calidad": "gestion", "reportes": "consolidado",
+    "reporte_generar": "consolidado", "reporte_detalle": "consolidado", "reporte_pdf": "consolidado",
 }
 
 

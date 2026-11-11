@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Reporte de avance · {{ reporte.datos_al|date:"d/m/Y H:i" }}{% endblock %}
+{% block contenido %}
+<div class="no-imprimir">
+  <h1>Consolidado</h1>
+  {% include "consolidado/_pestanas.html" with pestana="reportes" %}
+  <p><a href="{% url 'reportes' %}">← Reportes</a></p>
+</div>
+
+<div class="reporte-pantalla">
+  <h2>Reporte de avance de entregables</h2>
+  <div class="reporte-meta">
+    <span><strong>Datos al:</strong> {{ reporte.datos_al|date:"d/m/Y" }} a las {{ reporte.datos_al|date:"H:i" }} (hora de Lima)</span>
+    <span><strong>Origen:</strong> {{ reporte.get_origen_display }}{% if reporte.generado_por %} · {{ reporte.generado_por.nombre }}{% endif %}</span>
+    <span><strong>Por vencer:</strong> plazo en los próximos {{ datos.ventana_dias }} días</span>
+  </div>
+  <div class="acciones no-imprimir">
+    <a class="boton" href="{% url 'reporte_pdf' reporte.pk %}">Descargar PDF</a>
+    <button type="button" class="boton sec" data-imprimir>Imprimir</button>
+    <span class="suave">También puede imprimir con Ctrl+P.</span>
+  </div>
+  <p class="suave">Las cifras salen de los registros de la plataforma; no se ingresan a mano.</p>
+
+  <h3>Totales del área</h3>
+  <div class="tabla"><table>
+    <thead><tr><th class="num">Entregables</th><th class="num">Activos</th>
+      {% for e in estados %}<th class="num">{{ e.etiqueta }}</th>{% endfor %}
+      <th class="num">Vencidos</th><th class="num">Por vencer</th><th class="num">Observaciones pendientes</th></tr></thead>
+    <tbody><tr class="total-fila"><td class="num">{{ datos.totales.total }}</td><td class="num">{{ datos.totales.activos }}</td>
+      {% for n in datos.totales.celdas %}<td class="num">{{ n }}</td>{% endfor %}
+      <td class="num">{{ datos.totales.vencidos }}</td><td class="num">{{ datos.totales.por_vencer }}</td>
+      <td class="num">{{ datos.totales.observaciones_pendientes }}</td></tr></tbody>
+  </table></div>
+
+  <h3>Por cliente y contrato</h3>
+  <div class="tabla"><table>
+    <thead><tr><th>Cliente</th><th>Contrato</th><th class="num">Total</th>
+      {% for e in estados %}<th class="num">{{ e.etiqueta }}</th>{% endfor %}
+      <th class="num">Vencidos</th><th class="num">Por vencer</th><th class="num">Obs. pendientes</th></tr></thead>
+    <tbody>{% for c in datos.clientes %}
+      <tr class="total-fila"><td>{{ c.nombre }}</td><td>Todos los contratos</td><td class="num">{{ c.total }}</td>
+        {% for n in c.celdas %}<td class="num">{{ n }}</td>{% endfor %}
+        <td class="num">{{ c.vencidos }}</td><td class="num">{{ c.por_vencer }}</td><td class="num">{{ c.observaciones_pendientes }}</td></tr>
+      {% for k in c.contratos %}
+      <tr><td></td><td>{{ k.nombre }}</td><td class="num">{{ k.total }}</td>
+        {% for n in k.celdas %}<td class="num">{{ n }}</td>{% endfor %}
+        <td class="num">{{ k.vencidos }}</td><td class="num">{{ k.por_vencer }}</td><td class="num">{{ k.observaciones_pendientes }}</td></tr>
+      {% endfor %}
+    {% empty %}<tr><td colspan="{{ estados|length|add:6 }}">No hay entregables registrados.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="suave">Vencidos y por vencer no incluyen los entregables ya entregados. Observaciones pendientes: aún sin acción correctiva.</p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/imprimir.js' %}" defer></script>{% endblock %}

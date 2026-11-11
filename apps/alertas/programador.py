@@ -32,7 +32,22 @@ def tarea_alertas():
     logger.info("Alertas de vencimiento generadas: %s", creadas)
     actas = generar_alertas_acta()  # acta de conformidad pendiente: una sola vez por entrega (RF-29)
     logger.info("Alertas de acta pendiente generadas: %s", actas)
+    tarea_reporte()
     return creadas + actas
+
+
+def tarea_reporte():
+    """Reporte de avance automático (RF-50): a lo sumo uno por periodo. Un fallo no debe frenar las alertas."""
+    from apps.reportes.servicios import generar_si_corresponde
+
+    try:
+        reporte = generar_si_corresponde()
+    except Exception:  # noqa: BLE001  (se registra y se reintenta en la siguiente hora)
+        logger.exception("No se pudo generar el reporte de avance automático")
+        return None
+    if reporte:
+        logger.info("Reporte de avance automático generado: %s", reporte.pk)
+    return reporte
 
 
 def tarea_lecciones():

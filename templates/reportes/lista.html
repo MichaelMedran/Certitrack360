@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes de avance{% endblock %}
+{% block contenido %}
+<h1>Consolidado</h1>
+{% include "consolidado/_pestanas.html" with pestana="reportes" %}
+<p class="suave">Reportes de avance por cliente y contrato. Se calculan con lo registrado en la plataforma (sin ingreso manual), se guardan en este
+  servidor y se pueden ver, descargar en PDF o imprimir. Cada reporte nuevo avisa a los gerentes.</p>
+
+<div class="acciones">
+  <form method="post" action="{% url 'reporte_generar' %}">{% csrf_token %}<button class="boton">Generar reporte</button></form>
+</div>
+
+<h2>Reportes generados</h2>
+{% if reportes %}
+<div class="tabla"><table>
+  <thead><tr><th>Datos al</th><th>Origen</th><th>Generado por</th><th>Acciones</th></tr></thead>
+  <tbody>{% for r in reportes %}
+  <tr>
+    <td><a href="{% url 'reporte_detalle' r.pk %}">{{ r.datos_al|date:"d/m/Y H:i" }}</a></td>
+    <td>{{ r.get_origen_display }}</td>
+    <td>{% if r.generado_por %}{{ r.generado_por.nombre }}{% else %}Tarea programada{% endif %}</td>
+    <td><a href="{% url 'reporte_detalle' r.pk %}">Ver</a> · <a href="{% url 'reporte_pdf' r.pk %}">Descargar PDF</a></td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="tarjeta">Todavía no hay reportes. Pulse «Generar reporte» o espere al automático.</p>{% endif %}
+
+<h2>Generación automática</h2>
+<form method="post" class="tarjeta reporte-config">{% csrf_token %}
+  {% if form.errors %}<div class="aviso aviso-error" role="alert">Revise los datos del formulario.
+    <ul>{% for campo in form %}{% for error in campo.errors %}<li>{{ campo.label }}: {{ error }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+  <div class="filtros-grid">
+    <div><label for="{{ form.periodicidad.id_for_label }}">Periodicidad</label>{{ form.periodicidad }}</div>
+    <div><label for="{{ form.dia_semana.id_for_label }}">Día de la semana (semanal)</label>{{ form.dia_semana }}</div>
+    <div><label for="{{ form.dia_mes.id_for_label }}">Día del mes (mensual, del 1 al 28)</label>{{ form.dia_mes }}</div>
+    <div><label for="{{ form.hora.id_for_label }}">Hora (Lima)</label>{{ form.hora }}</div>
+  </div>
+  <p class="suave">Estado actual: <strong>{{ config.get_periodicidad_display }}</strong>.
+    {% if config.ultimo_automatico %}Último automático: {{ config.ultimo_automatico|date:"d/m/Y H:i" }}.{% else %}Aún no se generó ninguno automático.{% endif %}
+    La tarea programada revisa cada hora si toca generar uno y crea a lo sumo uno por periodo.</p>
+  <div class="acciones"><button class="boton sec">Guardar periodicidad</button></div>
+</form>
+{% endblock %}
