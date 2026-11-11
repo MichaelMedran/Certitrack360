@@ -8,6 +8,8 @@ from apps.clientes.models import Contrato
 from apps.cuentas.models import Usuario
 from apps.etiquetas import servicios as etiquetas_srv
 from apps.etiquetas.models import Etiqueta
+from apps.urgencias import forms as urgencias_forms
+from apps.urgencias import servicios as urgencias_srv
 
 from . import adjuntos, entregas
 from .models import Adjunto, Entrega, Entregable, TipoError
@@ -98,6 +100,15 @@ class EntregableForm(forms.Form):
         help_text="Viene marcada la etiqueta de la línea de servicio del contrato. El contrato puede tener etiquetas propias.",
     )
 
+    # Alerta de urgencia fuera de horario (RF-43): con «Urgente» son obligatorios la naturaleza y el plazo esperado.
+    prioridad = forms.ChoiceField(
+        label="Prioridad", choices=[("NORMAL", "Normal"), ("URGENTE", "Urgente – fuera de horario")], initial="NORMAL",
+        widget=forms.RadioSelect, required=False,
+        error_messages={"invalid_choice": "Elija una prioridad de la lista."},
+    )
+    naturaleza = urgencias_forms.campo_naturaleza()
+    plazo_esperado = urgencias_forms.campo_plazo()
+
     AYUDA_POR_TIPO = {"numero": "Número", "fecha": "Fecha", "texto_largo": "Texto largo", "opcion": "Elija una opción"}
 
     def __init__(self, usuario, plantilla, *args, **kwargs):
@@ -137,7 +148,7 @@ class EntregableForm(forms.Form):
             self.campos_dinamicos.append(c["nombre"])
         # Los errores se listan en el mismo orden en que se ven las secciones de la pantalla.
         self.order_fields(["contrato", "titulo", *self.CAMPOS_RECEPCION, "plazo", *self.campos_dinamicos,
-                           "junior_asignado", "senior_revisor", "etiquetas"])
+                           "junior_asignado", "senior_revisor", "etiquetas", "prioridad", "naturaleza", "plazo_esperado"])
 
     def _seccion(self, nombres):
         return [self[n] for n in nombres if n in self.fields]
@@ -200,7 +211,15 @@ class EntregableForm(forms.Form):
                 self.add_error("fecha_recepcion", "La fecha de recepción no puede ser futura.")
             if plazo and recepcion > plazo:
                 self.add_error("fecha_recepcion", "La fecha de recepción no puede ser posterior al plazo.")
+        if self.es_urgente and "plazo_esperado" not in self.errors and "naturaleza" not in self.errors:
+            urgencias_forms.validar_urgencia(datos, self.add_error)
         return datos
+
+    @property
+    def es_urgente(self):
+        """True si se eligió «Urgente – fuera de horario» (se consulta con el formulario ya validado)."""
+        valor = self.cleaned_data.get("prioridad") if hasattr(self, "cleaned_data") else None
+        return valor == "URGENTE"
 
     def guardar(self, usuario):
         """Crea el entregable con sus datos de recepción. El código único lo asigna el modelo al guardarlo."""
@@ -216,6 +235,8 @@ class EntregableForm(forms.Form):
             id_tdr=d["id_tdr"], fecha_recepcion=d["fecha_recepcion"],
         )
         etiquetas_srv.asignar_en_creacion(entregable, d.get("etiquetas") or [])
+        if self.es_urgente:  # la alerta se crea junto con el entregable y avisa a la guardia y a los responsables
+            urgencias_srv.activar(usuario, entregable, d["naturaleza"], d["plazo_esperado"])
         return entregable
 
 

@@ -1,0 +1,12 @@
+/* Alerta urgente (RF-43, HU-28): franja en todas las pantallas, sección del detalle y marca de la tarjeta.
+   Siempre con la palabra «URGENTE»: el color solo refuerza. Texto blanco sobre rojo oscuro (contraste mayor que 7:1). */
+.franja-urgente{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .8rem;background:#7f1d1d;color:#fff;border-bottom:4px solid #450a0a;padding:.5rem 1rem}
+.franja-urgente a{color:#fff;font-weight:600;text-decoration:underline}
+.franja-urgente-sello{background:#fff;color:#7f1d1d;border-radius:4px;padding:.05rem .5rem;letter-spacing:.06em}
+.franja-urgente-texto{flex:1 1 20rem}
+.franja-urgente .en-linea{display:inline;margin:0}
+.franja-urgente .boton.sec{background:#fff;color:#7f1d1d;border-color:#fff}
+.alerta-urgente{border:1px solid #dc2626;border-left-width:6px;border-radius:6px;background:#fef2f2;padding:.6rem .9rem}
+.alerta-urgente-titulo{margin:0 0 .4rem;color:#7f1d1d}
+.alerta-urgente .tabla-datos th{text-align:left;width:30%;vertical-align:top;padding-right:.8rem}
+.marca-urgente{background:#7f1d1d;color:#fff;font-weight:700;letter-spacing:.04em}

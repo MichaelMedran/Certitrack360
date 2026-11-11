@@ -8,6 +8,7 @@
   {% if e.ultima_entrega %}<div>Entregado {{ e.ultima_entrega.fecha_entrega|date:"d/m/Y" }} · <span class="etiqueta acta-{{ e.ultima_entrega.acta_estado|lower }}">Acta {{ e.ultima_entrega.get_acta_estado_display|lower }}</span></div>{% endif %}
   <div class="suave">{{ e.junior_asignado.nombre }}</div>
   <div class="insignias">
+    {% include "urgencias/_marca.html" %}
     {% if e.con_correcciones %}<span class="etiqueta subestado">Con correcciones pendientes</span>{% endif %}
     {% if e.n_obs_abiertas %}<span class="etiqueta">{{ e.n_obs_abiertas }} observaci{{ e.n_obs_abiertas|pluralize:"ón,ones" }} abierta{{ e.n_obs_abiertas|pluralize }}: {{ e.tipos_obs_abiertas|join:", " }}</span>{% endif %}
     <span class="etiqueta">Adjuntos: {{ e.n_adjuntos }}</span>

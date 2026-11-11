@@ -36,6 +36,7 @@
       <th class="num">Vencen en 7 días</th>
       <th>Ausencias próximas</th>
       <th>Carga</th>
+      <th>De guardia</th>
     </tr>
   </thead>
   <tbody>
@@ -70,9 +71,22 @@
           </div>
         {% endif %}
       </td>
+      <td>
+        <form method="post" action="{% url 'personal' %}" class="en-linea">{% csrf_token %}
+          <input type="hidden" name="accion" value="guardia">
+          <input type="hidden" name="usuario" value="{{ f.usuario.pk }}">
+          {% if f.usuario.de_guardia %}
+          <strong>Sí</strong> <input type="hidden" name="de_guardia" value="0">
+          <button class="boton sec chico">Quitar guardia<span class="sr-only"> a {{ f.usuario.nombre }}</span></button>
+          {% else %}
+          No <input type="hidden" name="de_guardia" value="1">
+          <button class="boton sec chico">Marcar de guardia<span class="sr-only"> a {{ f.usuario.nombre }}</span></button>
+          {% endif %}
+        </form>
+      </td>
     </tr>
     {% empty %}
-    <tr><td colspan="7">No hay colaboradores para mostrar con estos filtros.</td></tr>
+    <tr><td colspan="8">No hay colaboradores para mostrar con estos filtros.</td></tr>
     {% endfor %}
   </tbody>
 </table></div>

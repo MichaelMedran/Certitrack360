@@ -13,6 +13,7 @@ from apps.cuentas.permisos import solo_gestion
 from apps.entregables import personal as personal_srv
 from apps.entregables.filtros import entero
 from apps.entregables.models import Entregable, ResponsableApoyo
+from apps.urgencias import servicios as urgencias_srv
 
 from .forms import FILA_VACIA, TIPOS_CAMPO_ETIQUETAS, ClienteForm, ContratoForm, LineaServicioForm, PlantillaForm
 from .models import Cliente, Contrato, LineaServicio, PlantillaTDR
@@ -181,6 +182,11 @@ def personal(request):
                 apoyo = get_object_or_404(ResponsableApoyo.objects.select_related("entregable", "usuario"), pk=apoyo_id)
                 personal_srv.quitar_apoyo(apoyo, request.user)
                 messages.success(request, f"Se quitó a {apoyo.usuario.nombre} como apoyo.")
+                return redirect("personal")
+            elif accion == "guardia":  # marca «de guardia» (RF-43, D4): solo gerente y admin, que son quienes llegan aquí
+                u = get_object_or_404(Usuario, pk=entero(request.POST.get("usuario")))
+                urgencias_srv.marcar_guardia(request.user, u, request.POST.get("de_guardia") == "1")
+                messages.success(request, f"{u.nombre} " + ("quedó de guardia." if u.de_guardia else "dejó la guardia."))
                 return redirect("personal")
             else:
                 raise ValidationError("Acción no reconocida.")

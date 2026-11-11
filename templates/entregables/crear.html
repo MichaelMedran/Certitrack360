@@ -68,6 +68,15 @@
     {% empty %}<span class="suave">Todavía no hay etiquetas.</span>{% endfor %}
   </fieldset>
   <p class="suave">{{ form.etiquetas.help_text }}</p>
+
+  <h3>Prioridad</h3>
+  <fieldset class="etq-opciones">
+    <legend>Prioridad del entregable</legend>
+    {% for opcion in form.prioridad %}<label class="etq-opcion" for="{{ opcion.id_for_label }}">{{ opcion.tag }} {{ opcion.choice_label }}</label>{% endfor %}
+  </fieldset>
+  <p class="suave">Solo con «Urgente – fuera de horario» son obligatorios la naturaleza y el plazo esperado. Al crear se avisa «URGENTE» a las personas de guardia, al senior del contrato, al senior revisor y al junior asignado.</p>
+  {% with campo=form.naturaleza %}{% include "entregables/_campo.html" %}{% endwith %}
+  {% with campo=form.plazo_esperado %}{% include "entregables/_campo.html" %}{% endwith %}
   <div class="acciones"><button class="boton">Crear entregable</button><a class="boton sec" href="{% url 'entregables' %}">Cancelar</a></div>
 </form>
 
