@@ -86,11 +86,13 @@ class PaginaDelCalendarioTests(FiltrosBase):
         r = self.ver()
         self.assertContains(r, f'src="{static("js/fullcalendar.min.js")}"')
         self.assertContains(r, f'src="{static("js/fullcalendar-es.min.js")}"')
-        self.assertContains(r, '<div id="calendario"></div>')
-        self.assertContains(r, f'events: "{reverse("calendario_eventos")}"')
+        # RF-51: el código vive en un estático (sin <script> en línea) y recibe la API por atributos data-*.
+        self.assertContains(r, f'src="{static("js/calendario.js")}"')
+        self.assertContains(r, f'<div id="calendario" data-eventos="{reverse("calendario_eventos")}" data-consulta=""></div>')
+        self.assertNotContains(r, "FullCalendar.Calendar(")
 
     def test_en_pantallas_angostas_parte_de_la_lista_y_vuelve_a_la_cuadricula_al_ensanchar(self):
-        html = self.ver().content.decode()
+        html = (Path(settings.BASE_DIR) / "static" / "js" / "calendario.js").read_text(encoding="utf-8")
         self.assertIn("window.matchMedia('(max-width: 700px)')", html)
         self.assertIn("initialView: angosto.matches ? 'listMonth' : 'dayGridMonth'", html)
         self.assertIn("calendario.changeView(angosto.matches ? 'listMonth' : 'dayGridMonth')", html)

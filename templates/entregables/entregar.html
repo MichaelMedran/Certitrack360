@@ -19,7 +19,9 @@
     <div><label for="{{ form.fecha_entrega.id_for_label }}">Fecha de entrega</label>{{ form.fecha_entrega }}
       <p class="suave">No puede ser futura.</p></div>
     <div><label for="{{ form.medio.id_for_label }}">Medio de entrega</label>{{ form.medio }}
-      <p class="suave">Correo · Mesa de partes · FileDoc · Presencial · Otro</p></div>
+      <p class="suave">Correo · Mesa de partes · FileDoc · Presencial · Otro</p>
+      {% if filedoc_url %}<p id="enlace-filedoc"{% if form.medio.value != 'FILEDOC' %} hidden{% endif %}>
+        <a href="{{ filedoc_url }}" target="_blank" rel="noopener noreferrer">Abrir Filedoc</a></p>{% endif %}</div>
     <div><label for="{{ form.cargo.id_for_label }}">Cargo de recepción <strong>(obligatorio)</strong></label>{{ form.cargo }}
       <p class="suave">Formatos: {{ extensiones }} · máximo {{ tamano_max }} MB. Se guarda como adjunto «Cargo de recepción» y queda en el historial.</p></div>
     <div><label for="{{ form.version_enviada.id_for_label }}">Versión enviada al cliente</label>{{ form.version_enviada }}
@@ -39,3 +41,4 @@
   <li>Si el acta queda observada, el trabajo se puede reabrir para corrección y la siguiente entrega será la n.º {{ numero|add:1 }}.</li>
 </ul>
 {% endblock %}
+{% block scripts %}{% if filedoc_url %}{% load static %}<script src="{% static 'js/entregar.js' %}"></script>{% endif %}{% endblock %}

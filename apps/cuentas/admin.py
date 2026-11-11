@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Ausencia, Usuario
+from .models import Ausencia, IntentoIngreso, Usuario
 
 
 @admin.register(Usuario)
@@ -20,3 +20,18 @@ class AusenciaAdmin(admin.ModelAdmin):
     list_select_related = ("usuario", "registrada_por")
     list_filter = ("desde",)
     search_fields = ("usuario__username", "usuario__first_name", "usuario__last_name", "motivo")
+
+
+@admin.register(IntentoIngreso)
+class IntentoIngresoAdmin(admin.ModelAdmin):
+    """Solo lectura: es el rastro del bloqueo de ingreso (RF-51); no se altera a mano."""
+
+    list_display = ("fecha", "usuario_texto", "ip", "exitoso")
+    list_filter = ("exitoso",)
+    search_fields = ("usuario_texto", "ip")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

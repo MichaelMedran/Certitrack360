@@ -89,6 +89,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # estáticos en producción (RF-51): servir no necesita otro servidor web
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -96,6 +97,7 @@ MIDDLEWARE = [
     "apps.cuentas.middleware.SinCacheEnPaginasPrivadas",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.cuentas.middleware.CabecerasDeSeguridad",  # política de contenido sin orígenes externos (RF-51, RNF-16)
 ]
 
 ROOT_URLCONF = "certitrack.urls"
@@ -113,6 +115,7 @@ TEMPLATES = [
                 "apps.alertas.context_processors.notificaciones",
                 "apps.cuentas.context_processors.navegacion",
                 "apps.urgencias.context_processors.urgentes",
+                "apps.cuentas.context_processors.plataforma",
             ],
         },
     },
@@ -123,6 +126,8 @@ WSGI_APPLICATION = "certitrack.wsgi.application"
 DATABASES = {"default": _base_de_datos(os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3"))}
 
 AUTH_USER_MODEL = "cuentas.Usuario"
+# Bloqueo temporal de intentos de ingreso fallidos (RF-51): vale también para el panel /admin/.
+AUTHENTICATION_BACKENDS = ["apps.cuentas.backends.ModelBackendConBloqueo"]
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -161,6 +166,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# WhiteNoise sirve también lo que aún no se recopiló con collectstatic (manage.py servir lo recopila al arrancar).
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Alertas: días antes del vencimiento en que se genera una notificación (una sola por umbral y destinatario).
@@ -251,6 +259,11 @@ OCR_MAX_PAGINAS = _entero("OCR_MAX_PAGINAS", "10")
 
 # Plataforma independiente (RF-51): único origen externo permitido (vacío: ninguno) y bloqueo de intentos de ingreso.
 FILEDOC_URL = os.environ.get("FILEDOC_URL", "").strip()
+_filedoc = urlparse(FILEDOC_URL)
+if FILEDOC_URL and (_filedoc.scheme not in ("http", "https") or not _filedoc.netloc):
+    raise ImproperlyConfigured("FILEDOC_URL debe ser una dirección completa, p. ej. https://filedoc.certicom.local")
+# Solo el origen (esquema y servidor) entra en la cabecera Content-Security-Policy; vacío si no hay Filedoc.
+FILEDOC_ORIGEN = f"{_filedoc.scheme}://{_filedoc.netloc}" if FILEDOC_URL else ""
 LOGIN_MAX_INTENTOS = _entero("LOGIN_MAX_INTENTOS", "5")
 LOGIN_BLOQUEO_MINUTOS = _entero("LOGIN_BLOQUEO_MINUTOS", "15")
 SERVIDOR_PUERTO = _entero("SERVIDOR_PUERTO", "8000")

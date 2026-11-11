@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -9,6 +10,25 @@ from apps.entregables import urgencia
 from apps.entregables.models import Entregable
 from apps.entregables.visibilidad import entregables_visibles
 from apps.equipo.servicios import incorporacion_activa_de
+
+
+class IngresoView(LoginView):
+    """Pantalla de ingreso: si el usuario está bloqueado por intentos fallidos (RF-51), lo explica con el código 429."""
+
+    template_name = "cuentas/login.html"
+
+    def form_invalid(self, form):
+        respuesta = super().form_invalid(form)
+        if getattr(self.request, "_ingreso_bloqueado_hasta", None):
+            respuesta.status_code = 429
+        return respuesta
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        hasta = getattr(self.request, "_ingreso_bloqueado_hasta", None)
+        if hasta:
+            contexto["bloqueado_hasta"] = timezone.localtime(hasta)
+        return contexto
 
 
 @login_required
