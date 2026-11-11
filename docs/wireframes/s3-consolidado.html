@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S3 · Consolidado y Reportes</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 3 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-3.html">← Índice del Sprint 3</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span><span class="activo">Consolidado*</span><span>Gestión*</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (3) · Usuario · Gerente · Salir</span>
+</div>
+<p class="nota">* Solo gerente y admin. Un senior o un junior que abra esta pantalla recibe 403.</p>
+
+<h1>Consolidado</h1>
+<div class="pestanas"><span class="activa">Resumen</span><span class="nuevo">Reportes</span></div>
+
+<div class="panel">
+  <h2 style="margin-top:6px">Cifras actuales (sin cambios)</h2>
+  <div class="contadores">
+    <div class="contador">Entregables activos<b>38</b></div>
+    <div class="contador">Vencidos<b>4</b></div>
+    <div class="contador">Por vencer (7 días)<b>9</b></div>
+    <div class="contador">Observaciones pendientes<b>6</b></div>
+  </div>
+  <p class="nota">Las cifras del consolidado del Sprint 2 no cambian (D12). Los gráficos se suman debajo.</p>
+</div>
+
+<!-- GRAFICOS -->
+<h2>Gráficos gerenciales <span class="nuevo-inline">NUEVO</span> <span class="marca">1</span></h2>
+<div class="caja nuevo">
+  <div class="fila">
+    <label>Cliente <span class="campo">Todos ▾</span></label>
+    <label>Sector <span class="campo">Todos ▾</span></label>
+    <label>Contrato <span class="campo">Todos ▾</span></label>
+    <label>Desde <span class="campo">01/07/2026</span></label>
+    <label>Hasta <span class="campo">10/11/2026</span></label>
+    <span class="boton principal">Aplicar</span>
+  </div>
+  <p class="nota"><b>Filtro aplicado:</b> Cliente: todos · Sector: Financiero · Contrato: todos · Fechas: 01/07/2026 – 10/11/2026</p>
+  <div class="aviso">Sin datos: si el filtro no tiene entregables, cada gráfico dice «No hay datos para el filtro aplicado» y no dibuja barras.</div>
+
+  <!-- Grafico 1 -->
+  <h3 style="margin-top:14px">1. Entregables activos por persona <span class="marca">2</span></h3>
+  <svg width="100%" height="180" viewBox="0 0 480 180" role="img" aria-label="Barras: entregables activos por persona. Junior A 6, Junior B 4, Senior A 3, Senior B 2" style="max-width:480px;display:block;border:1px solid #999;background:#fff">
+    <line x1="40" y1="150" x2="470" y2="150" stroke="#333"/>
+    <line x1="40" y1="20" x2="40" y2="150" stroke="#333"/>
+    <rect x="60" y="50" width="60" height="100" fill="#777"/>
+    <rect x="160" y="78" width="60" height="72" fill="#777"/>
+    <rect x="260" y="98" width="60" height="52" fill="#777"/>
+    <rect x="360" y="118" width="60" height="32" fill="#777"/>
+    <text x="90" y="45" font-size="12" text-anchor="middle">6</text>
+    <text x="190" y="73" font-size="12" text-anchor="middle">4</text>
+    <text x="290" y="93" font-size="12" text-anchor="middle">3</text>
+    <text x="390" y="113" font-size="12" text-anchor="middle">2</text>
+    <text x="90" y="168" font-size="11" text-anchor="middle">Junior A</text>
+    <text x="190" y="168" font-size="11" text-anchor="middle">Junior B</text>
+    <text x="290" y="168" font-size="11" text-anchor="middle">Senior A</text>
+    <text x="390" y="168" font-size="11" text-anchor="middle">Senior B</text>
+  </svg>
+  <details>
+    <summary>Ver tabla de datos</summary>
+    <table><tr><th>Persona</th><th class="num">Entregables activos</th></tr>
+      <tr><td>Junior A</td><td class="num">6</td></tr><tr><td>Junior B</td><td class="num">4</td></tr>
+      <tr><td>Senior A</td><td class="num">3</td></tr><tr><td>Senior B</td><td class="num">2</td></tr></table>
+  </details>
+
+  <!-- Grafico 2 -->
+  <h3 style="margin-top:14px">2. % de entregables cumplidos dentro del plazo, por mes <span class="marca">2</span></h3>
+  <svg width="100%" height="180" viewBox="0 0 480 180" role="img" aria-label="Barras: porcentaje cumplido dentro del plazo. Agosto 70 por ciento, septiembre 82, octubre 91" style="max-width:480px;display:block;border:1px solid #999;background:#fff">
+    <line x1="40" y1="150" x2="470" y2="150" stroke="#333"/>
+    <line x1="40" y1="20" x2="40" y2="150" stroke="#333"/>
+    <rect x="80" y="45" width="80" height="105" fill="#777"/>
+    <rect x="200" y="62" width="80" height="88" fill="#777"/>
+    <rect x="320" y="36" width="80" height="114" fill="#777"/>
+    <text x="120" y="38" font-size="12" text-anchor="middle">70 %</text>
+    <text x="240" y="55" font-size="12" text-anchor="middle">82 %</text>
+    <text x="360" y="29" font-size="12" text-anchor="middle">91 %</text>
+    <text x="120" y="168" font-size="11" text-anchor="middle">Agosto</text>
+    <text x="240" y="168" font-size="11" text-anchor="middle">Septiembre</text>
+    <text x="360" y="168" font-size="11" text-anchor="middle">Octubre</text>
+  </svg>
+  <details>
+    <summary>Ver tabla de datos</summary>
+    <table><tr><th>Mes</th><th class="num">Cumplidos a tiempo</th><th class="num">Entregados</th><th class="num">%</th></tr>
+      <tr><td>Agosto</td><td class="num">7</td><td class="num">10</td><td class="num">70 %</td></tr>
+      <tr><td>Septiembre</td><td class="num">9</td><td class="num">11</td><td class="num">82 %</td></tr>
+      <tr><td>Octubre</td><td class="num">10</td><td class="num">11</td><td class="num">91 %</td></tr></table>
+  </details>
+
+  <!-- Grafico 3 -->
+  <h3 style="margin-top:14px">3. Tiempo promedio de atención por cliente (días, de recepción a entrega) <span class="marca">2</span></h3>
+  <svg width="100%" height="180" viewBox="0 0 480 180" role="img" aria-label="Barras: tiempo promedio de atención en días. Banco Andino 18, Telecom Sur 25, Municipalidad 12" style="max-width:480px;display:block;border:1px solid #999;background:#fff">
+    <line x1="40" y1="150" x2="470" y2="150" stroke="#333"/>
+    <line x1="40" y1="20" x2="40" y2="150" stroke="#333"/>
+    <rect x="60" y="78" width="80" height="72" fill="#777"/>
+    <rect x="180" y="41" width="80" height="109" fill="#777"/>
+    <rect x="300" y="112" width="80" height="38" fill="#777"/>
+    <text x="100" y="72" font-size="12" text-anchor="middle">18</text>
+    <text x="220" y="35" font-size="12" text-anchor="middle">25</text>
+    <text x="340" y="106" font-size="12" text-anchor="middle">12</text>
+    <text x="100" y="168" font-size="11" text-anchor="middle">Banco Andino (ficticio)</text>
+    <text x="220" y="168" font-size="11" text-anchor="middle">Telecom Sur (ficticia)</text>
+    <text x="340" y="168" font-size="11" text-anchor="middle">Municipalidad (ficticia)</text>
+  </svg>
+  <details>
+    <summary>Ver tabla de datos</summary>
+    <table><tr><th>Cliente</th><th class="num">Días promedio</th><th class="num">Entregas consideradas</th></tr>
+      <tr><td>Banco Andino (ficticio)</td><td class="num">18</td><td class="num">6</td></tr>
+      <tr><td>Telecom Sur (ficticia)</td><td class="num">25</td><td class="num">4</td></tr>
+      <tr><td>Municipalidad (ficticia)</td><td class="num">12</td><td class="num">3</td></tr></table>
+  </details>
+
+  <!-- Grafico 4 -->
+  <h3 style="margin-top:14px">4. Observaciones por tipo de error <span class="marca">2</span></h3>
+  <svg width="100%" height="180" viewBox="0 0 480 180" role="img" aria-label="Barras: observaciones por tipo de error. Formato 9, Contenido 6, Dato faltante 4, Otro 2" style="max-width:480px;display:block;border:1px solid #999;background:#fff">
+    <line x1="40" y1="150" x2="470" y2="150" stroke="#333"/>
+    <line x1="40" y1="20" x2="40" y2="150" stroke="#333"/>
+    <rect x="60" y="30" width="60" height="120" fill="#777"/>
+    <rect x="160" y="63" width="60" height="87" fill="#777"/>
+    <rect x="260" y="87" width="60" height="63" fill="#777"/>
+    <rect x="360" y="115" width="60" height="35" fill="#777"/>
+    <text x="90" y="24" font-size="12" text-anchor="middle">9</text>
+    <text x="190" y="57" font-size="12" text-anchor="middle">6</text>
+    <text x="290" y="81" font-size="12" text-anchor="middle">4</text>
+    <text x="390" y="109" font-size="12" text-anchor="middle">2</text>
+    <text x="90" y="168" font-size="11" text-anchor="middle">Formato</text>
+    <text x="190" y="168" font-size="11" text-anchor="middle">Contenido</text>
+    <text x="290" y="168" font-size="11" text-anchor="middle">Dato faltante</text>
+    <text x="390" y="168" font-size="11" text-anchor="middle">Otro</text>
+  </svg>
+  <details>
+    <summary>Ver tabla de datos</summary>
+    <table><tr><th>Tipo de error</th><th class="num">Observaciones</th></tr>
+      <tr><td>Formato</td><td class="num">9</td></tr><tr><td>Contenido</td><td class="num">6</td></tr>
+      <tr><td>Dato faltante</td><td class="num">4</td></tr><tr><td>Otro</td><td class="num">2</td></tr></table>
+  </details>
+  <p class="nota">Los cálculos se reutilizan de Indicadores. Sin permiso (junior o senior), esta pantalla no existe para ellos (404 o 403 según el caso).</p>
+</div>
+
+<!-- REPORTES -->
+<h2>Pestaña «Reportes» <span class="nuevo-inline">NUEVO</span> <span class="marca">3</span></h2>
+<div class="pestanas"><span>Resumen</span><span class="activa nuevo">Reportes</span></div>
+<div class="panel nuevo">
+  <div class="fila"><span class="boton principal">Generar reporte</span> <span class="nota">Genera uno ahora, con las cifras al momento de la generación.</span></div>
+  <table>
+    <tr><th>Fecha y hora</th><th>Origen</th><th>Datos al</th><th>Generado por</th><th>Acciones</th></tr>
+    <tr><td>09/11/2026 08:00</td><td>Automático</td><td>09/11/2026 08:00</td><td>Programación</td><td><span class="boton">Ver</span> <span class="boton">Descargar PDF</span></td></tr>
+    <tr><td>03/11/2026 08:00</td><td>Automático</td><td>03/11/2026 08:00</td><td>Programación</td><td><span class="boton">Ver</span> <span class="boton">Descargar PDF</span></td></tr>
+    <tr><td>02/11/2026 16:45</td><td>Manual</td><td>02/11/2026 16:45</td><td>Gerente</td><td><span class="boton">Ver</span> <span class="boton">Descargar PDF</span></td></tr>
+  </table>
+  <p class="nota">«Ver» abre el reporte en pantalla con estilo de impresión. Cada reporte guarda sus cifras y su PDF; no se sobrescribe. Al crearse se avisa a los gerentes activos (aviso con enlace).</p>
+
+  <h3 style="margin-top:12px">Configuración de periodicidad</h3>
+  <div class="fila">
+    <label>Periodicidad <span class="campo">Semanal ▾</span></label>
+    <span class="nota">Opciones: Diaria · Semanal · Mensual · Desactivada</span>
+  </div>
+  <div class="fila">
+    <label>Día de la semana (semanal) <span class="campo">Lunes ▾</span></label>
+    <label>Día del mes (mensual) <span class="campo">—</span></label>
+    <label>Hora <span class="campo">08:00</span></label>
+  </div>
+  <p class="nota">Último automático: 09/11/2026 08:00. La tarea programada revisa cada hora y genera a lo sumo un reporte por periodo.</p>
+  <div class="fila"><span class="boton principal">Guardar configuración</span> <span class="boton">Cancelar</span> <span class="marca">4</span></div>
+</div>
+
+<h3 style="margin-top:14px">Vista previa de un reporte <span class="nuevo-inline">NUEVO</span> <span class="marca">5</span></h3>
+<div class="caja nuevo">
+  <p><b>Reporte de avance · Área de Proyectos</b> · Datos al 09/11/2026 08:00</p>
+  <table>
+    <tr><th>Cliente · contrato</th><th class="num">Activos</th><th class="num">Vencidos</th><th class="num">Por vencer (7 días)</th><th class="num">Obs. pendientes</th></tr>
+    <tr><td>Banco Andino (ficticio) · DEMO-2026-001</td><td class="num">14</td><td class="num">1</td><td class="num">3</td><td class="num">2</td></tr>
+    <tr><td>Telecom Sur (ficticia) · DEMO-2026-004</td><td class="num">9</td><td class="num">2</td><td class="num">2</td><td class="num">3</td></tr>
+    <tr><th>Total del área</th><th class="num">38</th><th class="num">4</th><th class="num">9</th><th class="num">6</th></tr>
+  </table>
+  <p class="nota">Desglose por estado en cada fila; el PDF tiene el mismo contenido con encabezado y pie de fecha. Si no hay datos, el reporte lo dice en texto.</p>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Gráficos gerenciales</b> (HU-22; criterios de gráficos y filtros por cliente, sector, contrato y fechas; numeración por confirmar con Trello). Solo gerente y admin (SDD 8). Sin JavaScript: los gráficos son SVG del servidor.</li>
+  <li><b>Filtros y filtro aplicado</b> (HU-22): cada gráfico muestra el filtro aplicado. Los datos de cada gráfico se pueden leer en su tabla.</li>
+  <li><b>Pestaña Reportes</b> (HU-31; criterio 3: fecha y hora de los datos; criterios de generación a pedido y automática; numeración por confirmar). Acceso solo gerente y admin.</li>
+  <li><b>Periodicidad</b> (HU-31): la configuración la edita el gerente en pantalla; «Desactivada» no genera reportes automáticos.</li>
+  <li><b>Ver y descargar</b> (HU-31, criterio 3): el reporte guardado trae las cifras y la fecha de los datos; se puede ver, descargar o imprimir.</li>
+</ol>
+
+</div>
+</body>
+</html>

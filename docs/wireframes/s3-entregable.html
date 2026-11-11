@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S3 · Detalle del entregable</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 3 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-3.html">← Índice del Sprint 3</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span class="activo">Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo">Buscar código, contrato, cliente…</span> · Avisos (3) · Usuario · Senior · Salir</span>
+</div>
+
+<div class="aviso"><b>[rojo] URGENTE</b> · Banco Andino (ficticio) · Plazo esperado 12/11/2026 18:00 · Fuera de horario · Pendiente de tu lectura
+  <span class="boton principal">Confirmar lectura</span> <span class="boton">Aceptar el caso</span> <span class="marca">1</span></div>
+
+<p class="nota">Vista de ejemplo: senior del entregable. Las secciones nuevas del Sprint 3 llevan borde punteado. Las del Sprint 2 (responsables, adjuntos, observaciones, tiempo y entrega) están en <a href="s2-entregable.html">s2-entregable.html</a>.</p>
+
+<h1>Informe técnico 03 <span class="tag nuevo-inline">CT-2026-00031</span>
+  <span class="tag">Prioridad: ALTA</span> <span class="marca">2</span></h1>
+<div class="contadores">
+  <div class="contador">Cliente / contrato<br><b style="font-size:14px">Banco Andino (ficticio)<br>DEMO-2026-001</b></div>
+  <div class="contador">ID-TDR · Línea<br><b style="font-size:14px">TDR-BAF-014<br>Digitalización</b></div>
+  <div class="contador">Recepción · Plazo<br><b style="font-size:14px">01/11/2026<br>12/11/2026</b></div>
+  <div class="contador">Estado<br><b style="font-size:14px">En proceso</b><span class="tag suave">Con correcciones pendientes</span></div>
+  <div class="contador">Urgencia (Sprint 1)<br><b style="font-size:14px">Próximo</b></div>
+  <div class="contador nuevo">Prioridad<br><b style="font-size:14px">Alta</b><span class="nota">por alerta urgente abierta</span></div>
+</div>
+
+<!-- ETIQUETAS -->
+<h2>Etiquetas <span class="nuevo-inline">NUEVO</span></h2>
+<div class="caja nuevo">
+  <div class="fila"><span class="nota">Del entregable:</span> <span class="chip">Digitalización [azul]</span> <span class="chip">Seguimiento mensual [verde]</span>
+    <span class="nota">Del contrato (heredadas):</span> <span class="chip">Cliente estratégico [morado]</span> <span class="marca">3</span></div>
+  <div class="fila"><label>Agregar etiqueta <span class="campo">Elegir… ▾</span></label> <span class="boton">Asignar</span>
+    <span class="nota">Lo asigna el senior del entregable, gerente o admin. Un junior solo la ve.</span></div>
+</div>
+
+<!-- ALERTA URGENTE -->
+<h2>Alerta urgente <span class="nuevo-inline">NUEVO</span></h2>
+<div class="caja nuevo">
+  <div class="aviso" style="border-left-width:6px"><b>URGENTE · Alerta activa</b>
+    <table>
+      <tr><th style="width:30%">Cliente</th><td>Banco Andino (ficticio) · DEMO-2026-001</td></tr>
+      <tr><th>Naturaleza de la urgencia</th><td>Caída del servicio de carga de documentos del cliente; se requiere respuesta antes del cierre del día.</td></tr>
+      <tr><th>Plazo esperado</th><td>12/11/2026 18:00</td></tr>
+      <tr><th>Fuera de horario</th><td>Sí (calculado con el horario laboral)</td></tr>
+      <tr><th>Activada por</th><td>Senior del entregable · 10/11/2026 19:20</td></tr>
+      <tr><th>Lectura</th><td>2 de 4 destinatarios confirmaron. Pendientes: junior asignado, usuario de guardia</td></tr>
+      <tr><th>Caso aceptado por</th><td>— (solo una persona lo acepta)</td></tr>
+    </table>
+    <div class="fila"><span class="boton principal">Confirmar lectura</span> <span class="boton">Aceptar el caso</span> <span class="marca">4</span></div>
+  </div>
+  <details>
+    <summary>Activar alerta urgente (senior del entregable, gerente o admin) <span class="marca">5</span></summary>
+    <div class="fila"><label>Naturaleza de la urgencia <b>(obligatorio)</b> <span class="campo ancho">&nbsp;</span></label></div>
+    <div class="fila"><label>Plazo esperado <b>(fecha y hora futuras)</b> <span class="campo">dd/mm/aaaa hh:mm</span></label>
+      <span class="boton principal">Activar y avisar</span> <span class="boton">Cancelar</span></div>
+    <p class="nota">Al activar: aviso «URGENTE» a usuarios de guardia, senior del contrato, senior revisor y junior asignado (sin repetir, sin quien la activa).</p>
+  </details>
+</div>
+
+<!-- CHECKLIST POR TDR -->
+<h2>Checklist por TDR <span class="nuevo-inline">NUEVO</span></h2>
+<div class="caja nuevo">
+  <div class="fila"><b>Cumplimiento: 4 de 9 ítems (44 %)</b>
+    <span class="barra-g" style="width:220px"><i style="width:44%"></i></span>
+    <span class="tag">Obligatorios pendientes: 2</span> <span class="marca">6</span></div>
+  <table>
+    <tr><th>Ítem</th><th>Tipo</th><th>Obligatorio</th><th>Estado</th><th>Marcado por · fecha</th><th>Sustento</th><th></th></tr>
+    <tr><td>Entrega firmada por el representante del cliente</td><td>Requisito</td><td>Sí</td><td><span class="campo">Cumplido ▾</span></td><td>Junior asignado · 08/11 16:40</td><td>Adjunto: Borrador v3</td><td><span class="boton">Cambiar</span></td></tr>
+    <tr class="vencida"><td><b>Acta de reunión de inicio</b></td><td>Documento</td><td><b>Sí · OBLIGATORIO PENDIENTE</b></td><td><span class="campo">Pendiente ▾</span></td><td>—</td><td>—</td><td><span class="boton">Marcar</span></td></tr>
+    <tr class="vencida"><td><b>Formato de la plantilla del cliente (v2)</b></td><td>Formato</td><td><b>Sí · OBLIGATORIO PENDIENTE</b></td><td><span class="campo">En revisión ▾</span></td><td>Junior asignado · 09/11 11:05</td><td>—</td><td><span class="boton">Adjuntar sustento</span></td></tr>
+    <tr><td>Cronograma de trabajo (agregado a mano)</td><td>Documento</td><td>No</td><td><span class="campo">Pendiente ▾</span></td><td>—</td><td>—</td><td><span class="boton">Marcar</span></td></tr>
+  </table>
+  <div class="fila">
+    <label>Ítem nuevo <span class="campo ancho">&nbsp;</span></label>
+    <label>Tipo <span class="campo">Documento ▾</span></label>
+    <label>[ ] Obligatorio</label>
+    <span class="boton">+ Agregar ítem</span>
+  </div>
+  <div class="fila"><span class="boton">Generar desde el TDR</span> <span class="nota">Solo si aún no hay ítems generados; no duplica los existentes.</span> <span class="marca">7</span></div>
+  <div class="aviso">Al enviar a Revisión senior con 2 obligatorios pendientes se pedirá confirmación (ver <a href="s3-tablero.html">diálogo del tablero</a>).</div>
+</div>
+
+<!-- CHECKLIST DE CALIDAD -->
+<h2>Checklist de calidad <span class="nuevo-inline">NUEVO</span></h2>
+<div class="caja nuevo">
+  <p class="nota">Se muestra cuando el entregable está en Revisión senior. Vista del senior del entregable, con la revisión en curso.</p>
+  <table>
+    <tr><th>Ítem</th><th>Categoría</th><th>Obligatorio</th><th>Resultado</th><th>Observación (obligatoria si no conforme)</th></tr>
+    <tr><td>La información de la carátula está completa</td><td>Información completa</td><td>Sí</td><td>(•) Conforme &nbsp;( ) No conforme con observación</td><td>—</td></tr>
+    <tr><td>Las cifras coinciden con el anexo</td><td>Consistencia</td><td>Sí</td><td>( ) Conforme &nbsp;(•) No conforme con observación</td><td>El total del cuadro 3 no coincide con el anexo B.</td></tr>
+    <tr><td>Vigencia de los datos del periodo</td><td>Fechas y vigencia</td><td>Sí</td><td>( ) Conforme &nbsp;( ) No conforme con observación</td><td>&nbsp;</td></tr>
+    <tr><td>Estilo de títulos según plantilla (cliente ficticio)</td><td>Formato</td><td>No</td><td>(•) Conforme &nbsp;( ) No conforme con observación</td><td>—</td></tr>
+  </table>
+  <div class="fila"><span class="boton principal">Registrar revisión</span> <span class="nota">Cada ítem debe marcarse; un No conforme exige su observación.</span> <span class="marca">8</span></div>
+  <div class="aviso">Resultado al guardar: <b>NO CONFORME</b> (hay un ítem obligatorio no conforme). El entregable vuelve a En proceso con «Con correcciones pendientes» y el junior recibe un aviso.</div>
+
+  <h3 style="margin-top:12px">Historial de revisiones de calidad <span class="marca">9</span></h3>
+  <table>
+    <tr><th>Fecha y hora</th><th>Revisor</th><th>Resultado</th><th>Observaciones registradas</th><th>Ciclo</th></tr>
+    <tr><td>09/11/2026 16:20</td><td>Senior del entregable</td><td><span class="tag">No conforme</span></td><td>1 (Consistencia)</td><td>Anterior al último envío: no vale para aprobar</td></tr>
+    <tr><td>05/11/2026 17:30</td><td>Senior del entregable</td><td><span class="tag suave">Conforme</span></td><td>0</td><td>Anterior al último envío: no vale para aprobar</td></tr>
+  </table>
+</div>
+
+<!-- FACTURA -->
+<h2>Factura <span class="nuevo-inline">NUEVO</span></h2>
+<div class="caja nuevo">
+  <div class="fila"><label>Número de factura o correlativo <span class="campo">F001-00123</span></label>
+    <span class="boton principal">Verificar</span> <span class="nota">Solo lectura contra la facturación.</span> <span class="marca">10</span></div>
+  <div class="aviso"><b>Resultado: OTRO_CLIENTE</b> — la factura F001-00123 existe, pero pertenece a Telecom Sur (ficticia), no a Banco Andino (ficticio).
+    Este entregable no pasa a Aprobado hasta verificar un número correcto o hasta que un senior justifique.</div>
+  <div class="fila"><label>Justificación del senior <b>(obligatoria)</b> <span class="campo ancho">&nbsp;</span></label>
+    <span class="boton">Justificar</span> <span class="nota">Solo senior del entregable, gerente o admin.</span></div>
+  <table>
+    <tr><th>Fecha y hora</th><th>Usuario</th><th>Número</th><th>Resultado</th><th>Justificación</th></tr>
+    <tr><td>10/11/2026 15:02</td><td>Junior asignado</td><td>F001-00123</td><td>OTRO_CLIENTE</td><td>—</td></tr>
+    <tr><td>09/11/2026 09:12</td><td>Junior asignado</td><td>F001-00119</td><td>CORRECTA</td><td>—</td></tr>
+  </table>
+  <p class="nota">El número vigente es el de la última verificación. Sin número de factura, el entregable no exige nada.</p>
+</div>
+
+<!-- EXPORTAR -->
+<h2>Exportar <span class="nuevo-inline">NUEVO</span></h2>
+<div class="caja nuevo">
+  <div class="fila"><span class="boton principal">Exportar a PDF</span> <span class="boton principal">Exportar a Excel</span> <span class="nota">Para responsables activos, gerente y admin.</span> <span class="marca">11</span></div>
+  <div class="aviso">No se exportó: falta el campo obligatorio «Versión del informe» de la plantilla y el ID-TDR está vacío. Complete los datos y vuelva a exportar.</div>
+  <h3 style="margin-top:12px">Exportaciones anteriores</h3>
+  <table>
+    <tr><th>Fecha y hora</th><th>Formato</th><th>Usuario</th><th>Versión (Adjunto)</th><th></th></tr>
+    <tr><td>08/11/2026 11:40</td><td>PDF</td><td>Junior asignado</td><td>Exportación v2 <span class="tag suave">Versión nueva; no se sobrescribe</span></td><td><span class="boton">Descargar</span></td></tr>
+    <tr><td>06/11/2026 09:15</td><td>Excel</td><td>Senior del entregable</td><td>Exportación v1</td><td><span class="boton">Descargar</span></td></tr>
+  </table>
+</div>
+
+<!-- EXTRAER DATOS SOBRE ADJUNTO -->
+<h2>Adjuntos <span class="nuevo-inline">Extraer datos: NUEVO</span></h2>
+<div class="caja">
+  <table>
+    <tr><th>Tipo</th><th>Versión vigente</th><th>Archivo</th><th>Subido por</th><th>Acciones</th></tr>
+    <tr><td>TDR</td><td><span class="tag">Vigente · v1</span></td><td>tdr_baf_014.pdf</td><td>Senior del contrato</td><td><span class="boton">Descargar</span></td></tr>
+    <tr class="nuevo"><td>Borrador</td><td><span class="tag">Vigente · v3</span></td><td>informe_03.docx</td><td>Junior asignado</td><td><span class="boton">Descargar</span> <span class="boton">Extraer datos</span> <span class="marca">12</span></td></tr>
+  </table>
+  <p class="nota">«Extraer datos» abre la vista previa de extracción (misma pantalla que en <a href="s3-nuevo.html">Nuevo entregable</a>), solo para completar los datos de la plantilla en Por hacer o En proceso.</p>
+</div>
+
+<!-- HISTORIAL -->
+<h2>Historial</h2>
+<div class="caja">
+  <table>
+    <tr><th>Fecha</th><th>Usuario</th><th>Evento</th></tr>
+    <tr class="nuevo"><td>10/11/2026 15:02</td><td>Junior asignado</td><td>Verificó la factura F001-00123: OTRO_CLIENTE</td></tr>
+    <tr class="nuevo"><td>10/11/2026 19:20</td><td>Senior del entregable</td><td>Activó la alerta urgente (naturaleza y plazo registrados)</td></tr>
+    <tr class="nuevo"><td>09/11/2026 16:20</td><td>Senior del entregable</td><td>Revisión de calidad: NO CONFORME (1 observación) → En proceso</td></tr>
+    <tr><td>05/11/2026 10:00</td><td>Senior del entregable</td><td>Estado: Revisión senior → En proceso (2 observaciones registradas)</td></tr>
+  </table>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Etiquetas</b> (HU-23, criterios de asignación y de la tarjeta; numeración por confirmar con Trello): el entregable muestra sus etiquetas y las de su contrato. Las de baja no se ofrecen, pero se conservan donde ya estaban.</li>
+  <li><b>Prioridad</b> (HU-29, criterio 4): se calcula al mostrar, no se guarda. Cambia sola al cambiar el plazo, el tipo de cliente o una alerta. La urgencia del Sprint 1 se sigue mostrando.</li>
+  <li><b>Etiquetas del entregable</b> (HU-23): el senior del entregable, gerente o admin las asigna desde aquí.</li>
+  <li><b>Alerta urgente</b> (HU-28, criterios de aviso, lectura y aceptación; numeración por confirmar): «Confirmar lectura» registra quién y cuándo. «Aceptar el caso» lo puede hacer una sola persona y la registra. La alerta se cierra al aceptarla o al quedar Entregado.</li>
+  <li>La alerta muestra el cliente, la naturaleza, el plazo esperado y si es fuera de horario (HU-28). El correo solo se envía si hay servidor local configurado (D3).</li>
+  <li><b>Activar</b> (HU-28): exige naturaleza y plazo futuro. Solo senior del entregable, gerente y admin.</li>
+  <li><b>Checklist por TDR</b> (HU-25, criterios de generación y % de cumplimiento; criterio 4 = aviso antes de la revisión): los ítems obligatorios pendientes se resaltan. Marcan los responsables activos; cada cambio guarda quién y cuándo.</li>
+  <li><b>Generar desde el TDR</b> (HU-25): crea los ítems desde la ficha confirmada del contrato y no duplica los ya generados.</li>
+  <li><b>Checklist de calidad</b> (HU-26, criterio 5: revisor, fecha, hora y resultado): cada ítem se marca; un No conforme exige observación. Las revisiones nunca se editan.</li>
+  <li><b>Historial de revisiones</b> (HU-26, criterio 4): la aprobación exige una revisión conforme del ciclo de revisión actual. Las anteriores se muestran, pero no sirven.</li>
+  <li><b>Factura</b> (HU-30, criterio 3: condición para Listo para entrega, que en el tablero se llama Aprobado; criterio 5: base de facturación simulada en solo lectura). La justificación del senior queda en el historial.</li>
+  <li><b>Exportar</b> (HU-27): valida los obligatorios antes de exportar, dice qué falta y guarda cada exportación como versión nueva (tipo Exportación).</li>
+  <li><b>Extraer datos</b> (HU-24, criterio 3 vista previa; criterio 5 completar a mano): sobre un adjunto ya subido. Nada se guarda hasta confirmar.</li>
+</ol>
+
+</div>
+</body>
+</html>

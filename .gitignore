@@ -19,3 +19,6 @@ demo_remota/
 # Editores
 .vscode/
 .idea/
+
+# Worktrees y datos locales de Claude Code
+.claude/

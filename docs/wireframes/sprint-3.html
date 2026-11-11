@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CertiTrack 360 · Wireframes del Sprint 3</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 3 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-2.html">← Wireframes del Sprint 2</a></div>
+<div class="pantalla">
+
+<h1>CertiTrack 360 — Wireframes del Sprint 3 (hito S3-H0)</h1>
+<p>Pantallas nuevas y modificadas del Sprint 3, según <code>docs/sdd-sprint-3.md</code> (secciones 7, 8 y 9). Se abren con doble clic, sin servidor.
+   Los nombres de clientes, contratos y personas son ficticios; las personas se nombran por su función.</p>
+
+<div class="aviso"><b>Por ratificar: el equipo pidió construir sin esperar (2026-11-10).</b> Las decisiones de la sección 15 del SDD se tomaron con el valor propuesto para no detener la construcción.
+   Los wireframes se usan igual que en los sprints anteriores, pero su aprobación queda pendiente hasta que el equipo ratifique las decisiones.</div>
+
+<h2>Cómo leerlos</h2>
+<div class="caja">
+  <p>Borde sólido = existe desde el Sprint 1 o 2. <span class="nuevo-inline">NUEVO</span> o borde punteado = lo que agrega el Sprint 3.</p>
+  <p>Los círculos numerados <span class="marca">1</span> remiten a las anotaciones al pie de cada pantalla, donde se indica qué criterios de qué historia cubre.
+     El color se menciona siempre en texto, entre corchetes (por ejemplo, [rojo]); la escala de grises no es una señal única.</p>
+</div>
+
+<h2>Navegación</h2>
+<p class="nota">La barra principal no cambia (RNF-14). Todo lo nuevo vive en pestañas de pantallas existentes, y la franja «URGENTE» aparece arriba en todas las pantallas
+   mientras haya una alerta sin confirmar (RF-43).</p>
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span><span>Consolidado*</span><span>Gestión*</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos · Usuario · Salir</span>
+</div>
+<p class="nota">* Solo gerente y admin. Gestión suma las pestañas Etiquetas, Checklist de calidad y Clientes (tipo de cliente), y Personal suma la marca «de guardia».</p>
+
+<h2>Pantallas</h2>
+<table>
+  <tr><th>Pantalla</th><th>Historias</th><th>Qué cambia</th><th>Tipo</th></tr>
+  <tr><td><a href="s3-entregable.html">Detalle del entregable</a></td><td>HU-23, 28, 25, 26, 30, 27, 24</td><td>Etiquetas y prioridad; alerta urgente (naturaleza, plazo, «Confirmar lectura», «Aceptar el caso»); checklist por TDR con % de cumplimiento; checklist de calidad con historial de revisiones; verificación de factura; «Exportar» (PDF, Excel); «Extraer datos» sobre un adjunto</td><td>Modificada</td></tr>
+  <tr><td><a href="s3-nuevo.html">Nuevo entregable</a></td><td>HU-23, 28, 24</td><td>Etiquetas al crear (con la de la línea marcada); selector Prioridad (Normal / Urgente – fuera de horario); «Prellenar desde un documento» con vista previa de extracción</td><td>Modificada</td></tr>
+  <tr><td><a href="s3-tablero.html">Tablero y lista</a></td><td>HU-23, 29, 28, 25</td><td>Etiquetas de color en las tarjetas; insignia de prioridad; filtro «Etiqueta»; orden «Prioridad» por defecto; diálogo «Confirme antes de continuar»; franja «URGENTE»</td><td>Modificada</td></tr>
+  <tr><td><a href="s3-checklists.html">Checklists (pestaña de Entregables)</a></td><td>HU-25</td><td>Consulta del checklist por TDR con filtros por cliente, contrato e ID-TDR y % de cumplimiento por entregable</td><td>Nueva</td></tr>
+  <tr><td><a href="s3-gestion.html">Gestión › Etiquetas, Checklist de calidad, Clientes y Personal</a></td><td>HU-23, 26, 28, 29</td><td>Catálogo de etiquetas (nombre, color, línea de servicio, baja); checklist de calidad general y por cliente; tipo de cliente; marca «de guardia»</td><td>Nuevas pestañas</td></tr>
+  <tr><td><a href="s3-consolidado.html">Consolidado: gráficos y pestaña Reportes</a></td><td>HU-22, 31</td><td>Cuatro gráficos de barras debajo de las cifras, con filtros (cliente, sector, contrato, fechas) y «Filtro aplicado»; pestaña Reportes (generar, periodicidad, ver y descargar PDF)</td><td>Modificada / nueva</td></tr>
+</table>
+<p class="nota">Las secciones del Sprint 2 del detalle (responsables, adjuntos y versiones, observaciones, tiempo por etapa, entregas y acta) no cambian: ver
+   <a href="s2-entregable.html">s2-entregable.html</a>. HU-11 y HU-13 no tienen pantalla nueva: la auditoría del hito S3-H1 solo corrige brechas si las hay (SDD sección 2).</p>
+
+<h2>Flujos principales</h2>
+<div class="caja">
+  <div class="fila"><span class="boton">Nuevo entregable</span> → etiqueta de la línea marcada → Prioridad <span class="boton">Urgente – fuera de horario</span> → naturaleza y plazo esperado → <span class="boton principal">Crear</span> → avisos «URGENTE» a guardia y responsables</div>
+  <div class="fila"><span class="boton">Franja URGENTE</span> → <span class="boton">Confirmar lectura</span> (cada destinatario) → <span class="boton principal">Aceptar el caso</span> (una sola persona) → la alerta se cierra al aceptarla o al quedar Entregado</div>
+  <div class="fila"><span class="boton">Detalle</span> → checklist por TDR (<span class="boton">Marcar</span>) → <span class="boton">Enviar a Revisión senior</span> con obligatorios pendientes → <span class="boton">Confirmar envío</span> → checklist de calidad → <span class="boton">Registrar revisión</span> (todos conformes) → <span class="boton principal">Aprobado</span></div>
+  <div class="fila"><span class="boton">Detalle</span> → número de factura → <span class="boton">Verificar</span> → «No existe» / «Otro cliente» → senior <span class="boton">Justificar</span> o nuevo número correcto</div>
+  <div class="fila"><span class="boton">Detalle</span> → <span class="boton">Exportar</span> → PDF o Excel (validación de obligatorios) → nueva versión en Exportaciones y descarga</div>
+  <div class="fila"><span class="boton">Nuevo entregable</span> o <span class="boton">Detalle › Extraer datos</span> → documento → vista previa editable → <span class="boton principal">Aplicar al formulario</span> (nada se guarda antes)</div>
+  <div class="fila"><span class="boton">Consolidado</span> → filtros → gráficos · <span class="boton">Reportes</span> → <span class="boton principal">Generar reporte</span> → <span class="boton">Ver</span> / <span class="boton">Descargar PDF</span></div>
+  <p class="nota">Lo que no ve un usuario responde 404; lo que ve pero no puede hacer, 403 (SDD sección 8). Ningún flujo nuevo envía datos fuera del servidor propio (RNF-16).</p>
+</div>
+
+<h2>Decisiones por ratificar (SDD sección 15)</h2>
+<table>
+  <tr><th style="width:50px">#</th><th>Decisión</th><th>Valor usado en los wireframes</th><th style="width:120px">¿Ratificada?</th></tr>
+  <tr><td>D1</td><td>Bibliotecas locales nuevas (PDF, Excel, OCR, servidor)</td><td>Sí (RNF-15)</td><td>Por ratificar</td></tr>
+  <tr><td>D2</td><td>Motor de OCR</td><td>Tesseract en el servidor; sin él, solo PDF con texto (aviso «El OCR no está disponible en este servidor»)</td><td>Por ratificar</td></tr>
+  <tr><td>D3</td><td>Canal de la alerta urgente</td><td>Franja y aviso en la plataforma; correo solo con servidor local configurado</td><td>Por ratificar</td></tr>
+  <tr><td>D4</td><td>Grupo de guardia</td><td>Marca «de guardia» por usuario; la activan senior, gerente y admin</td><td>Por ratificar</td></tr>
+  <tr><td>D5</td><td>Tipo de cliente</td><td>Estratégico, Regular (por defecto), Ocasional</td><td>Por ratificar</td></tr>
+  <tr><td>D8</td><td>Checklist por TDR</td><td>Advierte y pide confirmación; no bloquea</td><td>Por ratificar</td></tr>
+  <tr><td>D10</td><td>Filedoc</td><td>Único origen externo, configurable; vacío por defecto</td><td>Por ratificar</td></tr>
+  <tr><td>D11</td><td>Plantilla del cliente en la exportación</td><td>Marcadores en un .xlsx del repositorio; PDF estándar</td><td>Por ratificar</td></tr>
+  <tr><td>7.3</td><td>Umbrales de prioridad</td><td>Los de la sección 7.3 y <code>PRIORIDAD_DIAS_ESTRATEGICO</code> = 10</td><td>Por ratificar</td></tr>
+  <tr><td>7.12</td><td>Bloqueo de ingreso</td><td>5 intentos fallidos, 15 minutos</td><td>Por ratificar</td></tr>
+</table>
+<p class="nota">Además, el SDD (sección 3) marca como decisiones de diseño o cambios ya aceptados D6 (condición de calidad para aprobar), D7 (número de factura solo si existe), D9 (instalación física fuera del repositorio, sección 16) y D12 (el consolidado no cambia sus cifras).</p>
+
+<h2>Registro de aprobación</h2>
+<div class="aviso"><b>Estado:</b> Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</div>
+<table>
+  <tr><th>Pantalla</th><th style="width:220px">¿Aprobada?</th><th>Observaciones del equipo</th></tr>
+  <tr><td>Detalle del entregable</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+  <tr><td>Nuevo entregable</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+  <tr><td>Tablero y lista</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+  <tr><td>Franja «URGENTE»</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+  <tr><td>Checklists</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+  <tr><td>Gestión: Etiquetas, Checklist de calidad, Clientes y Personal</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+  <tr><td>Consolidado y Reportes</td><td>Por ratificar: el equipo pidió construir sin esperar (2026-11-10)</td><td>&nbsp;</td></tr>
+</table>
+
+</div>
+</body>
+</html>

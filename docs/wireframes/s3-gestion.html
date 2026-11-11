@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S3 · Gestión</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 3 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-3.html">← Índice del Sprint 3</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span>Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span><span>Consolidado*</span><span class="activo">Gestión*</span>
+  <span class="der"><span class="campo">Buscar…</span> · Avisos (3) · Usuario · Admin · Salir</span>
+</div>
+<p class="nota">* Vista de gerente o admin. Los seniors ven solo la pestaña Checklist de calidad, limitada a los clientes de sus contratos.</p>
+
+<h1>Gestión</h1>
+<div class="pestanas"><span>Fichas</span><span>Personal</span><span>Líneas de servicio</span><span class="nuevo">Clientes</span><span class="activa nuevo">Etiquetas</span><span class="nuevo">Checklist de calidad</span></div>
+<p class="nota">Este wireframe muestra las pestañas nuevas una debajo de otra. Fichas, Personal y Líneas de servicio no cambian (la marca «de guardia» está en Personal, abajo).</p>
+
+<!-- ETIQUETAS -->
+<div class="panel nuevo">
+  <h2 style="margin-top:6px">Pestaña «Etiquetas» <span class="nuevo-inline">NUEVO</span> <span class="marca">1</span></h2>
+  <table>
+    <tr><th>Nombre</th><th>Color</th><th>Línea de servicio</th><th>Estado</th><th>Acciones</th></tr>
+    <tr><td>Digitalización</td><td>[azul]</td><td>Digitalización</td><td>Activa</td><td><span class="boton">Editar</span> <span class="boton">Dar de baja</span></td></tr>
+    <tr><td>Seguimiento mensual</td><td>[verde]</td><td>—</td><td>Activa</td><td><span class="boton">Editar</span> <span class="boton">Dar de baja</span></td></tr>
+    <tr><td>Revisión externa</td><td>[ámbar]</td><td>—</td><td>Activa</td><td><span class="boton">Editar</span> <span class="boton">Dar de baja</span></td></tr>
+    <tr><td>Cliente estratégico</td><td>[morado]</td><td>—</td><td>De baja (se conserva en 2 entregables)</td><td><span class="boton">Editar</span></td></tr>
+  </table>
+  <h3 style="margin-top:12px">Nueva etiqueta</h3>
+  <div class="fila"><label>Nombre <b>(único)</b> <span class="campo ancho">&nbsp;</span></label>
+    <label>Color <span class="campo">Gris ▾</span></label>
+    <label>Línea de servicio <span class="campo">Ninguna ▾</span></label>
+    <span class="boton principal">Crear</span></div>
+  <p class="nota">Lista cerrada de 8 colores: gris, azul, verde, ámbar, rojo, morado, turquesa, rosa. El nombre siempre se muestra en texto.
+     Crear y editar: senior, gerente y admin. Dar de baja: gerente y admin. Al crear una línea de servicio nueva se crea su etiqueta.</p>
+</div>
+
+<!-- CHECKLIST DE CALIDAD -->
+<div class="panel nuevo">
+  <h2 style="margin-top:6px">Pestaña «Checklist de calidad» <span class="nuevo-inline">NUEVO</span> <span class="marca">2</span></h2>
+  <h3>Ítems generales (aplican a todos los clientes) · solo gerente y admin</h3>
+  <table>
+    <tr><th>Ítem</th><th>Cliente</th><th>Categoría</th><th>Obligatorio</th><th>Activo</th><th>Orden</th><th></th></tr>
+    <tr><td>La carátula tiene todos los datos obligatorios</td><td>General</td><td>Información completa</td><td>Sí</td><td>Sí</td><td>1</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Las cifras coinciden con los anexos</td><td>General</td><td>Consistencia</td><td>Sí</td><td>Sí</td><td>2</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Las fechas de vigencia son correctas</td><td>General</td><td>Fechas de vigencia</td><td>Sí</td><td>Sí</td><td>3</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>El formato sigue la plantilla vigente</td><td>General</td><td>Formato</td><td>Sí</td><td>Sí</td><td>4</td><td><span class="boton">Editar</span></td></tr>
+  </table>
+  <h3 style="margin-top:12px">Ítems por cliente</h3>
+  <table>
+    <tr><th>Ítem</th><th>Cliente</th><th>Categoría</th><th>Obligatorio</th><th>Activo</th><th>Orden</th><th></th></tr>
+    <tr><td>El anexo de firmas del cliente está adjunto</td><td>Banco Andino (ficticio)</td><td>Información completa</td><td>Sí</td><td>Sí</td><td>1</td><td><span class="boton">Editar</span></td></tr>
+    <tr><td>Los montos están en la moneda del contrato</td><td>Banco Andino (ficticio)</td><td>Otro</td><td>No</td><td>Sí</td><td>2</td><td><span class="boton">Editar</span></td></tr>
+  </table>
+  <h3 style="margin-top:12px">Nuevo ítem</h3>
+  <div class="fila">
+    <label>Texto <span class="campo ancho">&nbsp;</span></label>
+    <label>Cliente <span class="campo">General ▾</span></label>
+    <label>Categoría <span class="campo">Información completa ▾</span></label>
+    <label>[ ] Obligatorio</label>
+    <span class="boton principal">Agregar</span>
+  </div>
+  <p class="nota">Categorías: Información completa, Consistencia, Fechas de vigencia, Formato, Otro. Un senior edita solo los ítems de los clientes de sus contratos; los generales no le aparecen editables.
+     Un ítem nuevo no cambia las revisiones ya registradas.</p>
+</div>
+
+<!-- CLIENTES: TIPO -->
+<div class="panel nuevo">
+  <h2 style="margin-top:6px">Pestaña «Clientes»: tipo de cliente <span class="nuevo-inline">NUEVO</span> <span class="marca">3</span></h2>
+  <div class="fila"><label>Razón social <span class="campo ancho">Banco Andino (ficticio)</span></label></div>
+  <div class="fila"><label>Tipo de cliente</label>
+    <label>(•) Regular (por defecto)</label>
+    <label>( ) Estratégico</label>
+    <label>( ) Ocasional</label></div>
+  <p class="nota">Los clientes existentes quedan como Regular. El tipo afecta el orden y el nivel de prioridad de sus entregables (HU-29). Lo edita gerente o admin.</p>
+  <div class="fila"><span class="boton principal">Guardar</span> <span class="boton">Cancelar</span></div>
+</div>
+
+<!-- PERSONAL: DE GUARDIA -->
+<div class="panel nuevo">
+  <h2 style="margin-top:6px">Pestaña «Personal»: marca «de guardia» <span class="nuevo-inline">NUEVO</span> <span class="marca">4</span></h2>
+  <table>
+    <tr><th>Persona</th><th>Rol</th><th>Estado</th><th>De guardia</th><th></th></tr>
+    <tr><td>Usuario de ejemplo A</td><td>Junior</td><td>Activo</td><td>[ ] No</td><td><span class="boton">Cambiar</span></td></tr>
+    <tr><td>Usuario de ejemplo B</td><td>Senior</td><td>Activo</td><td><b>[x] Sí</b></td><td><span class="boton">Quitar guardia</span></td></tr>
+    <tr><td>Usuario de ejemplo C</td><td>Gerente</td><td>Activo</td><td>[ ] No</td><td><span class="boton">Marcar de guardia</span></td></tr>
+  </table>
+  <p class="nota">La marca no crea un rol nuevo (D4). Quien está de guardia y activo recibe los avisos «URGENTE». Solo gerente y admin marcan o quitan la guardia.</p>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Etiquetas</b> (HU-23, criterios de catálogo, color y baja; numeración por confirmar con Trello): las etiquetas dadas de baja se conservan donde ya estaban (SDD 7.2). Lista de 8 colores con nombre en texto.</li>
+  <li><b>Checklist de calidad</b> (HU-26, criterio 1: cuatro ítems generales mínimos; ítems por cliente; criterio de configuración por rol; SDD 7.6).</li>
+  <li><b>Tipo de cliente</b> (HU-29, criterio de orden y prioridad; D5): Estratégico, Regular (por defecto) u Ocasional.</li>
+  <li><b>De guardia</b> (HU-28, criterio de destinatarios de la alerta urgente; D4): marca por usuario, sin rol nuevo.</li>
+</ol>
+
+</div>
+</body>
+</html>

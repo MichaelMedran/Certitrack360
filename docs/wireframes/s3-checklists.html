@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S3 · Checklists</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 3 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-3.html">← Índice del Sprint 3</a></div>
+<div class="pantalla">
+
+<div class="aviso" style="border-left-width:6px"><b>[rojo] URGENTE</b> · Banco Andino (ficticio) · CT-2026-00031 · Plazo esperado 12/11/2026 18:00
+  <span class="boton principal">Confirmar lectura</span> <span class="boton">Ver entregable</span></div>
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span class="activo">Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo">Buscar código, contrato, cliente…</span> · Avisos (3) · Usuario · Senior · Salir</span>
+</div>
+
+<h1>Entregables</h1>
+<div class="pestanas"><span>Entregables</span><span>Observaciones</span><span>Entregas</span><span>Tiempos</span><span class="activa nuevo">Checklists</span></div>
+
+<div class="panel nuevo">
+  <h2 style="margin-top:6px">Checklists por TDR <span class="nuevo-inline">NUEVO</span> <span class="marca">1</span></h2>
+  <div class="fila">
+    <label>Cliente <span class="campo">Todos ▾</span></label>
+    <label>Contrato <span class="campo">Todos ▾</span></label>
+    <label>ID-TDR <span class="campo">Todos ▾</span></label>
+    <span class="boton">Filtrar</span>
+  </div>
+  <p class="nota">Lista sobre los entregables visibles para el usuario; los filtros nunca amplían la visibilidad.</p>
+
+  <table>
+    <tr><th>Código</th><th>Título</th><th>Cliente · contrato</th><th>ID-TDR</th><th class="num">Ítems</th><th class="num">Obligatorios pendientes</th><th>% de cumplimiento</th><th></th></tr>
+    <tr><td>CT-2026-00031</td><td>Informe técnico 03</td><td>Banco Andino (ficticio) · DEMO-2026-001</td><td>TDR-BAF-014</td><td class="num">9</td><td class="num"><b>2</b></td>
+      <td>44 % <span class="barra-g" style="width:120px"><i style="width:44%"></i></span></td><td><span class="boton">Abrir</span></td></tr>
+    <tr><td>CT-2026-00035</td><td>Reporte mensual — 2026-12</td><td>Banco Andino (ficticio) · DEMO-2026-001</td><td>TDR-BAF-014</td><td class="num">6</td><td class="num">0</td>
+      <td>100 % <span class="barra-g" style="width:120px"><i style="width:100%"></i></span></td><td><span class="boton">Abrir</span></td></tr>
+    <tr><td>CT-2026-00024</td><td>Matriz de riesgos</td><td>Municipalidad (ficticia) · DEMO-2026-006</td><td>TDR-MUN-003</td><td class="num">7</td><td class="num"><b>1</b></td>
+      <td>67 % <span class="barra-g" style="width:120px"><i style="width:67%"></i></span></td><td><span class="boton">Abrir</span></td></tr>
+    <tr><td>CT-2026-00040</td><td>Informe de avance</td><td>Telecom Sur (ficticia) · DEMO-2026-004</td><td>TDR-TSU-002</td><td class="num">0</td><td class="num">—</td>
+      <td>Sin checklist <span class="barra-g" style="width:120px"><i style="width:0%"></i></span></td><td><span class="boton">Generar desde el TDR</span></td></tr>
+  </table>
+  <p class="nota">% de cumplimiento = ítems cumplidos ÷ total de ítems. Los obligatorios pendientes se resaltan en el detalle del entregable.
+     Si el filtro no devuelve nada, la pantalla dice: «No hay checklists con esos filtros».</p>
+</div>
+
+<ol class="anotaciones">
+  <li><b>Consulta de checklists</b> (HU-25, criterio de consulta por filtros: cliente, contrato e ID-TDR; numeración por confirmar con Trello). Sobre los entregables visibles (SDD 7.5).</li>
+  <li>El % de cumplimiento coincide con el del detalle del entregable (cumplidos ÷ total). Un entregable sin ítems pide «Generar desde el TDR», que solo funciona si el contrato tiene una ficha confirmada.</li>
+</ol>
+
+</div>
+</body>
+</html>

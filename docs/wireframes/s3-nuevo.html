@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe S3 · Nuevo entregable</title>
+<link rel="stylesheet" href="wf.css">
+</head>
+<body>
+<div class="nota-wf"><b>WIREFRAME SPRINT 3 · baja fidelidad</b> — estructura y flujo, sin colores ni estilos finales. <a href="sprint-3.html">← Índice del Sprint 3</a></div>
+<div class="pantalla">
+
+<div class="app-bar">
+  <b>CertiTrack 360</b>
+  <span>Inicio</span><span>Tablero</span><span>Calendario</span><span class="activo">Entregables</span>
+  <span>Repositorio</span><span>Indicadores</span><span>Asistente</span>
+  <span class="der"><span class="campo">Buscar código, contrato, cliente…</span> · Avisos (3) · Usuario · Senior · Salir</span>
+</div>
+
+<h1>Nuevo entregable</h1>
+<p class="nota">Pantalla del Sprint 2 (código automático CT-año-número, contrato, cliente, ID-TDR, fechas, responsables). Las secciones nuevas del Sprint 3 llevan borde punteado.</p>
+
+<div class="caja">
+  <table>
+    <tr><th style="width:30%">Código</th><td>Se asigna al crear (CT-2026-#####)</td></tr>
+    <tr><th>Cliente · contrato</th><td><span class="campo">Banco Andino (ficticio) ▾</span> <span class="campo">DEMO-2026-001 ▾</span></td></tr>
+    <tr><th>Título</th><td><span class="campo ancho">Informe técnico 04</span></td></tr>
+    <tr><th>ID-TDR · Línea de servicio</th><td><span class="campo">TDR-BAF-014</span> <span class="campo">Digitalización ▾</span></td></tr>
+    <tr><th>Fecha de recepción · Plazo</th><td><span class="campo">01/11/2026</span> <span class="campo">12/11/2026</span></td></tr>
+    <tr><th>Junior · Senior</th><td><span class="campo">Junior asignado ▾</span> <span class="campo">Senior del entregable ▾</span></td></tr>
+  </table>
+</div>
+
+<!-- ETIQUETAS -->
+<h2>Etiquetas <span class="nuevo-inline">NUEVO</span> <span class="marca">1</span></h2>
+<div class="caja nuevo">
+  <div class="fila"><span class="nota">Viene marcada la etiqueta de la línea del contrato:</span></div>
+  <div class="fila">
+    <span class="chip">[x] Digitalización [azul]</span>
+    <span class="chip">[ ] Seguimiento mensual [verde]</span>
+    <span class="chip">[ ] Cliente estratégico [morado]</span>
+    <span class="chip">[ ] Revisión externa [ámbar]</span>
+    <span class="boton">+ Crear etiqueta</span>
+  </div>
+  <details>
+    <summary>Crear etiqueta (senior, gerente o admin)</summary>
+    <div class="fila"><label>Nombre <b>(único, sin distinguir mayúsculas)</b> <span class="campo ancho">&nbsp;</span></label></div>
+    <div class="fila"><label>Color <span class="campo">Elegir de la lista ▾</span></label>
+      <span class="nota">gris · azul · verde · ámbar · rojo · morado · turquesa · rosa</span></div>
+    <div class="fila"><label>Línea de servicio (opcional) <span class="campo">Ninguna ▾</span></label>
+      <span class="boton principal">Crear</span> <span class="boton">Cancelar</span></div>
+  </details>
+</div>
+
+<!-- PRIORIDAD -->
+<h2>Prioridad <span class="nuevo-inline">NUEVO</span> <span class="marca">2</span></h2>
+<div class="caja nuevo">
+  <div class="fila">
+    <label>( ) Normal</label>
+    <label>(•) Urgente – fuera de horario</label>
+  </div>
+  <div class="aviso">Se muestra desplegado como ejemplo. Al elegir «Urgente» son obligatorios la naturaleza y el plazo esperado.</div>
+  <div class="fila"><label>Naturaleza de la urgencia <b>(obligatorio)</b> <span class="campo ancho">&nbsp;</span></label></div>
+  <div class="fila"><label>Plazo esperado <b>(fecha y hora futuras)</b> <span class="campo">12/11/2026 18:00</span></label></div>
+  <p class="nota">Si la creación cae fuera de horario laboral (lunes a viernes, 09:00 a 18:00, hora de Lima), la alerta lo indica. Al crear: aviso «URGENTE» a usuarios de guardia, senior del contrato, senior revisor y junior asignado.</p>
+</div>
+
+<!-- PRELLENADO -->
+<h2>Prellenar desde un documento <span class="nuevo-inline">NUEVO</span> <span class="marca">3</span></h2>
+<div class="caja nuevo">
+  <div class="fila"><label>Documento (PDF o imagen, máximo 10 páginas) <span class="campo ancho">Elegir archivo…</span></label>
+    <span class="boton principal">Extraer datos</span></div>
+  <p class="nota">Motor usado: texto del PDF. Si una página no trae texto, se intenta el OCR local (Tesseract). Si el OCR no está en el servidor, se avisa y se completa a mano.</p>
+
+  <h3 id="vista-previa" style="margin-top:12px">Vista previa de la extracción</h3>
+  <div class="aviso"><b>Texto poco legible:</b> la confianza media del OCR es 58 (mínimo 60). Revise los campos resaltados; los que no se encontraron quedan vacíos.</div>
+  <table>
+    <tr><th>Campo</th><th>Valor propuesto (editable)</th><th>Origen</th><th>Confianza</th></tr>
+    <tr><td>Cliente</td><td><span class="campo ancho">Banco Andino (ficticio)</span></td><td>Página 1 · encabezado</td><td>92 %</td></tr>
+    <tr><td>Número de contrato</td><td><span class="campo ancho">DEMO-2026-001</span></td><td>Página 1 · tabla de datos</td><td>88 %</td></tr>
+    <tr><td>ID-TDR</td><td><span class="campo ancho">TDR-BAF-014</span></td><td>Página 1 · pie</td><td>74 %</td></tr>
+    <tr><td>Fecha de recepción</td><td><span class="campo ancho">01/11/2026</span></td><td>Página 1 · «Recibido el»</td><td>81 %</td></tr>
+    <tr class="vencida"><td><b>Plazo</b></td><td><span class="campo ancho">&nbsp;</span></td><td><b>No encontrado: completar a mano</b></td><td>—</td></tr>
+    <tr class="vencida"><td><b>Versión del informe (campo de la plantilla)</b></td><td><span class="campo ancho">2</span></td><td><b>Texto poco legible (página 2)</b></td><td>41 %</td></tr>
+    <tr><td>Periodo reportado (campo de la plantilla)</td><td><span class="campo ancho">Octubre 2026</span></td><td>Página 2 · «Periodo:»</td><td>79 %</td></tr>
+  </table>
+  <p class="nota">Estado de los motores: «Texto del PDF» (sí) · «OCR Tesseract» (no disponible en este servidor; aviso visible solo si una página lo necesitaba).</p>
+  <div class="fila"><span class="boton principal">Aplicar al formulario</span> <span class="boton">Descartar</span>
+    <span class="nota">Nada se guarda hasta confirmar. Al aplicar, los valores pasan al formulario y se validan igual que una carga manual. El documento se adjunta como TDR al crear el entregable.</span></div>
+</div>
+
+<div class="fila" style="margin-top:14px"><span class="boton principal">Crear entregable</span> <span class="boton">Cancelar</span>
+  <span class="nota">Al crear, se genera el checklist por TDR si el contrato tiene ficha confirmada.</span></div>
+
+<ol class="anotaciones">
+  <li><b>Etiquetas</b> (HU-23, criterios de creación y asignación; numeración por confirmar con Trello): viene marcada la de la línea del contrato. Crear una etiqueta nueva es solo para senior, gerente y admin; un junior no la ve en el formulario.</li>
+  <li><b>Prioridad Urgente</b> (HU-28, criterios de creación con naturaleza y plazo; numeración por confirmar): la alerta se crea junto con el entregable y el aviso «URGENTE» llega a guardia y responsables. La Prioridad Normal no crea alerta.</li>
+  <li><b>Prellenado</b> (HU-24, criterio 3: vista previa editable con origen y confianza; criterio 4: aviso de texto poco legible; criterio 5: campos no encontrados vacíos y resaltados). Nada se guarda sin confirmar (RF-48).</li>
+  <li>Si el OCR no está disponible, la vista previa sigue funcionando con PDF que traen texto y avisa del motor que falta (D2).</li>
+</ol>
+
+</div>
+</body>
+</html>
