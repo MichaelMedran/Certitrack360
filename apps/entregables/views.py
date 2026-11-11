@@ -20,7 +20,7 @@ from apps.cuentas.permisos import solo_senior_o_superior
 from apps.etiquetas import servicios as etiquetas_srv
 from apps.etiquetas.models import Etiqueta
 
-from . import adjuntos, entregas, extensiones, filtros, personal, servicios, subestado, tiempos
+from . import adjuntos, entregas, extensiones, filtros, personal, prioridad, servicios, subestado, tiempos
 from . import filtros_entregas, filtros_observaciones, filtros_tiempos
 from . import observaciones as obs_servicio
 from .forms import ActaForm, AdjuntoForm, EntregaForm, EntregableForm, ObservacionForm, contratos_para
@@ -219,6 +219,7 @@ def detalle(request, pk):
 
 
 def _contexto_detalle(usuario, e):
+    prioridad.enriquecer([e])  # prioridad calculada al momento (RF-42)
     es_senior = es_senior_del_entregable(usuario, e)
     es_elaborador = es_elaborador_del_entregable(usuario, e)
     siguientes = [

@@ -1,4 +1,5 @@
 <article class="ficha nivel-{{ e.urgencia|lower }}" data-id="{{ e.pk }}">
+  {% include "entregables/_prioridad.html" %}
   {% if e.estado != 'HECHO' %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}
   <div class="codigo">{{ e.codigo }}</div>
   <a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a>

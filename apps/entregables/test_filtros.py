@@ -112,7 +112,8 @@ class FiltrosBase(Base):
 
 class FiltrosTests(FiltrosBase):
     def test_sin_filtros_se_ve_todo_lo_visible_ordenado_por_plazo(self):
-        self.assertEqual(self.ver(self.j1), ["g-hecho", "a-vencido", "b-hoy", "c-critico", "E1"])
+        # Desde el Sprint 3 (RF-42) el orden por defecto es «prioridad» (SDD §11.3): el plazo se pide de forma explícita.
+        self.assertEqual(self.ver(self.j1, orden="plazo"), ["g-hecho", "a-vencido", "b-hoy", "c-critico", "E1"])
         self.assertEqual(self.ver_set(self.gerente), {e.titulo for e in Entregable.objects.all()})
 
     def test_cada_filtro_por_separado(self):
@@ -149,7 +150,7 @@ class FiltrosTests(FiltrosBase):
             "cliente": "abc", "contrato": "", "responsable": "1; DROP", "estado": "XYZ", "urgencia": "NOPE",
             "tipo_observacion": "MALO", "orden": "hack"}, self.hoy)
         self.assertEqual(res.activos, {})
-        self.assertEqual(res.orden, "plazo")
+        self.assertEqual(res.orden, "prioridad")  # el orden por defecto desde el Sprint 3 (RF-42)
         self.assertEqual(res.queryset.count(), Entregable.objects.count())
 
 
@@ -169,8 +170,8 @@ class OrdenTests(FiltrosBase):
         self.assertEqual(titulos[-2:], ["c-critico", "d-proximo"])
         self.assertEqual(titulos[0], "g-hecho")
 
-    def test_orden_por_defecto_es_el_plazo(self):
-        titulos = self.ver(self.gerente)
+    def test_orden_por_plazo_explicito(self):
+        titulos = self.ver(self.gerente, orden="plazo")
         plazos = [Entregable.objects.get(titulo=t).plazo for t in titulos]
         self.assertEqual(plazos, sorted(plazos))
 

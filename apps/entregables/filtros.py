@@ -14,13 +14,17 @@ from apps.cuentas.models import Usuario
 
 from apps.etiquetas import servicios as etiquetas
 
+from . import prioridad as prio
 from . import subestado
 from . import urgencia as urg
 from .models import Entregable, Observacion, TipoError
 from .visibilidad import entregables_visibles
 
-ORDEN_CHOICES = [("plazo", "Plazo (más próximo primero)"), ("urgencia", "Urgencia"), ("cliente", "Cliente")]
+# Sprint 3 (RF-42): «prioridad» es el orden por defecto; los órdenes anteriores se conservan.
+ORDEN_CHOICES = [("prioridad", "Prioridad (más alta primero)"), ("plazo", "Plazo (más próximo primero)"),
+                 ("urgencia", "Urgencia"), ("cliente", "Cliente")]
 ORDENES = [valor for valor, _ in ORDEN_CHOICES]
+ORDEN_POR_DEFECTO = "prioridad"
 
 Resultado = namedtuple("Resultado", "queryset activos orden")
 
@@ -84,6 +88,11 @@ def aplicar(qs, params, hoy=None):
         qs = qs.filter(urg.condicion(urgencia, hoy))
         activos["urgencia"] = urgencia
 
+    nivel = params.get("prioridad")  # prioridad calculada (Sprint 3, RF-42)
+    if nivel in prio.ETIQUETAS:
+        qs = prio.filtrar(qs, nivel, hoy)
+        activos["prioridad"] = nivel
+
     etiqueta = entero(params.get("etiqueta"))  # etiqueta del entregable o de su contrato (Sprint 3, RF-41)
     if etiqueta is not None:
         qs = qs.filter(etiquetas.condicion(etiqueta))
@@ -98,11 +107,13 @@ def aplicar(qs, params, hoy=None):
 
     orden = params.get("orden")
     if orden not in ORDENES:
-        orden = "plazo"
+        orden = ORDEN_POR_DEFECTO
     return Resultado(ordenar(qs, orden, hoy), activos, orden)
 
 
 def ordenar(qs, orden, hoy=None):
+    if orden == "prioridad":
+        return prio.ordenar(qs, hoy)
     if orden == "urgencia":
         return qs.annotate(rango_urgencia=urg.rango(hoy)).order_by("rango_urgencia", "plazo", "id")
     if orden == "cliente":
@@ -113,8 +124,8 @@ def ordenar(qs, orden, hoy=None):
 def chips(params, activos, opciones_):
     """Un chip por filtro aplicado, con la dirección que lo quita (conservando los demás filtros y el orden)."""
     titulos = [("cliente", "Cliente"), ("contrato", "Contrato"), ("responsable", "Responsable"), ("estado", "Estado"),
-               ("linea", "Línea de servicio"), ("etiqueta", "Etiqueta"), ("urgencia", "Urgencia"),
-               ("tipo_observacion", "Observación abierta")]
+               ("linea", "Línea de servicio"), ("etiqueta", "Etiqueta"), ("prioridad", "Prioridad"),
+               ("urgencia", "Urgencia"), ("tipo_observacion", "Observación abierta")]
     nombres = {
         "cliente": {c.pk: c.nombre for c in opciones_["clientes"]},
         "contrato": {c.pk: c.numero_contrato for c in opciones_["contratos"]},
@@ -122,6 +133,7 @@ def chips(params, activos, opciones_):
         "estado": dict(opciones_["estados"]),
         "linea": {linea.pk: linea.nombre for linea in opciones_["lineas"]},
         "etiqueta": {t.pk: t.nombre for t in opciones_["etiquetas"]},
+        "prioridad": dict(opciones_["prioridades"]),
         "urgencia": dict(opciones_["urgencias"]),
         "tipo_observacion": dict(opciones_["tipos_observacion"]),
     }
@@ -151,6 +163,7 @@ def opciones(usuario):
         "estados": subestado.estados_con_subestado(),
         "lineas": LineaServicio.objects.filter(contratos__entregables__in=visibles).distinct(),
         "etiquetas": etiquetas.opciones_de_filtro(visibles),
+        "prioridades": prio.CHOICES,
         "urgencias": urg.CHOICES,
         "tipos_observacion": TipoError.choices,
         "ordenes": ORDEN_CHOICES,
