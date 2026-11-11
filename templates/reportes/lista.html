@@ -13,12 +13,13 @@
 <h2>Reportes generados</h2>
 {% if reportes %}
 <div class="tabla"><table>
-  <thead><tr><th>Datos al</th><th>Origen</th><th>Generado por</th><th>Acciones</th></tr></thead>
+  <thead><tr><th>Fecha y hora</th><th>Datos al</th><th>Origen</th><th>Generado por</th><th>Acciones</th></tr></thead>
   <tbody>{% for r in reportes %}
   <tr>
+    <td>{{ r.generado_en|date:"d/m/Y H:i" }}</td>
     <td><a href="{% url 'reporte_detalle' r.pk %}">{{ r.datos_al|date:"d/m/Y H:i" }}</a></td>
     <td>{{ r.get_origen_display }}</td>
-    <td>{% if r.generado_por %}{{ r.generado_por.nombre }}{% else %}Tarea programada{% endif %}</td>
+    <td>{% if r.generado_por %}{{ r.generado_por.nombre }}{% else %}Programación{% endif %}</td>
     <td><a href="{% url 'reporte_detalle' r.pk %}">Ver</a> · <a href="{% url 'reporte_pdf' r.pk %}">Descargar PDF</a></td>
   </tr>{% endfor %}</tbody>
 </table></div>

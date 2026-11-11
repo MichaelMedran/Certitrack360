@@ -99,11 +99,16 @@ def generar(origen, usuario=None, ahora=None):
     datos = calcular_datos(ahora=ahora)
     etiqueta_origen = ReporteAvance.Origen(origen).label
     contenido = pdf.generar_pdf(datos, timezone.localtime(ahora), etiqueta_origen, usuario.nombre if usuario else "")
-    with transaction.atomic():
-        reporte = ReporteAvance(origen=origen, generado_por=usuario, datos_al=ahora, datos=datos)
-        reporte.archivo.save("reporte.pdf", ContentFile(contenido), save=False)
-        reporte.save()
-        _avisar_a_gerentes(reporte)
+    reporte = ReporteAvance(origen=origen, generado_por=usuario, datos_al=ahora, datos=datos)
+    try:
+        with transaction.atomic():
+            reporte.archivo.save("reporte.pdf", ContentFile(contenido), save=False)
+            reporte.save()
+            _avisar_a_gerentes(reporte)
+    except Exception:
+        if reporte.archivo.name:  # no dejar un PDF huérfano si se revierte el guardado
+            reporte.archivo.storage.delete(reporte.archivo.name)
+        raise
     return reporte
 
 
