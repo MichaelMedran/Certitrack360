@@ -1,0 +1,9 @@
+<form method="post" action="{% url 'extraccion_nueva' %}" enctype="multipart/form-data" class="tarjeta extr-prellenar" id="prellenar">{% csrf_token %}
+  <input type="hidden" name="plantilla" value="{{ plantilla.pk }}">
+  <h2 style="margin-top:0">Prellenar desde un documento (opcional)</h2>
+  <label for="extr-archivo">Documento (PDF o imagen, máximo {{ ocr_max_paginas }} páginas)</label>
+  <input type="file" id="extr-archivo" name="archivo" accept=".pdf,.png,.jpg,.jpeg" required>
+  <div class="acciones"><button class="boton sec">Extraer datos</button></div>
+  {% include "extraccion/_motores.html" %}
+  <p class="suave">Verá una vista previa con lo encontrado. Nada se guarda hasta que la confirme.</p>
+</form>

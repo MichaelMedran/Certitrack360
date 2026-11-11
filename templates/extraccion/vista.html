@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Vista previa de la extracción{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/s3-extraccion.css' %}">{% endblock %}
+{% block contenido %}
+<h1>Vista previa de la extracción</h1>
+<p class="suave">Documento: <strong>{{ extraccion.nombre_original }}</strong> · Motor usado: {{ extraccion.get_motor_display }}
+  {% if extraccion.entregable %}· Para completar los datos del entregable <a href="{% url 'entregable_detalle' extraccion.entregable.pk %}">{{ extraccion.entregable.codigo|default:extraccion.entregable.titulo }}</a>{% endif %}</p>
+
+{% for aviso in extraccion.avisos %}
+<div class="aviso aviso-warning" role="status"><strong>Aviso:</strong> {{ aviso }}</div>
+{% endfor %}
+{% if aplicada %}<div class="aviso aviso-success" role="status">Esta extracción ya se aplicó el {{ extraccion.aplicada_en|date:"d/m/Y H:i" }}.</div>{% endif %}
+
+<form method="post" class="tarjeta">{% csrf_token %}
+  <p class="suave">Corrija lo que haga falta. Nada se guarda hasta que pulse «{% if extraccion.entregable %}Aplicar a los datos{% else %}Aplicar al formulario{% endif %}».</p>
+  <div class="tabla"><table class="extr-tabla">
+    <caption class="sr-only">Campos propuestos por la extracción</caption>
+    <thead><tr><th scope="col">Campo</th><th scope="col">Valor propuesto (editable)</th><th scope="col">Origen</th><th scope="col">Confianza</th></tr></thead>
+    <tbody>
+    {% for f in filas %}{% with c=f.campo %}
+    <tr class="{% if f.dudoso %}extr-dudoso{% endif %}">
+      <th scope="row">{{ c.etiqueta }}{% if c.clave|slice:":6" == "campo:" %} <span class="suave">(campo de la plantilla)</span>{% endif %}</th>
+      <td>
+        <label class="sr-only" for="valor-{{ f.i }}">{{ c.etiqueta }}</label>
+        {% if c.tipo == "contrato" %}
+        <select id="valor-{{ f.i }}" name="valor-{{ f.i }}"{% if aplicada %} disabled{% endif %}>
+          <option value="">— Elija el contrato —</option>
+          {% for k in contratos %}<option value="{{ k.pk }}"{% if f.valor == k.pk|stringformat:"s" %} selected{% endif %}>{{ k.numero_contrato }} · {{ k.cliente.nombre }}</option>{% endfor %}
+        </select>
+        {% elif c.tipo == "fecha" %}
+        <input type="date" id="valor-{{ f.i }}" name="valor-{{ f.i }}" value="{{ f.valor }}"{% if aplicada %} disabled{% endif %}>
+        {% elif c.tipo == "opcion" %}
+        <select id="valor-{{ f.i }}" name="valor-{{ f.i }}"{% if aplicada %} disabled{% endif %}>
+          <option value="">— Elija una opción —</option>
+          {% for o in c.opciones %}<option value="{{ o }}"{% if f.valor == o %} selected{% endif %}>{{ o }}</option>{% endfor %}
+        </select>
+        {% elif c.tipo == "texto_largo" %}
+        <textarea id="valor-{{ f.i }}" name="valor-{{ f.i }}" rows="3"{% if aplicada %} disabled{% endif %}>{{ f.valor }}</textarea>
+        {% else %}
+        <input type="text" id="valor-{{ f.i }}" name="valor-{{ f.i }}" value="{{ f.valor }}"{% if c.tipo == "numero" %} inputmode="decimal"{% endif %}{% if aplicada %} disabled{% endif %}>
+        {% endif %}
+        {% if f.error %}<p class="extr-error" role="alert">{{ f.error }}</p>{% endif %}
+      </td>
+      <td class="extr-origen">{{ c.origen }}</td>
+      <td>{% if c.confianza is not None %}{{ c.confianza }} %{% else %}—{% endif %}</td>
+    </tr>
+    {% endwith %}{% endfor %}
+    </tbody>
+  </table></div>
+  {% include "extraccion/_motores.html" with motores=motores %}
+  {% if not aplicada %}
+  <div class="acciones">
+    <button class="boton" name="accion" value="aplicar">{% if extraccion.entregable %}Aplicar a los datos{% else %}Aplicar al formulario{% endif %}</button>
+    <button class="boton sec" name="accion" value="descartar" formnovalidate>Descartar</button>
+  </div>
+  <p class="suave">{% if extraccion.entregable %}Al aplicar, los valores se validan igual que en el formulario y quedan anotados en el historial.{% else %}Al aplicar, los valores pasan al formulario y se validan igual que una carga manual. El documento se adjunta como TDR al crear el entregable.{% endif %}</p>
+  {% endif %}
+</form>
+{% endblock %}

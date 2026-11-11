@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}Nuevo entregable{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/s3-extraccion.css' %}">{% endblock %}
 {% block contenido %}
 <h1>Nuevo entregable</h1>
 {% if not hay_contratos %}
@@ -27,8 +28,13 @@
 </form>
 
 {% if form %}
+{% include "extraccion/_prellenar.html" %}
 <form method="post" class="tarjeta">{% csrf_token %}
   <input type="hidden" name="plantilla" value="{{ plantilla.pk }}">
+  {% if extraccion %}
+  <input type="hidden" name="extraccion" value="{{ extraccion.pk }}">
+  <div class="aviso aviso-info" role="status">Datos prellenados desde «{{ extraccion.nombre_original }}». Revíselos: el documento se adjuntará como TDR al crear el entregable.</div>
+  {% endif %}
   <h2 style="margin-top:0">2. Complete los datos requeridos</h2>
   {% if form.errors %}
   <div class="aviso aviso-error" role="alert"><strong>No se pudo guardar. Revise lo siguiente:</strong>
