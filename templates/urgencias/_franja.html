@@ -1,1 +1,18 @@
-{# Franja «URGENTE» (SDD del Sprint 3, §7.4). La completa el hito S3-H4; recibe `alertas_urgentes`. #}
+{# Franja «URGENTE» (SDD del Sprint 3, §7.4): una por alerta abierta que el usuario recibió y todavía no confirmó. Recibe `alertas_urgentes`. #}
+{% for a in alertas_urgentes %}
+<div class="franja-urgente" role="alert">
+  <strong class="franja-urgente-sello">URGENTE</strong>
+  <span class="franja-urgente-texto">
+    {{ a.entregable.contrato.cliente.nombre }} · {{ a.naturaleza|truncatechars:140 }} · Plazo esperado {{ a.plazo_esperado|date:"d/m/Y H:i" }}{% if a.fuera_de_horario %} · Fuera de horario{% endif %}
+    {% if a.ver_entregable %}· <a href="{% url 'entregable_detalle' a.entregable_id %}#urgencia">{{ a.entregable.codigo }}</a>{% else %}· {{ a.entregable.codigo }}{% endif %}
+  </span>
+  <form method="post" action="{% url 'urgencia_leer' a.pk %}" class="en-linea">{% csrf_token %}
+    <input type="hidden" name="volver" value="{{ request.get_full_path }}">
+    <button class="boton chico">Confirmar lectura<span class="sr-only"> de la alerta urgente de {{ a.entregable.codigo }}</span></button>
+  </form>
+  <form method="post" action="{% url 'urgencia_aceptar' a.pk %}" class="en-linea">{% csrf_token %}
+    <input type="hidden" name="volver" value="{{ request.get_full_path }}">
+    <button class="boton sec chico">Aceptar el caso<span class="sr-only"> de {{ a.entregable.codigo }}</span></button>
+  </form>
+</div>
+{% endfor %}

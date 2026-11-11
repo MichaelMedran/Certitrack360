@@ -1,0 +1,50 @@
+<section class="tarjeta" id="urgencia" aria-labelledby="urg-titulo" style="margin:1rem 0">
+  <h2 id="urg-titulo" style="margin-top:0">Alerta urgente</h2>
+  {% if s.alerta %}
+  {% with a=s.alerta %}
+  <div class="alerta-urgente" role="group" aria-label="Alerta urgente activa">
+    <p class="alerta-urgente-titulo"><strong>URGENTE</strong> · Alerta activa</p>
+    <table class="tabla-datos">
+      <tr><th scope="row">Cliente</th><td>{{ e.contrato.cliente.nombre }} · {{ e.contrato.numero_contrato }}</td></tr>
+      <tr><th scope="row">Naturaleza de la urgencia</th><td>{{ a.naturaleza|linebreaksbr }}</td></tr>
+      <tr><th scope="row">Plazo esperado</th><td>{{ a.plazo_esperado|date:"d/m/Y H:i" }}</td></tr>
+      <tr><th scope="row">Fuera de horario</th><td>{% if a.fuera_de_horario %}Sí (calculado con el horario laboral){% else %}No{% endif %}</td></tr>
+      <tr><th scope="row">Activada por</th><td>{{ a.activada_por.nombre }} · {{ a.activada_en|date:"d/m/Y H:i" }}</td></tr>
+      <tr><th scope="row">Lectura</th><td>{{ s.leyeron|length }} de {{ s.destinatarios }} destinatarios confirmaron.
+        {% if s.leyeron %}<ul>{% for l in s.leyeron %}<li>{{ l.usuario.nombre }} · {{ l.leida_en|date:"d/m/Y H:i" }}</li>{% endfor %}</ul>{% endif %}
+        {% if s.pendientes %}<span class="suave">Pendientes: {% for u in s.pendientes %}{{ u.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}</td></tr>
+      <tr><th scope="row">Caso aceptado por</th><td>Nadie todavía (solo una persona lo acepta)</td></tr>
+    </table>
+    {% if s.puede_responder %}
+    <div class="acciones">
+      {% if not s.ya_leyo %}
+      <form method="post" action="{% url 'urgencia_leer' a.pk %}" class="en-linea">{% csrf_token %}
+        <input type="hidden" name="volver" value="{% url 'entregable_detalle' e.pk %}#urgencia">
+        <button class="boton">Confirmar lectura</button>
+      </form>
+      {% else %}<span class="suave">Usted ya confirmó la lectura.</span>{% endif %}
+      <form method="post" action="{% url 'urgencia_aceptar' a.pk %}" class="en-linea">{% csrf_token %}
+        <input type="hidden" name="volver" value="{% url 'entregable_detalle' e.pk %}#urgencia">
+        <button class="boton sec">Aceptar el caso</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endwith %}
+  {% elif s.ultima_cerrada %}
+  {% with a=s.ultima_cerrada %}
+  <p class="suave">La última alerta urgente (plazo esperado {{ a.plazo_esperado|date:"d/m/Y H:i" }}) se cerró el {{ a.cerrada_en|date:"d/m/Y H:i" }}{% if a.aceptada_por %}: el caso lo aceptó {{ a.aceptada_por.nombre }}{% else %}: el entregable pasó a Entregado{% endif %}.</p>
+  {% endwith %}
+  {% else %}<p class="suave">Este entregable no tiene una alerta urgente.</p>{% endif %}
+
+  {% if s.puede_activar %}
+  <details>
+    <summary>Activar alerta urgente</summary>
+    <form method="post" action="{% url 'entregable_urgencia' e.pk %}">{% csrf_token %}
+      {% for campo in s.form %}{% include "entregables/_campo.html" %}{% endfor %}
+      <p class="suave">Al activar: aviso «URGENTE» a las personas de guardia, al senior del contrato, al senior revisor y al junior asignado (sin repetir y sin quien la activa).</p>
+      <div class="acciones"><button class="boton">Activar y avisar</button></div>
+    </form>
+  </details>
+  {% endif %}
+</section>
