@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}Nuevo entregable{% endblock %}
 {% block contenido %}
 <h1>Nuevo entregable</h1>
@@ -8,7 +9,7 @@
 
 <form method="get" class="tarjeta" style="margin-bottom:1rem">
   <label for="plantilla">1. Elija la plantilla de TDR</label>
-  <select name="plantilla" id="plantilla" onchange="this.form.submit()">
+  <select name="plantilla" id="plantilla" data-autoenviar>
     <option value="">— Seleccione —</option>
     {% for p in plantillas %}<option value="{{ p.pk }}"{% if plantilla.pk == p.pk %} selected{% endif %}>{{ p.nombre }} ({{ p.cliente|default:"genérica" }})</option>{% endfor %}
   </select>
@@ -57,7 +58,33 @@
 
   <h3>Responsables</h3>
   {% for campo in form.seccion_responsables %}{% include "entregables/_campo.html" %}{% endfor %}
+
+  <h3>Etiquetas</h3>
+  <fieldset class="etq-opciones" data-lineas-por-contrato="{{ form.lineas_por_contrato }}">
+    <legend>Etiquetas del entregable</legend>
+    {% for opcion in form.etiquetas %}
+    <label class="etq-opcion" for="{{ opcion.id_for_label }}">{{ opcion.tag }}
+      <span class="etq {{ opcion.data.value.instance.clase_css }}">{{ opcion.choice_label }}</span></label>
+    {% empty %}<span class="suave">Todavía no hay etiquetas.</span>{% endfor %}
+  </fieldset>
+  <p class="suave">{{ form.etiquetas.help_text }}</p>
   <div class="acciones"><button class="boton">Crear entregable</button><a class="boton sec" href="{% url 'entregables' %}">Cancelar</a></div>
 </form>
+
+{% if puede_crear_etiquetas %}
+<form method="post" action="{% url 'etiqueta_nueva' %}" class="tarjeta etq-nueva" style="margin-top:1rem">{% csrf_token %}
+  <input type="hidden" name="volver" value="{{ request.get_full_path }}">
+  <fieldset>
+    <legend>¿Necesita una etiqueta que no existe? Créela aquí</legend>
+    <label for="etq-nueva-nombre">Nombre</label>
+    <input id="etq-nueva-nombre" name="nombre" type="text" maxlength="40" required>
+    <label for="etq-nueva-color">Color</label>
+    <select id="etq-nueva-color" name="color">{% for valor, nombre in colores_etiqueta %}<option value="{{ valor }}">{{ nombre }}</option>{% endfor %}</select>
+    <button class="boton sec chico">Crear etiqueta</button>
+  </fieldset>
+  <p class="suave">Al crearla se vuelve a esta pantalla y aparece entre las etiquetas de arriba. Si ya escribió datos del entregable, cree la etiqueta antes de llenarlos.</p>
+</form>
+{% endif %}
 {% endif %}
 {% endblock %}
+{% block scripts %}<script src="{% static 'js/crear.js' %}"></script>{% endblock %}

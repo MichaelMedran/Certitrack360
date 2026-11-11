@@ -17,6 +17,8 @@ from django.views.decorators.http import require_POST
 from apps.clientes.models import PlantillaTDR
 from apps.cuentas.models import Usuario
 from apps.cuentas.permisos import solo_senior_o_superior
+from apps.etiquetas import servicios as etiquetas_srv
+from apps.etiquetas.models import Etiqueta
 
 from . import adjuntos, entregas, extensiones, filtros, personal, servicios, subestado, tiempos
 from . import filtros_entregas, filtros_observaciones, filtros_tiempos
@@ -202,6 +204,7 @@ def crear(request):
     return render(request, "entregables/crear.html", {
         "plantillas": plantillas, "plantilla": plantilla, "form": form,
         "hay_contratos": contratos_para(usuario).exists(),
+        "puede_crear_etiquetas": etiquetas_srv.puede_crear(usuario), "colores_etiqueta": Etiqueta.Color.choices,
         # Ejemplo del formato del código que se asignará al guardar (p. ej. CT-2026-00031).
         "ejemplo_codigo": f"{settings.CODIGO_PREFIJO}-{timezone.localdate().year}-00031",
     })

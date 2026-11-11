@@ -1,1 +1,20 @@
-/* Estilos del Sprint 3 (s3-prioridad). */
+/* Estilos del Sprint 3 (s3-prioridad): etiquetas (RF-41), prioridad (RF-42) y alerta urgente (RF-43). */
+
+/* Etiquetas: texto oscuro sobre fondo claro (contraste mayor que 7:1); el nombre siempre va en texto. */
+.etiquetas-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin:.3rem 0}
+.etq{display:inline-block;font-size:.75rem;font-weight:600;padding:.05rem .5rem;border-radius:999px;border:1px solid;line-height:1.5}
+.etq-gris{background:#e5e7eb;color:#1f2937;border-color:#6b7280}
+.etq-azul{background:#dbeafe;color:#1e3a8a;border-color:#2563eb}
+.etq-verde{background:#dcfce7;color:#14532d;border-color:#16a34a}
+.etq-ambar{background:#fef3c7;color:#78350f;border-color:#d97706}
+.etq-rojo{background:#fee2e2;color:#7f1d1d;border-color:#dc2626}
+.etq-morado{background:#ede9fe;color:#4c1d95;border-color:#7c3aed}
+.etq-turquesa{background:#ccfbf1;color:#134e4a;border-color:#0d9488}
+.etq-rosa{background:#fce7f3;color:#831843;border-color:#db2777}
+.etq-opciones{border:1px solid #cbd5e1;border-radius:6px;margin:.5rem 0;padding:.5rem .8rem}
+.etq-opciones legend{font-weight:600;padding:0 .3rem}
+.etq-opcion{display:inline-flex;align-items:center;gap:.3rem;margin:.2rem .8rem .2rem 0}
+.etq-nueva fieldset{border:1px dashed #94a3b8;border-radius:6px;margin:.8rem 0 0;padding:.5rem .8rem}
+.etq-nueva legend{font-weight:600;padding:0 .3rem}
+.etq-nueva label{margin:0 .3rem 0 .6rem}
+.etq-nueva label:first-of-type{margin-left:0}

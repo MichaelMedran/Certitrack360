@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Etiquetas · {% if etiqueta %}Editar{% else %}Nueva{% endif %}{% endblock %}
+{% block contenido %}
+{% if user.es_gerente_o_admin %}{% include "clientes/_pestanas.html" %}{% else %}<h1>Etiquetas</h1>{% endif %}
+<h2>{% if etiqueta %}Editar etiqueta{% else %}Nueva etiqueta{% endif %}</h2>
+<form method="post" class="tarjeta">{% csrf_token %}
+  {% if form.errors %}<div class="aviso aviso-error" role="alert"><strong>No se pudo guardar.</strong>
+    <ul>{% for campo, errs in form.errors.items %}{% for err in errs %}<li>{{ err }}</li>{% endfor %}{% endfor %}</ul></div>{% endif %}
+  <p><label for="{{ form.nombre.id_for_label }}">Nombre</label>{{ form.nombre }}</p>
+  <p><label for="{{ form.color.id_for_label }}">Color</label>{{ form.color }}</p>
+  {% if etiqueta.linea_servicio %}<p class="suave">Es la etiqueta de la línea de servicio «{{ etiqueta.linea_servicio.nombre }}».</p>{% endif %}
+  <div class="acciones"><button class="boton">Guardar</button><a class="boton sec" href="{% url 'etiquetas' %}">Cancelar</a></div>
+</form>
+{% endblock %}

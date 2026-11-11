@@ -3,6 +3,7 @@
   <div class="codigo">{{ e.codigo }}</div>
   <a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a>
   <div class="suave">{{ e.contrato.cliente }} · {{ e.contrato.numero_contrato }}</div>
+  {% include "etiquetas/_chips.html" %}
   <div>Plazo: {{ e.plazo|date:"d/m/Y" }}</div>
   {% if e.ultima_entrega %}<div>Entregado {{ e.ultima_entrega.fecha_entrega|date:"d/m/Y" }} · <span class="etiqueta acta-{{ e.ultima_entrega.acta_estado|lower }}">Acta {{ e.ultima_entrega.get_acta_estado_display|lower }}</span></div>{% endif %}
   <div class="suave">{{ e.junior_asignado.nombre }}</div>

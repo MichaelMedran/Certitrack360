@@ -12,6 +12,8 @@ from django.utils import timezone
 from apps.clientes.models import Cliente, Contrato, LineaServicio
 from apps.cuentas.models import Usuario
 
+from apps.etiquetas import servicios as etiquetas
+
 from . import subestado
 from . import urgencia as urg
 from .models import Entregable, Observacion, TipoError
@@ -82,6 +84,11 @@ def aplicar(qs, params, hoy=None):
         qs = qs.filter(urg.condicion(urgencia, hoy))
         activos["urgencia"] = urgencia
 
+    etiqueta = entero(params.get("etiqueta"))  # etiqueta del entregable o de su contrato (Sprint 3, RF-41)
+    if etiqueta is not None:
+        qs = qs.filter(etiquetas.condicion(etiqueta))
+        activos["etiqueta"] = etiqueta
+
     tipo = params.get("tipo_observacion")
     if tipo in TipoError.values:
         # Solo observaciones abiertas (no resueltas) del tipo pedido.
@@ -106,13 +113,15 @@ def ordenar(qs, orden, hoy=None):
 def chips(params, activos, opciones_):
     """Un chip por filtro aplicado, con la dirección que lo quita (conservando los demás filtros y el orden)."""
     titulos = [("cliente", "Cliente"), ("contrato", "Contrato"), ("responsable", "Responsable"), ("estado", "Estado"),
-               ("linea", "Línea de servicio"), ("urgencia", "Urgencia"), ("tipo_observacion", "Observación abierta")]
+               ("linea", "Línea de servicio"), ("etiqueta", "Etiqueta"), ("urgencia", "Urgencia"),
+               ("tipo_observacion", "Observación abierta")]
     nombres = {
         "cliente": {c.pk: c.nombre for c in opciones_["clientes"]},
         "contrato": {c.pk: c.numero_contrato for c in opciones_["contratos"]},
         "responsable": {u.pk: u.nombre for u in opciones_["responsables"]},
         "estado": dict(opciones_["estados"]),
         "linea": {linea.pk: linea.nombre for linea in opciones_["lineas"]},
+        "etiqueta": {t.pk: t.nombre for t in opciones_["etiquetas"]},
         "urgencia": dict(opciones_["urgencias"]),
         "tipo_observacion": dict(opciones_["tipos_observacion"]),
     }
@@ -141,6 +150,7 @@ def opciones(usuario):
         ).distinct().order_by("first_name", "last_name", "username"),
         "estados": subestado.estados_con_subestado(),
         "lineas": LineaServicio.objects.filter(contratos__entregables__in=visibles).distinct(),
+        "etiquetas": etiquetas.opciones_de_filtro(visibles),
         "urgencias": urg.CHOICES,
         "tipos_observacion": TipoError.choices,
         "ordenes": ORDEN_CHOICES,

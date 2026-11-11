@@ -1,0 +1,33 @@
+<section class="tarjeta" id="etiquetas" aria-labelledby="etq-titulo" style="margin:1rem 0">
+  <h2 id="etq-titulo" style="margin-top:0">Etiquetas</h2>
+  {% if s.etiquetas %}
+  <p class="etiquetas-chips">{% for t in s.etiquetas %}<span class="etq {{ t.clase_css }}">{{ t.nombre }}</span>{% endfor %}</p>
+  {% else %}<p class="suave">Este entregable no tiene etiquetas.</p>{% endif %}
+  {% if s.puede_asignar %}
+  <form method="post" action="{% url 'entregable_etiquetas' e.pk %}">{% csrf_token %}
+    <fieldset class="etq-opciones">
+      <legend>Etiquetas propias del entregable</legend>
+      {% for t in s.ofrecidas %}
+      <label class="etq-opcion"><input type="checkbox" name="etiquetas" value="{{ t.pk }}"{% if t.pk in s.propias %} checked{% endif %}>
+        <span class="etq {{ t.clase_css }}">{{ t.nombre }}</span>{% if not t.activa %} <span class="suave">(de baja)</span>{% endif %}</label>
+      {% empty %}<span class="suave">Todavía no hay etiquetas.</span>{% endfor %}
+    </fieldset>
+    <p class="suave">Las etiquetas del contrato se muestran siempre y se cambian en Gestión › Contratos.</p>
+    <div class="acciones"><button class="boton sec">Guardar etiquetas</button></div>
+  </form>
+  {% endif %}
+  {% if s.puede_crear %}
+  <form method="post" action="{% url 'etiqueta_nueva' %}" class="etq-nueva">{% csrf_token %}
+    <input type="hidden" name="volver" value="{% url 'entregable_detalle' e.pk %}">
+    {% if s.puede_asignar %}<input type="hidden" name="entregable" value="{{ e.pk }}">{% endif %}
+    <fieldset>
+      <legend>Crear una etiqueta nueva</legend>
+      <label for="etq-nombre-{{ e.pk }}">Nombre</label>
+      <input id="etq-nombre-{{ e.pk }}" name="nombre" type="text" maxlength="40" required>
+      <label for="etq-color-{{ e.pk }}">Color</label>
+      <select id="etq-color-{{ e.pk }}" name="color">{% for valor, nombre in s.colores %}<option value="{{ valor }}">{{ nombre }}</option>{% endfor %}</select>
+      <button class="boton sec chico">Crear{% if s.puede_asignar %} y asignar{% endif %}</button>
+    </fieldset>
+  </form>
+  {% endif %}
+</section>

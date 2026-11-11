@@ -1,10 +1,13 @@
 import datetime
+import json
 
 from django import forms
 from django.utils import timezone
 
 from apps.clientes.models import Contrato
 from apps.cuentas.models import Usuario
+from apps.etiquetas import servicios as etiquetas_srv
+from apps.etiquetas.models import Etiqueta
 
 from . import adjuntos, entregas
 from .models import Adjunto, Entrega, Entregable, TipoError
@@ -29,6 +32,17 @@ class SelectorDeContrato(forms.Select):
         if contrato is not None:
             opcion["attrs"]["data-cliente"] = contrato.cliente.nombre
             opcion["attrs"]["data-linea"] = linea_de(contrato)
+        return opcion
+
+
+class SelectorDeEtiquetas(forms.CheckboxSelectMultiple):
+    """Casillas de etiquetas; las de una línea de servicio llevan `data-linea-id` para marcarse al elegir el contrato."""
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        opcion = super().create_option(name, value, label, selected, index, subindex, attrs)
+        etiqueta = getattr(value, "instance", None)
+        if etiqueta is not None and etiqueta.linea_servicio_id:
+            opcion["attrs"]["data-linea-id"] = etiqueta.linea_servicio_id
         return opcion
 
 
@@ -78,6 +92,11 @@ class EntregableForm(forms.Form):
         error_messages={"invalid_choice": "Elija un senior de la lista."},
         help_text="Revisa y aprueba el entregable. Si no elige uno, será el senior responsable del contrato.",
     )
+    etiquetas = forms.ModelMultipleChoiceField(
+        queryset=Etiqueta.objects.none(), label="Etiquetas", required=False, widget=SelectorDeEtiquetas,
+        error_messages={"invalid_choice": "Elija etiquetas de la lista.", "invalid_pk_value": "Elija etiquetas de la lista."},
+        help_text="Viene marcada la etiqueta de la línea de servicio del contrato. El contrato puede tener etiquetas propias.",
+    )
 
     AYUDA_POR_TIPO = {"numero": "Número", "fecha": "Fecha", "texto_largo": "Texto largo", "opcion": "Elija una opción"}
 
@@ -87,6 +106,7 @@ class EntregableForm(forms.Form):
         self.fields["contrato"].queryset = contratos_para(usuario)
         self.fields["junior_asignado"].queryset = Usuario.objects.filter(rol=Usuario.Rol.JUNIOR, is_active=True)
         self.fields["senior_revisor"].queryset = Usuario.objects.filter(rol=Usuario.Rol.SENIOR, is_active=True)
+        self.fields["etiquetas"].queryset = etiquetas_srv.ofrecidas_para()
         if not self.is_bound:
             self.fields["fecha_recepcion"].initial = timezone.localdate()
             if plantilla:
@@ -117,7 +137,7 @@ class EntregableForm(forms.Form):
             self.campos_dinamicos.append(c["nombre"])
         # Los errores se listan en el mismo orden en que se ven las secciones de la pantalla.
         self.order_fields(["contrato", "titulo", *self.CAMPOS_RECEPCION, "plazo", *self.campos_dinamicos,
-                           "junior_asignado", "senior_revisor"])
+                           "junior_asignado", "senior_revisor", "etiquetas"])
 
     def _seccion(self, nombres):
         return [self[n] for n in nombres if n in self.fields]
@@ -143,6 +163,11 @@ class EntregableForm(forms.Form):
     @property
     def campos_plantilla(self):
         return [self[n] for n in self.campos_dinamicos]
+
+    @property
+    def lineas_por_contrato(self):
+        """JSON {id del contrato: id de su línea de servicio} para marcar la etiqueta de la línea al elegir el contrato."""
+        return json.dumps({str(c.pk): c.linea_servicio_id for c in self.fields["contrato"].queryset if c.linea_servicio_id})
 
     def contrato_elegido(self):
         """El contrato elegido (o None), para mostrar su cliente y su línea de servicio en solo lectura.
@@ -184,12 +209,14 @@ class EntregableForm(forms.Form):
         for nombre in self.campos_dinamicos:
             v = d[nombre]
             valores[nombre] = v.isoformat() if isinstance(v, datetime.date) else (str(v) if not isinstance(v, str) else v)
-        return Entregable.objects.create(
+        entregable = Entregable.objects.create(
             contrato=d["contrato"], plantilla=self.plantilla, titulo=d["titulo"], datos=valores, plazo=d["plazo"],
             junior_asignado=d["junior_asignado"], creado_por=usuario,
             senior_revisor=d["senior_revisor"] or d["contrato"].senior_responsable,
             id_tdr=d["id_tdr"], fecha_recepcion=d["fecha_recepcion"],
         )
+        etiquetas_srv.asignar_en_creacion(entregable, d.get("etiquetas") or [])
+        return entregable
 
 
 class AdjuntoForm(forms.Form):

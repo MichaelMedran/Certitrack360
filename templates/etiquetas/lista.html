@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Etiquetas{% endblock %}
+{% block contenido %}
+{% if user.es_gerente_o_admin %}{% include "clientes/_pestanas.html" %}{% else %}<h1>Etiquetas</h1>{% endif %}
+<h2>Etiquetas</h2>
+<p class="suave">Las etiquetas clasifican contratos y entregables; el nombre siempre se muestra en texto y el color solo lo refuerza.
+  Una etiqueta de baja deja de ofrecerse, pero se conserva donde ya estaba.</p>
+<p><a class="boton" href="{% url 'etiqueta_nueva' %}">Nueva etiqueta</a>
+  {% if not user.es_gerente_o_admin %}<a class="boton sec" href="{% url 'entregables' %}">Volver a Entregables</a>{% endif %}</p>
+<div class="tabla"><table>
+  <thead><tr><th>Etiqueta</th><th>Color</th><th>Línea de servicio</th><th class="num">Contratos</th><th class="num">Entregables</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>
+    {% for t in etiquetas %}
+    <tr>
+      <td><span class="etq {{ t.clase_css }}">{{ t.nombre }}</span></td>
+      <td>{{ t.get_color_display }}</td>
+      <td>{{ t.linea_servicio.nombre|default:"—" }}</td>
+      <td class="num">{{ t.n_contratos }}</td><td class="num">{{ t.n_entregables }}</td>
+      <td>{% if t.activa %}Activa{% else %}De baja{% endif %}</td>
+      <td>
+        <a class="boton sec chico" href="{% url 'etiqueta_editar' t.pk %}">Editar<span class="sr-only"> {{ t.nombre }}</span></a>
+        {% if puede_dar_de_baja %}
+        <form method="post" action="{% url 'etiqueta_editar' t.pk %}" class="en-linea">{% csrf_token %}
+          <input type="hidden" name="accion" value="{% if t.activa %}baja{% else %}alta{% endif %}">
+          <button class="boton sec chico">{% if t.activa %}Dar de baja{% else %}Reactivar{% endif %}<span class="sr-only"> {{ t.nombre }}</span></button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="7">Todavía no hay etiquetas.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

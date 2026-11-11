@@ -78,6 +78,27 @@ class ContratoForm(forms.ModelForm):
         self.fields["cliente"].empty_label = "— Elija el cliente —"
         self.fields["senior_responsable"].empty_label = "— Elija el senior —"
         self._preparar_linea()
+        self._preparar_etiquetas()
+
+    def _preparar_etiquetas(self):
+        """Etiquetas del contrato (RF-41): viven en la app de etiquetas; aquí solo se eligen. Un contrato conserva las suyas
+        aunque estén de baja."""
+        from apps.etiquetas.models import Etiqueta
+
+        condicion = Q(activa=True)
+        if self.instance.pk:
+            condicion |= Q(contratos=self.instance)
+        self.fields["etiquetas"] = forms.ModelMultipleChoiceField(
+            queryset=Etiqueta.objects.filter(condicion).distinct(), required=False, label="Etiquetas",
+            widget=forms.CheckboxSelectMultiple,
+            help_text="Se muestran en todos los entregables del contrato.",
+        )
+        if self.instance.pk:
+            self.initial["etiquetas"] = list(self.instance.etiquetas_asignadas.values_list("pk", flat=True))
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        self.instance.etiquetas_asignadas.set(self.cleaned_data.get("etiquetas") or [])
 
     def _preparar_linea(self):
         campo = self.fields["linea_servicio"]
