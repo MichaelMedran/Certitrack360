@@ -1,0 +1,38 @@
+<h2 id="exportar">Exportar</h2>
+<div class="tarjeta exportar">
+  <p class="suave">Genera un PDF o un Excel con los datos consolidados del entregable (cliente, periodo y la información de «{{ e.plantilla.nombre }}»). Cada exportación se guarda como una versión nueva y queda en el historial.</p>
+  {% if s.faltantes %}
+  <div class="aviso aviso-warning" role="alert">
+    <strong>No se puede exportar todavía.</strong> Falta completar:
+    <ul>{% for f in s.faltantes %}<li>{{ f }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  <div class="acciones">
+    <form class="en-linea" method="post" action="{% url 'entregable_exportar' e.pk 'pdf' %}">{% csrf_token %}
+      <button class="boton"{% if s.faltantes %} disabled{% endif %}>Exportar a PDF</button>
+    </form>
+    <form class="en-linea" method="post" action="{% url 'entregable_exportar' e.pk 'excel' %}">{% csrf_token %}
+      <button class="boton sec"{% if s.faltantes %} disabled{% endif %}>Exportar a Excel</button>
+    </form>
+  </div>
+
+  <h3>Exportaciones anteriores</h3>
+  {% if s.exportaciones %}
+  <div class="tabla"><table>
+    <thead><tr><th>Versión</th><th>Formato</th><th>Exportado por</th><th>Fecha y hora</th><th>Archivo</th></tr></thead>
+    <tbody>
+      {% for x in s.exportaciones %}
+      <tr>
+        <td>v{{ x.version }}</td>
+        <td>{{ x.formato }}</td>
+        <td>{{ x.subido_por.nombre }}</td>
+        <td>{{ x.subido_en|date:"d/m/Y H:i" }}</td>
+        <td><a href="{% url 'adjunto_descargar' x.pk %}">Descargar {{ x.nombre_original }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="suave">Todavía no se exportó este entregable.</p>
+  {% endif %}
+</div>
