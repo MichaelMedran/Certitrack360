@@ -137,7 +137,9 @@ class TiposNuevosNoSonRequeridosTests(EntregasBase):
     def test_los_tipos_nuevos_no_se_ofrecen_como_adjuntos_requeridos_de_la_plantilla(self):
         valores = [v for v, _ in PlantillaForm().fields["adjuntos_requeridos"].choices]
         self.assertEqual(valores, ["TDR", "BORRADOR", "VERSION_FINAL", "EVIDENCIA", "OTRO"])
-        self.assertEqual({v for v, _ in TIPOS_DE_SUBIDA}, set(TipoAdjunto.values) - {t.value for t in TIPOS_DE_ENTREGA})
+        # Sprint 3: la exportación (RF-47) tampoco se sube a mano; la genera la plataforma.
+        self.assertEqual({v for v, _ in TIPOS_DE_SUBIDA},
+                         set(TipoAdjunto.values) - {t.value for t in TIPOS_DE_ENTREGA} - {TipoAdjunto.EXPORTACION.value})
 
     def test_el_cargo_y_el_acta_no_alteran_los_faltantes_ni_la_numeracion_de_versiones(self):
         from apps.clientes.models import PlantillaTDR

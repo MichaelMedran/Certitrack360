@@ -78,6 +78,13 @@ INSTALLED_APPS = [
     "apps.repositorio",
     "apps.busqueda",
     "apps.equipo",
+    # Sprint 3 (SDD del Sprint 3, §5)
+    "apps.etiquetas",
+    "apps.urgencias",
+    "apps.checklists",
+    "apps.facturacion",
+    "apps.exportacion",
+    "apps.extraccion",
 ]
 
 MIDDLEWARE = [
@@ -105,6 +112,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.alertas.context_processors.notificaciones",
                 "apps.cuentas.context_processors.navegacion",
+                "apps.urgencias.context_processors.urgentes",
             ],
         },
     },
@@ -138,6 +146,12 @@ SESSION_SAVE_EVERY_REQUEST = True
 # Cookies «seguras» solo viajan por HTTPS: activas por defecto fuera de DEBUG.
 # En una red interna sin HTTPS, fijar DJANGO_COOKIE_SECURE=0.
 SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = _bool("DJANGO_COOKIE_SECURE", "0" if DEBUG else "1")
+# Detrás de un proxy o túnel que termina HTTPS (p. ej. la demostración remota con Cloudflare):
+# confiar en X-Forwarded-Proto para que Django sepa que la petición original fue HTTPS (CSRF y cookies seguras).
+# Activarlo solo si de verdad hay un proxy delante; si no, cualquiera podría falsear la cabecera.
+if _bool("DJANGO_BEHIND_PROXY", "0"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = _lista("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 
 LANGUAGE_CODE = "es-pe"
 TIME_ZONE = "America/Lima"
@@ -186,6 +200,61 @@ except ValueError as exc:
     raise ImproperlyConfigured("BUSCADOR_LIMITE debe ser un número entero mayor que cero.") from exc
 if BUSCADOR_LIMITE <= 0:
     raise ImproperlyConfigured("BUSCADOR_LIMITE debe ser mayor que cero.")
+
+# ------------------------------------------------------------------ Sprint 3 (SDD del Sprint 3, §10.1)
+
+def _entero(nombre, defecto, minimo=1):
+    try:
+        valor = int(os.environ.get(nombre, defecto))
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"{nombre} debe ser un número entero.") from exc
+    if valor < minimo:
+        raise ImproperlyConfigured(f"{nombre} debe ser {minimo} o más.")
+    return valor
+
+
+def _horario(texto):
+    """«1-5,09:00-18:00» → (días laborales como conjunto de 1 (lunes) a 7, hora de inicio, hora de fin)."""
+    import datetime
+
+    try:
+        dias, horas = texto.split(",")
+        d1, d2 = (int(x) for x in dias.split("-"))
+        inicio, fin = (datetime.time.fromisoformat(x.strip()) for x in horas.split("-"))
+        if not (1 <= d1 <= d2 <= 7) or inicio >= fin:
+            raise ValueError
+    except ValueError as exc:
+        raise ImproperlyConfigured("HORARIO_LABORAL debe tener la forma 1-5,09:00-18:00 (días 1 = lunes a 7).") from exc
+    return set(range(d1, d2 + 1)), inicio, fin
+
+
+# Prioridad (RF-42): días para que un entregable normal de cliente Estratégico sea de prioridad Media.
+PRIORIDAD_DIAS_ESTRATEGICO = _entero("PRIORIDAD_DIAS_ESTRATEGICO", "10")
+
+# Alerta de urgencia (RF-43): horario laboral (para marcar «fuera de horario») y correo opcional por un servidor LOCAL.
+HORARIO_LABORAL = _horario(os.environ.get("HORARIO_LABORAL", "1-5,09:00-18:00"))
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "").strip()
+EMAIL_PORT = _entero("EMAIL_PORT", "25")
+DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "certitrack@localhost")
+# Sin servidor de correo configurado no se envía nada (los avisos quedan dentro de la plataforma).
+EMAIL_BACKEND = ("django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST
+                 else "django.core.mail.backends.dummy.EmailBackend")
+
+# Facturación (RF-46): conector de solo lectura. El simulado lee la tabla FacturaSimulada del servidor local.
+FACTURACION_CONECTOR = os.environ.get("FACTURACION_CONECTOR", "apps.facturacion.conector.ConectorSimulado")
+
+# Extracción de datos (RF-48): Tesseract es un programa del servidor; sin él solo se lee el texto de los PDF que lo traen.
+TESSERACT_CMD = os.environ.get("TESSERACT_CMD", "tesseract").strip()
+OCR_IDIOMAS = os.environ.get("OCR_IDIOMAS", "spa+eng").strip()
+OCR_CONFIANZA_MINIMA = _entero("OCR_CONFIANZA_MINIMA", "60", minimo=0)
+OCR_MAX_PAGINAS = _entero("OCR_MAX_PAGINAS", "10")
+
+# Plataforma independiente (RF-51): único origen externo permitido (vacío: ninguno) y bloqueo de intentos de ingreso.
+FILEDOC_URL = os.environ.get("FILEDOC_URL", "").strip()
+LOGIN_MAX_INTENTOS = _entero("LOGIN_MAX_INTENTOS", "5")
+LOGIN_BLOQUEO_MINUTOS = _entero("LOGIN_BLOQUEO_MINUTOS", "15")
+SERVIDOR_PUERTO = _entero("SERVIDOR_PUERTO", "8000")
+SERVIDOR_HILOS = _entero("SERVIDOR_HILOS", "8")
 
 # Adjuntos de los entregables: se guardan en disco local y NO se sirven por una URL pública.
 # MEDIA_URL = None impide que Django construya direcciones a los archivos; no hay ruta de medios en urls.py

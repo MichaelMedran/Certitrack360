@@ -118,6 +118,20 @@ Servicios: `db` (PostgreSQL), `web`, `programador` y `ollama` (sin puertos publi
 **Escrito pero sin probar** (no había Docker disponible al prepararlo). El contenedor usa el servidor de desarrollo de Django, adecuado para una demostración en red local;
 servir en producción con gunicorn y WhiteNoise es la decisión abierta n.º 8 del SDD y está pendiente de confirmar.
 
+## Demostración remota (temporal)
+
+Para que el cliente use la aplicación desde internet durante una reunión, sin servidor ni abrir puertos del router:
+
+```powershell
+winget install --id Cloudflare.cloudflared      # una sola vez
+powershell -ExecutionPolicy Bypass -File scripts\demo_remota.ps1            # -Reiniciar: datos desde cero · -Clave "...": clave fija
+```
+
+El script usa una base y adjuntos aparte (`demo_remota/`, sin tocar `db.sqlite3`), corre con `DJANGO_DEBUG=0`, reemplaza la clave pública
+`demo1234` por una nueva en cada arranque y abre un túnel rápido de Cloudflare (HTTPS). Imprime la dirección `https://….trycloudflare.com`
+y la clave; ambas dejan de servir al cerrar la ventana (Ctrl+C). El equipo debe seguir encendido y sin suspenderse durante la reunión.
+Solo con datos simulados.
+
 ## Seguridad y privacidad
 
 - Todo permiso se verifica en el servidor (vistas, filtros, calendario, buscador, indicadores, repositorio y descargas); la interfaz solo oculta lo no permitido. Lo que un usuario no puede ver responde 404; lo que ve pero no puede hacer, 403.

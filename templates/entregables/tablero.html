@@ -25,6 +25,15 @@
     <div class="acciones"><button class="boton">Devolver</button><button type="button" class="boton sec" id="d-cancelar">Cancelar</button></div>
   </form>
 </dialog>
+
+<dialog id="dialogo-confirmar" aria-labelledby="titulo-confirmar">
+  <form id="form-confirmar">
+    <h2 id="titulo-confirmar" style="margin-top:0">Confirme antes de continuar</h2>
+    <p class="suave" id="confirmar-entregable"></p>
+    <p id="confirmar-mensaje"></p>
+    <div class="acciones"><button class="boton">Continuar de todos modos</button><button type="button" class="boton sec" id="c-cancelar">Cancelar</button></div>
+  </form>
+</dialog>
 {% endblock %}
 {% block scripts %}
 <script defer src="{% static 'js/Sortable.min.js' %}"></script>

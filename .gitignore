@@ -10,6 +10,9 @@ staticfiles/
 # Archivos subidos (adjuntos): nunca se versionan
 media/
 
+# Base, adjuntos y registros de la demostración remota (scripts/demo_remota.ps1)
+demo_remota/
+
 # Variables de entorno reales (solo se versiona .env.example)
 .env
 

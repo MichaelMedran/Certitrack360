@@ -85,5 +85,25 @@
 
   document.addEventListener("click", function (evento) {
     if (evento.target.id === "d-cancelar") document.getElementById("dialogo-devolver").close();
+    if (evento.target.id === "c-cancelar") document.getElementById("dialogo-confirmar").close();
+  });
+
+  // Advertencias (Sprint 3): el servidor no prohíbe el movimiento, pero pide confirmarlo (p. ej. checklist con pendientes).
+  let porConfirmar = null;
+  document.addEventListener("confirmarAdvertencia", function (evento) {
+    const dialogo = document.getElementById("dialogo-confirmar");
+    if (!dialogo) return;
+    porConfirmar = evento.detail;
+    document.getElementById("confirmar-entregable").textContent = "«" + porConfirmar.titulo + "»";
+    document.getElementById("confirmar-mensaje").textContent = porConfirmar.mensaje;
+    dialogo.showModal();
+  });
+
+  document.addEventListener("submit", function (evento) {
+    if (evento.target.id !== "form-confirmar") return;
+    evento.preventDefault();
+    const a = porConfirmar;
+    document.getElementById("dialogo-confirmar").close();
+    enviar(a.id, { estado: a.estado, confirmar: (a.confirmadas || []).concat([a.clave]) });
   });
 })();

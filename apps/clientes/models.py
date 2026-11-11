@@ -37,8 +37,15 @@ class Cliente(models.Model):
         TELECOM = "TELECOM", "Telecomunicaciones"
         PUBLICO = "PUBLICO", "Sector público"
 
+    class Tipo(models.TextChoices):
+        # Sprint 3 (RF-42): pesa en la prioridad calculada de sus entregables.
+        ESTRATEGICO = "ESTRATEGICO", "Estratégico"
+        REGULAR = "REGULAR", "Regular"
+        OCASIONAL = "OCASIONAL", "Ocasional"
+
     nombre = models.CharField(max_length=150, unique=True)
     sector = models.CharField(max_length=10, choices=Sector.choices)
+    tipo = models.CharField("tipo de cliente", max_length=12, choices=Tipo.choices, default=Tipo.REGULAR)
     activo = models.BooleanField(default=True)
 
     class Meta:

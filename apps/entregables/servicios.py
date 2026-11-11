@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from apps.alertas.models import Notificacion
 
-from . import adjuntos
+from . import adjuntos, extensiones
 from .models import Adjunto, Entrega, Entregable, HistorialEstado, Observacion, TipoError
 from .visibilidad import es_elaborador_del_entregable, es_senior_del_entregable
 
@@ -206,7 +206,8 @@ def requisitos_para_verificacion(entregable):
     return f"No se puede enviar a verificación: faltan {' y '.join(partes)}. {' '.join(ayudas)}"
 
 
-def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", observaciones=None, rechazo=None):
+def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", observaciones=None, rechazo=None,
+          confirmadas=()):
     """Cambia el estado y registra el historial. Lanza ValidationError o PermissionDenied.
 
     Es la única puerta para cambiar de estado. Al devolver (Revisión senior → En proceso) exige al menos una observación:
@@ -220,6 +221,10 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
     `rechazo`: devolución por el rechazo de una corrección (§7.1 y §7.2). La observación rechazada, de este entregable y
     ya de vuelta en Pendiente, es la observación abierta que justifica la devolución: no se crea otra. Los avisos los da
     quien rechaza (`observaciones.rechazar`).
+
+    Sprint 3 (§5.1): los módulos suman condiciones con `extensiones.registrar_condicion`. Un texto bloquea el paso; una
+    `Advertencia` lo detiene hasta que quien mueve la confirma: entonces su clave llega en `confirmadas`. Una advertencia
+    sin confirmar lanza ValidationError con code="advertencia" y params={"clave", "mensaje"}.
     """
     actual = entregable.estado
     clave = (actual, nuevo_estado)
@@ -245,9 +250,14 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
             motivos.append(MOTIVO_SIN_ENTREGA)
     if clave == REAPERTURA:
         motivos.append(motivo_sin_reapertura(entregable))
-    motivos = [m for m in motivos if m]
+    opciones = {"confirmadas": tuple(confirmadas or ())}
+    extra, advertencias = extensiones.evaluar_condiciones(entregable, nuevo_estado, usuario, opciones)
+    motivos = [m for m in motivos if m] + extra
     if motivos:
         raise ValidationError(motivos[0] if len(motivos) == 1 else motivos)
+    if advertencias:  # nada lo impide, pero hay algo que confirmar antes (p. ej. checklist por TDR con pendientes)
+        a = advertencias[0]
+        raise ValidationError(a.mensaje, code="advertencia", params={"clave": a.clave, "mensaje": a.mensaje})
 
     devuelve = clave == DEVOLUCION
     reabre = clave == REAPERTURA
@@ -282,6 +292,8 @@ def mover(entregable, nuevo_estado, usuario, tipo_error=None, descripcion="", ob
         cambio = HistorialEstado.objects.create(
             entregable=entregable, estado_anterior=actual, estado_nuevo=nuevo_estado, usuario=usuario, detalle=detalle[:255],
         )
+        opciones["cambio"] = cambio
+        extensiones.ejecutar_al_mover(entregable, actual, nuevo_estado, usuario, opciones)
         if entrega is not None:
             # La entrega queda cerrada con este paso y la versión enviada, bloqueada: nadie la elimina (RF-28).
             entrega.cierre = cambio

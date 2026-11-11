@@ -39,6 +39,7 @@
   </div>
 </header>
 {% endif %}
+{% if user.is_authenticated %}{% include "urgencias/_franja.html" %}{% endif %}
 <main class="contenedor" id="contenido">
   {% for m in messages %}<div class="aviso aviso-{{ m.tags }}" role="{% if m.level >= 40 %}alert{% else %}status{% endif %}">{{ m }}</div>{% endfor %}
   {% block contenido %}{% endblock %}

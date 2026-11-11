@@ -2,3 +2,11 @@ Django>=5.2,<5.3
 Faker>=30
 APScheduler>=3.10,<4
 psycopg[binary]>=3.2  # solo para PostgreSQL en producción
+# Sprint 3 (RNF-15): bibliotecas locales, sin servicios externos
+openpyxl>=3.1      # exportación a Excel (RF-47)
+reportlab>=4.2     # exportación y reportes en PDF (RF-47, RF-50)
+pypdf>=5           # texto de los PDF (RF-48)
+pypdfium2>=4.30    # páginas escaneadas a imagen para el OCR (RF-48)
+Pillow>=10
+waitress>=3        # servidor de aplicación de producción (RF-51)
+whitenoise>=6.7    # archivos estáticos en producción (RF-51)

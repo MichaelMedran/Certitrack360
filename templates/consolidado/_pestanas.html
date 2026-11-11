@@ -1,0 +1,5 @@
+{# Pestañas del consolidado (SDD del Sprint 3, §9): cifras y gráficos · reportes de avance. Solo gerente y admin. #}
+<nav class="pestanas" aria-label="Consolidado">
+  <a href="{% url 'consolidado' %}"{% if pestana == 'consolidado' %} aria-current="true"{% endif %}>Resumen</a>
+  <a href="{% url 'reportes' %}"{% if pestana == 'reportes' %} aria-current="true"{% endif %}>Reportes</a>
+</nav>

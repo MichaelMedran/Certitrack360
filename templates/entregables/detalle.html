@@ -16,6 +16,21 @@
   <div class="tarjeta"><div class="suave">Responsables</div>Junior: {{ e.junior_asignado.nombre }}<br>Senior: {{ e.senior_revisor.nombre }}</div>
 </div>
 
+{% for sec in secciones.cabecera %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+
+{% if advertencia %}
+<div class="aviso aviso-warning" role="alert">
+  <p style="margin-top:0">{{ advertencia.mensaje }}</p>
+  <form class="en-linea" method="post" action="{% url 'entregable_estado' e.pk %}">{% csrf_token %}
+    <input type="hidden" name="estado" value="{{ advertencia.estado }}">
+    {% for clave in advertencia.confirmadas %}<input type="hidden" name="confirmar" value="{{ clave }}">{% endfor %}
+    <input type="hidden" name="confirmar" value="{{ advertencia.clave }}">
+    <button class="boton">Continuar de todos modos</button>
+  </form>
+  <a class="boton sec" href="{% url 'entregable_detalle' e.pk %}">Cancelar</a>
+</div>
+{% endif %}
+
 {% if siguientes %}
 <div class="tarjeta">
   <h2 style="margin-top:0">Mover entregable</h2>
@@ -454,6 +469,8 @@
   </form>
   {% endif %}
 </div>
+
+{% for sec in secciones.cuerpo %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
 
 <h2>Historial</h2>
 <div class="tabla"><table>

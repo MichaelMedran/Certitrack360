@@ -19,6 +19,8 @@ class Usuario(AbstractUser):
     rol = models.CharField("rol", max_length=10, choices=Rol.choices, default=Rol.JUNIOR)
     # Sprint 2 (RF-31 y RF-38): puesto opcional del colaborador (p. ej. «Asistente de Proyectos»).
     puesto = models.CharField("puesto", max_length=100, blank=True, default="")
+    # Sprint 3 (RF-43): integra el grupo de guardia que recibe las alertas de urgencia fuera de horario.
+    de_guardia = models.BooleanField("de guardia", default=False)
 
     objects = UsuarioManager()
 

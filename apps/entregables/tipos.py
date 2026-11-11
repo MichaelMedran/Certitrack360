@@ -12,10 +12,15 @@ class TipoAdjunto(models.TextChoices):
     # requeridos del Poka-Yoke ni tipos de documento que se versionen a mano (ver TIPOS_DE_SUBIDA).
     CARGO_RECEPCION = "CARGO_RECEPCION", "Cargo de recepción"
     ACTA_CONFORMIDAD = "ACTA_CONFORMIDAD", "Acta de conformidad"
+    # Sprint 3 (RF-47): la crea la exportación a PDF o Excel; cada exportación es una versión nueva.
+    EXPORTACION = "EXPORTACION", "Exportación"
 
 
 #: Tipos de la entrega: se crean con «Marcar como entregado» y «Registrar acta»; nacen bloqueados.
 TIPOS_DE_ENTREGA = (TipoAdjunto.CARGO_RECEPCION, TipoAdjunto.ACTA_CONFORMIDAD)
 
 #: Tipos que el usuario sube, versiona y restaura (formulario de subida, adjuntos requeridos de la plantilla).
-TIPOS_DE_SUBIDA = [(valor, etiqueta) for valor, etiqueta in TipoAdjunto.choices if valor not in TIPOS_DE_ENTREGA]
+#: Tipos que genera la plataforma (la entrega, el acta y la exportación): no se suben ni se restauran a mano.
+TIPOS_GENERADOS = (*TIPOS_DE_ENTREGA, TipoAdjunto.EXPORTACION)
+
+TIPOS_DE_SUBIDA = [(valor, etiqueta) for valor, etiqueta in TipoAdjunto.choices if valor not in TIPOS_GENERADOS]

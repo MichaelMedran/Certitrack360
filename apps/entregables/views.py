@@ -18,13 +18,13 @@ from apps.clientes.models import PlantillaTDR
 from apps.cuentas.models import Usuario
 from apps.cuentas.permisos import solo_senior_o_superior
 
-from . import adjuntos, entregas, filtros, personal, servicios, subestado, tiempos
+from . import adjuntos, entregas, extensiones, filtros, personal, servicios, subestado, tiempos
 from . import filtros_entregas, filtros_observaciones, filtros_tiempos
 from . import observaciones as obs_servicio
 from .forms import ActaForm, AdjuntoForm, EntregaForm, EntregableForm, ObservacionForm, contratos_para
 from .htmx import con_vary, es_htmx, pide_parcial
 from .models import Adjunto, Entrega, Entregable, Observacion, RegistroTiempo, ResponsableApoyo, TipoError
-from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
+from .tipos import TIPOS_GENERADOS, TipoAdjunto
 from .visibilidad import entregables_visibles, es_elaborador_del_entregable, es_senior_del_entregable
 
 E = Entregable.Estado
@@ -36,8 +36,11 @@ def _base(usuario):
     )
 
 
-def _enriquecer(entregables):
-    """Agrega a cada entregable sus adjuntos y observaciones abiertas para las tarjetas (dos consultas en total)."""
+def _enriquecer(entregables, usuario=None):
+    """Agrega a cada entregable sus adjuntos y observaciones abiertas para las tarjetas (dos consultas en total).
+
+    Los módulos del Sprint 3 suman lo suyo (etiquetas, prioridad, alerta urgente...) con `extensiones.registrar_tarjeta`.
+    """
     ids = [e.pk for e in entregables]
     adjuntos_por = dict(
         Adjunto.objects.filter(entregable_id__in=ids).values("entregable_id").annotate(n=Count("id"))
@@ -62,7 +65,7 @@ def _enriquecer(entregables):
         e.tipos_obs_abiertas = [etiquetas[t] for t in TipoError.values if t in abiertas[e.pk]]
         # «Con correcciones pendientes» (RF-26): En proceso con observaciones abiertas, sin consultas adicionales.
         e.con_correcciones = subestado.aplica(e, e.n_obs_abiertas > 0)
-    return entregables
+    return extensiones.enriquecer_tarjetas(entregables, usuario)
 
 
 def _contexto_filtros(request, resultado):
@@ -88,13 +91,13 @@ def lista(request):
     # Los filtros (cliente, contrato, responsable, estado, urgencia, tipo_observacion) y el orden viajan en la URL
     # y se aplican sobre el queryset ya restringido por rol: solo pueden reducirlo.
     resultado = filtros.aplicar(_base(request.user), request.GET)
-    contexto = {"entregables": _enriquecer(list(resultado.queryset)), **_contexto_filtros(request, resultado)}
+    contexto = {"entregables": _enriquecer(list(resultado.queryset), request.user), **_contexto_filtros(request, resultado)}
     return _respuesta(request, "entregables/lista.html", "entregables/_lista.html", contexto)
 
 
 def _contexto_tablero(request):
     resultado = filtros.aplicar(_base(request.user), request.GET)
-    tarjetas = _enriquecer(list(resultado.queryset))  # una sola consulta; ya viene filtrada y ordenada
+    tarjetas = _enriquecer(list(resultado.queryset), request.user)  # una sola consulta; ya viene filtrada y ordenada
     columnas = [
         {"valor": valor, "etiqueta": etiqueta, "tarjetas": [e for e in tarjetas if e.estado == valor]}
         for valor, etiqueta in E.choices
@@ -119,7 +122,7 @@ def cambiar_estado(request, pk):
     clásico y se responde con un mensaje y una redirección.
     """
     e = get_object_or_404(_base(request.user), pk=pk)
-    codigo, mensaje, pide_observacion = 200, None, False
+    codigo, mensaje, pide_observacion, advertencia = 200, None, False, None
     if (request.POST.get("estado") == E.HECHO and e.estado == E.LISTO_PARA_ENTREGA
             and entregas.puede_registrar(request.user, e)):
         # Pasar a «Entregado» exige el cargo de recepción (RF-29): soltar la tarjeta o pulsar el botón no la mueve, abre el
@@ -134,14 +137,23 @@ def cambiar_estado(request, pk):
         servicios.mover(
             e, request.POST.get("estado", ""), request.user,
             tipo_error=request.POST.get("tipo_error"), descripcion=request.POST.get("descripcion", ""),
+            confirmadas=request.POST.getlist("confirmar"),
         )
     except ValidationError as exc:
         codigo, mensaje = 422, " ".join(exc.messages)
+        if getattr(exc, "code", None) == "advertencia":  # no está prohibido: falta que el usuario lo confirme (§5.1)
+            advertencia = {"id": e.pk, "titulo": e.titulo, "estado": request.POST.get("estado", ""),
+                           "clave": exc.params["clave"], "mensaje": exc.params["mensaje"],
+                           "confirmadas": request.POST.getlist("confirmar")}
         pide_observacion = getattr(exc, "code", None) == "observacion_requerida"
     except PermissionDenied as exc:
         codigo, mensaje = 403, str(exc) or "No tiene permiso para esa acción."
 
     if not es_htmx(request):
+        if advertencia:  # el detalle se muestra con el aviso y el botón «Continuar de todos modos»
+            contexto = _contexto_detalle(request.user, e)
+            contexto["advertencia"] = advertencia
+            return render(request, "entregables/detalle.html", contexto, status=422)
         if mensaje:
             messages.error(request, mensaje)
         else:
@@ -150,12 +162,14 @@ def cambiar_estado(request, pk):
 
     # Si solo falta la observación y todavía no se envió ninguna, no hay nada que reprochar: se abre el diálogo.
     pidiendo = pide_observacion and not request.POST.get("tipo_error") and not request.POST.get("descripcion")
-    contexto = {**_contexto_tablero(request), "es_htmx": True, "error": None if pidiendo else mensaje}
+    contexto = {**_contexto_tablero(request), "es_htmx": True, "error": None if (pidiendo or advertencia) else mensaje}
     if codigo == 200:
         contexto["exito"] = f"«{e.titulo}» pasó a «{e.get_estado_display()}»."
     respuesta = render(request, "entregables/_tablero.html", contexto, status=codigo)
     if pide_observacion:  # el tablero abre el diálogo de devolución (JSON en ASCII: viaja en una cabecera)
         respuesta["HX-Trigger"] = json.dumps({"pedirObservacion": {"id": e.pk, "titulo": e.titulo}})
+    if advertencia:  # el tablero abre el diálogo de confirmación y reenvía con «confirmar»
+        respuesta["HX-Trigger"] = json.dumps({"confirmarAdvertencia": advertencia})
     return con_vary(respuesta)
 
 
@@ -225,7 +239,7 @@ def _contexto_detalle(usuario, e):
     for g in grupos:
         g["ultima"].puede_restaurar = False
         for a in g["anteriores"]:
-            a.puede_restaurar = puede_restaurar and a.tipo not in TIPOS_DE_ENTREGA
+            a.puede_restaurar = puede_restaurar and a.tipo not in TIPOS_GENERADOS
 
     # Entregas y acta (RF-29): historial de entregas del entregable, con lo que el usuario puede hacer sobre ellas.
     lista_entregas = list(e.entregas.select_related("cargo", "version_enviada", "acta", "registrada_por").order_by("numero"))
@@ -280,6 +294,7 @@ def _contexto_detalle(usuario, e):
 
     return {
         "e": e, "es_senior": es_senior, "siguientes": siguientes,
+        "secciones": extensiones.secciones(usuario, e),
         "apoyos_activos": apoyos_activos,
         "puede_gestionar_responsables": puede_gestionar_resp,
         "juniors_disponibles": juniors_disponibles,

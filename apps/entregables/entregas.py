@@ -23,7 +23,7 @@ from apps.alertas.models import Notificacion
 
 from . import adjuntos, servicios
 from .models import Adjunto, Entrega, Entregable
-from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
+from .tipos import TIPOS_DE_ENTREGA, TIPOS_GENERADOS, TipoAdjunto
 from .visibilidad import entregables_visibles, es_senior_del_entregable
 
 E = Entregable.Estado
@@ -44,7 +44,7 @@ def visibles(usuario):
 
 def versiones_enviables(entregable):
     """Versiones que se pueden indicar como la enviada: todos los adjuntos del entregable salvo el cargo y el acta."""
-    return (Adjunto.objects.filter(entregable=entregable).exclude(tipo__in=TIPOS_DE_ENTREGA)
+    return (Adjunto.objects.filter(entregable=entregable).exclude(tipo__in=TIPOS_GENERADOS)
             .order_by("tipo", "-version"))
 
 

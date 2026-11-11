@@ -15,4 +15,11 @@ urlpatterns = [
     path("", include("apps.repositorio.urls")),
     path("", include("apps.busqueda.urls")),
     path("", include("apps.equipo.urls")),
+    path("", include("apps.etiquetas.urls")),
+    path("", include("apps.urgencias.urls")),
+    path("", include("apps.checklists.urls")),
+    path("", include("apps.facturacion.urls")),
+    path("", include("apps.exportacion.urls")),
+    path("", include("apps.extraccion.urls")),
+    path("", include("apps.reportes.urls")),
 ]

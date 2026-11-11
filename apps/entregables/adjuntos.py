@@ -8,7 +8,7 @@ from django.db.models import Max, Q
 # se siguen ofreciendo aquí para quienes ya los usaban desde adjuntos (formularios, vistas y pruebas).
 from .archivos import NOMBRE_MAX, extensiones_permitidas, sanear_nombre, tamano_maximo_bytes, validar_archivo  # noqa: F401
 from .models import Adjunto, Entregable, HistorialEstado
-from .tipos import TIPOS_DE_ENTREGA, TipoAdjunto
+from .tipos import TIPOS_GENERADOS, TipoAdjunto
 from .visibilidad import es_elaborador_del_entregable, es_senior_del_entregable
 
 # El junior o responsable de apoyo solo puede subir mientras el entregable está en estas columnas.
@@ -84,7 +84,7 @@ def crear_adjunto(entregable, usuario, archivo, tipo, comentario="", restaurado_
 def subir(entregable, usuario, archivo, tipo, comentario=""):
     if not puede_subir(usuario, entregable):
         raise PermissionDenied("No tiene permiso para subir adjuntos a este entregable en su estado actual.")
-    if tipo in TIPOS_DE_ENTREGA:  # el cargo y el acta nacen del registro de la entrega, no de la subida
+    if tipo in TIPOS_GENERADOS:  # el cargo y el acta nacen del registro de la entrega, no de la subida
         raise ValidationError(f"«{etiqueta_tipo(tipo)}» se registra con la entrega del entregable, no como adjunto suelto.")
     return crear_adjunto(entregable, usuario, archivo, tipo, comentario)
 
@@ -100,7 +100,7 @@ def restaurar(adjunto, usuario):
     entregable = adjunto.entregable
     if not puede_restaurar(usuario, entregable):
         raise PermissionDenied("Solo el senior del entregable, el gerente y el admin restauran versiones.")
-    if adjunto.tipo in TIPOS_DE_ENTREGA:
+    if adjunto.tipo in TIPOS_GENERADOS:
         raise ValidationError(f"«{etiqueta_tipo(adjunto.tipo)}» no se restaura: es parte del registro de la entrega.")
     actual = vigente(entregable, adjunto.tipo)
     if actual is None or actual.pk == adjunto.pk:

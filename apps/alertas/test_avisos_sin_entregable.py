@@ -173,6 +173,8 @@ class ModeloTests(Base):
             "VENCIMIENTO": "Vencimiento", "OBSERVACION": "Observación", "ASIGNACION": "Asignación",
             "VERIFICACION": "Verificación", "CORRECCION": "Corrección", "ACTA": "Acta", "REASIGNACION": "Reasignación",
             "INCORPORACION": "Incorporación", "FICHA": "Ficha",
+            # Sprint 3 (SDD del Sprint 3, §6.1)
+            "URGENTE": "Urgente", "REPORTE": "Reporte", "CHECKLIST": "Checklist", "FACTURA": "Factura",
         })
 
     def test_todos_los_codigos_caben_y_se_guardan(self):

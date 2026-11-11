@@ -92,7 +92,8 @@ class PantallaDeLineasTests(Base):
     def test_es_una_pestana_de_gestion_y_la_barra_marca_gestion(self):
         html = self.ver(self.gerente).content.decode()
         self.assertEqual(pestanas(html), [("Clientes", False), ("Contratos", False), ("Plantillas", False),
-                                          ("Fichas", False), ("Personal", False), ("Líneas de servicio", True)])
+                                          ("Fichas", False), ("Personal", False), ("Líneas de servicio", True),
+                                          ("Etiquetas", False), ("Checklist de calidad", False)])
         self.assertEqual(re.findall(r'<nav aria-label="Principal">.*?aria-current="page">([^<]+)</a>', html, flags=re.S),
                          ["Gestión"])
         self.assertEqual(html.count("<h1"), 1)

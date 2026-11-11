@@ -23,6 +23,11 @@ class Notificacion(models.Model):
         REASIGNACION = "REASIGNACION", "Reasignación"  # cambió el responsable principal (RF-31)
         INCORPORACION = "INCORPORACION", "Incorporación"  # plan de incorporación (RF-38)
         FICHA = "FICHA", "Ficha"  # una ficha de levantamiento espera confirmación (RF-30)
+        # Tipos del Sprint 3 (SDD del Sprint 3, §6.1).
+        URGENTE = "URGENTE", "Urgente"  # alerta de urgencia fuera de horario (RF-43)
+        REPORTE = "REPORTE", "Reporte"  # se generó un reporte de avance (RF-50)
+        CHECKLIST = "CHECKLIST", "Checklist"  # checklist por TDR o de calidad (RF-44, RF-45)
+        FACTURA = "FACTURA", "Factura"  # verificación del número de factura (RF-46)
 
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notificaciones")
     # Opcional desde el Sprint 2: los avisos que no son de un entregable llevan `enlace`.

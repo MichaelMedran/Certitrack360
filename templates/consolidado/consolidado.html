@@ -2,6 +2,7 @@
 {% block titulo %}Consolidado{% endblock %}
 {% block contenido %}
 <h1>Consolidado</h1>
+{% include "consolidado/_pestanas.html" with pestana="consolidado" %}
 <p class="suave">Vista de solo lectura de todos los proyectos. Cada entregable enlaza a su detalle.</p>
 
 <details class="filtros"{% if filtros %} open{% endif %}>

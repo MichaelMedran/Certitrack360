@@ -36,6 +36,24 @@ def entregar(entregable, usuario, fecha_entrega=None, medio=Entrega.Medio.CORREO
     return entregable
 
 
+def aprobar(entregable, usuario):
+    """Lleva un entregable de «Revisión senior» (VERIFICACION_SENIOR) a «Aprobado» (LISTO_PARA_ENTREGA) y lo devuelve.
+
+    Desde el Sprint 3 (RF-45) aprobar exige una revisión de calidad conforme del ciclo actual: este ayudante la registra
+    (todos los ítems aplicables en Conforme) y luego llama a `mover`, igual que la interfaz. Las pruebas y el seed que
+    aprueban entregables lo usan (SDD del Sprint 3, §11.3).
+    """
+    from . import servicios
+
+    try:
+        from apps.checklists.calidad import registrar_conforme
+    except ImportError:  # el módulo de calidad aún no existe
+        registrar_conforme = None
+    if registrar_conforme is not None:
+        registrar_conforme(entregable, usuario)
+    return servicios.mover(entregable, entregable.Estado.LISTO_PARA_ENTREGA, usuario)
+
+
 class MediaTemporal:
     """Las pruebas que escriben archivos usan una carpeta temporal como MEDIA_ROOT y la borran al terminar,
     para no ensuciar el directorio `media/` real."""
