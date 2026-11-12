@@ -80,6 +80,18 @@ class Entregable(models.Model):
             type(self)._base_manager.using(base).filter(pk=self.pk).update(codigo=self.codigo)
 
     @property
+    def numero_correlativo(self):
+        """N.º de este entregable entre los de su mismo tipo (plantilla) en el contrato, por orden de registro.
+
+        Es el «n.º de reporte» que antes se llevaba a mano: el tercer informe mensual del contrato es el 3.
+        """
+        if not self.pk:
+            return None
+        return Entregable.objects.filter(
+            contrato_id=self.contrato_id, plantilla_id=self.plantilla_id, pk__lte=self.pk
+        ).count()
+
+    @property
     def referencia(self):
         """Código y título para los avisos: CT-2026-00031 «Informe técnico 03» (el título, acotado)."""
         titulo = Truncator(self.titulo).chars(150)

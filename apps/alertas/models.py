@@ -28,6 +28,7 @@ class Notificacion(models.Model):
         REPORTE = "REPORTE", "Reporte"  # se generó un reporte de avance (RF-50)
         CHECKLIST = "CHECKLIST", "Checklist"  # checklist por TDR o de calidad (RF-44, RF-45)
         FACTURA = "FACTURA", "Factura"  # verificación del número de factura (RF-46)
+        VIGENCIA = "VIGENCIA", "Vigencia"  # un certificado o documento del cliente está por vencer o venció
 
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notificaciones")
     # Opcional desde el Sprint 2: los avisos que no son de un entregable llevan `enlace`.

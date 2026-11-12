@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Penalidades{% endblock %}
+{% block contenido %}
+<h1>Entregables</h1>
+{% include "entregables/_pestanas.html" %}
+<h2 style="margin-top:0">Penalidades incurridas</h2>
+
+<form method="get" action="{% url 'penalidades' %}" class="tarjeta" style="margin-bottom:1rem">
+  <div class="filtros-grid">
+    <div><label for="f-cliente">Cliente</label>
+      <select id="f-cliente" name="cliente"><option value="">Todos</option>
+        {% for c in clientes %}<option value="{{ c.pk }}"{% if cliente_id == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}</select></div>
+  </div>
+  <div class="acciones"><button class="boton">Filtrar</button>{% if cliente_id %} <a class="boton sec" href="{% url 'penalidades' %}">Limpiar</a>{% endif %}</div>
+</form>
+
+{% if penalidades %}
+<div class="contadores">
+  <div class="contador">Total incurrido<b>S/ {{ total|floatformat:2 }}</b><span>{{ penalidades|length }} penalidad{{ penalidades|length|pluralize:"es" }}</span></div>
+  {% for f in por_cliente %}<div class="contador">{{ f.cliente }}<b>S/ {{ f.total|floatformat:2 }}</b></div>{% endfor %}
+</div>
+<div class="tabla"><table>
+  <thead><tr><th>Fecha</th><th>Entregable</th><th>Cliente · contrato</th><th>Motivo</th><th class="num">Monto (S/)</th><th>Registró</th></tr></thead>
+  <tbody>
+    {% for p in penalidades %}
+    <tr>
+      <td>{{ p.fecha|date:"d/m/Y" }}</td>
+      <td class="codigo"><a href="{% url 'entregable_detalle' p.entregable_id %}#penalidades" title="{{ p.entregable.titulo }}">{{ p.entregable.codigo|default:p.entregable.titulo }}</a></td>
+      <td>{{ p.entregable.contrato.cliente }} · {{ p.entregable.contrato.numero_contrato }}</td>
+      <td>{{ p.motivo }}</td>
+      <td class="num">{% if p.monto is not None %}{{ p.monto|floatformat:2 }}{% else %}—{% endif %}</td>
+      <td>{{ p.registrada_por.nombre }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="tarjeta">No hay penalidades registradas{% if cliente_id %} para ese cliente{% endif %}. Se registran desde la sección «Penalidades» de cada entregable.</p>
+{% endif %}
+{% endblock %}

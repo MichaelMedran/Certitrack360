@@ -93,7 +93,8 @@ class PantallaDeLineasTests(Base):
         html = self.ver(self.gerente).content.decode()
         self.assertEqual(pestanas(html), [("Clientes", False), ("Contratos", False), ("Plantillas", False),
                                           ("Fichas", False), ("Personal", False), ("Líneas de servicio", True),
-                                          ("Etiquetas", False), ("Checklist de calidad", False)])
+                                          ("Etiquetas", False), ("Checklist de calidad", False),
+                                          ("Certificados", False)])
         self.assertEqual(re.findall(r'<nav aria-label="Principal">.*?aria-current="page">([^<]+)</a>', html, flags=re.S),
                          ["Gestión"])
         self.assertEqual(html.count("<h1"), 1)

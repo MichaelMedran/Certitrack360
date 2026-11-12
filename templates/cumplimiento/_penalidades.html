@@ -1,0 +1,51 @@
+{% load l10n %}
+<section class="tarjeta" id="penalidades" aria-labelledby="pen-titulo" style="margin:1rem 0">
+  <h2 id="pen-titulo" style="margin-top:0">Penalidades</h2>
+  {% if s.pactadas %}<p class="suave"><strong>Según el TDR:</strong> {{ s.pactadas }}</p>{% endif %}
+  {% if s.atraso %}
+  <p class="aviso aviso-warning">{% if e.estado == 'HECHO' %}Se entregó con{% else %}Lleva{% endif %} <strong>{{ s.atraso }} día{{ s.atraso|pluralize }} de atraso</strong> respecto del plazo ({{ e.plazo|date:"d/m/Y" }}).{% if s.puede and not s.penalidades %} Si el cliente aplicó una penalidad, regístrela aquí.{% endif %}</p>
+  {% endif %}
+
+  {% if s.penalidades %}
+  <div class="tabla"><table>
+    <thead><tr><th>Fecha</th><th>Motivo</th><th class="num">Monto (S/)</th><th>Registró</th>{% if s.puede %}<th><span class="sr-only">Acciones</span></th>{% endif %}</tr></thead>
+    <tbody>
+      {% for p in s.penalidades %}
+      <tr>
+        <td>{{ p.fecha|date:"d/m/Y" }}</td>
+        <td>{{ p.motivo }}</td>
+        <td class="num">{% if p.monto is not None %}{{ p.monto|floatformat:2 }}{% else %}—{% endif %}</td>
+        <td>{{ p.registrada_por.nombre }}</td>
+        {% if s.puede %}
+        <td>
+          <form method="post" action="{% url 'penalidad_eliminar' p.pk %}" class="en-linea">{% csrf_token %}
+            <button class="boton sec chico">Eliminar<span class="sr-only"> la penalidad «{{ p.motivo }}»</span></button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr><th scope="row" colspan="2">Total</th><td class="num"><strong>{{ s.total|floatformat:2 }}</strong></td><td{% if s.puede %} colspan="2"{% endif %}></td></tr></tfoot>
+  </table></div>
+  {% else %}
+  <p class="suave">Este entregable no tiene penalidades registradas.</p>
+  {% endif %}
+
+  {% if s.puede %}
+  <details>
+    <summary>Registrar una penalidad</summary>
+    <form method="post" action="{% url 'entregable_penalidad' e.pk %}" class="caja-gris">{% csrf_token %}
+      <div class="filtros-grid">
+        <div><label for="pen-motivo">Motivo *</label>
+          <input id="pen-motivo" name="motivo" type="text" maxlength="255" required placeholder="p. ej. Entrega con 3 días de retraso"></div>
+        <div><label for="pen-monto">Monto en soles</label>
+          <input id="pen-monto" name="monto" type="text" inputmode="decimal" maxlength="20" placeholder="p. ej. 1250,50"></div>
+        <div><label for="pen-fecha">Fecha</label>
+          <input id="pen-fecha" name="fecha" type="date" value="{{ s.hoy|date:'Y-m-d' }}" max="{{ s.hoy|date:'Y-m-d' }}"></div>
+      </div>
+      <button class="boton sec chico">Registrar penalidad</button>
+    </form>
+  </details>
+  {% endif %}
+</section>

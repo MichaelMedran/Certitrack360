@@ -1,0 +1,23 @@
+<section class="tarjeta" id="vigencias" aria-labelledby="vig-titulo" style="margin:1rem 0">
+  <h2 id="vig-titulo" style="margin-top:0">Certificados y documentos con vigencia</h2>
+  {% if s.hay_vencidos %}
+  <p class="aviso aviso-error">{{ s.cliente.nombre }} tiene documentos vencidos. Verifique que este entregable no los incluya.</p>
+  {% endif %}
+  {% if s.documentos %}
+  <div class="tabla"><table>
+    <thead><tr><th>Documento</th><th>Vence</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for d in s.documentos %}
+      <tr>
+        <td>{{ d.nombre }}{% if d.notas %}<br><small class="suave">{{ d.notas }}</small>{% endif %}</td>
+        <td>{{ d.vence|date:"d/m/Y" }}</td>
+        <td><span class="etiqueta {{ d.clase }}">{{ d.estado_texto }}{% if d.estado == 'por-vencer' %} · {{ d.dias }} día{{ d.dias|pluralize }}{% endif %}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="suave">{{ s.cliente.nombre }} no tiene certificados ni documentos con vencimiento registrados.</p>
+  {% endif %}
+  {% if s.puede %}<p><a class="boton sec chico" href="{% url 'vigencias' %}?cliente={{ s.cliente.pk }}">Registrar o renovar documentos</a></p>{% endif %}
+</section>

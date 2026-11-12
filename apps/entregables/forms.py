@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django import forms
+from django.db.models import Count
 from django.utils import timezone
 
 from apps.clientes.models import Contrato
@@ -86,7 +87,7 @@ class EntregableForm(forms.Form):
     junior_asignado = forms.ModelChoiceField(
         queryset=Usuario.objects.none(), label="Junior asignado",
         error_messages={"required": "Falta asignar un junior."},
-        help_text="Solo los juniors asignados al contrato.",
+        help_text="Solo los juniors asignados al contrato. Junto a cada nombre se ve cuántos entregables activos tiene.",
     )
     senior_revisor = forms.ModelChoiceField(
         queryset=Usuario.objects.none(), label="Senior revisor", required=False,
@@ -116,6 +117,14 @@ class EntregableForm(forms.Form):
         self.plantilla = plantilla
         self.fields["contrato"].queryset = contratos_para(usuario)
         self.fields["junior_asignado"].queryset = Usuario.objects.filter(rol=Usuario.Rol.JUNIOR, is_active=True)
+        # Cada junior se muestra con su carga actual, para repartir el trabajo al asignar.
+        carga = dict(
+            Entregable.objects.exclude(estado=Entregable.Estado.HECHO).values_list("junior_asignado")
+            .annotate(n=Count("pk")).values_list("junior_asignado", "n")
+        )
+        self.fields["junior_asignado"].label_from_instance = lambda u: (
+            f"{u.nombre} · {carga.get(u.pk, 0)} activo{'' if carga.get(u.pk, 0) == 1 else 's'}"
+        )
         self.fields["senior_revisor"].queryset = Usuario.objects.filter(rol=Usuario.Rol.SENIOR, is_active=True)
         self.fields["etiquetas"].queryset = etiquetas_srv.ofrecidas_para()
         if not self.is_bound:

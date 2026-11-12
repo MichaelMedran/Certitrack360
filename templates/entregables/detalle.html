@@ -5,7 +5,8 @@
 <div class="cuadricula">
   <div class="tarjeta"><div class="suave">Cliente / contrato</div>{{ e.contrato.cliente }}<br>{{ e.contrato.numero_contrato }}</div>
   <div class="tarjeta"><div class="suave">ID-TDR · Línea</div>ID-TDR: {{ e.id_tdr|default:"sin registrar" }}<br>
-    Línea: {{ e.contrato.linea_servicio.nombre|default:"sin asignar" }}</div>
+    Línea: {{ e.contrato.linea_servicio.nombre|default:"sin asignar" }}<br>
+    <span title="Número de este entregable entre los de su tipo en el contrato">{{ e.plantilla.nombre }} n.º {{ e.numero_correlativo }}</span></div>
   <div class="tarjeta"><div class="suave">Recepción · Plazo</div>Recepción: {{ e.fecha_recepcion|date:"d/m/Y"|default:"sin registrar" }}<br>
     Plazo: <strong>{{ e.plazo|date:"d/m/Y" }}</strong></div>
   <div class="tarjeta"><div class="suave">Estado</div><strong>{{ e.get_estado_display }}</strong>

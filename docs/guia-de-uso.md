@@ -1,6 +1,6 @@
 # CertiTrack 360 — Guía de uso y verificación contra las entrevistas
 
-Estado al 2026-11-12, rama `sprint-3` (Sprints 1, 2 y 3 completos, 1216 pruebas en verde).
+Estado al 2026-11-12, rama `sprint-3` (Sprints 1, 2 y 3 completos, 1270 pruebas en verde).
 
 Esta guía tiene tres partes:
 
@@ -67,20 +67,21 @@ Tras 5 intentos fallidos de ingreso, la cuenta queda bloqueada 15 minutos desde 
 | Inicio | `/` | Sí | Sí | Sí | Sí |
 | Tablero | `/tablero/` | Sí | Sí | Sí | Sí |
 | Calendario | `/calendario/` | Sí | Sí | Sí | Sí |
-| Entregables (pestañas: Observaciones, Entregas, Tiempos, Checklists) | `/entregables/` | Sí | Sí | Sí | Sí |
+| Entregables (pestañas: Observaciones, Entregas, Tiempos, Checklists, Penalidades) | `/entregables/` | Sí | Sí | Sí | Sí |
 | Repositorio | `/repositorio/` | Sí | Sí | Sí | Sí |
 | Indicadores | `/indicadores/` | Sí | Sí | Sí | Sí |
 | Asistente | `/asistente/` | Sí | Sí | Sí | Sí |
 | Buscar y Avisos | `/buscar/`, `/notificaciones/` | Sí | Sí | Sí | Sí |
 | Fichas | `/fichas/` | Sí | Sí | En Gestión | En Gestión |
 | Consolidado (pestaña Reportes) | `/consolidado/`, `/reportes/` | No | No | Sí | Sí |
-| Gestión (Clientes, Contratos, Plantillas, Fichas, Personal, Líneas de servicio, Etiquetas, Checklist de calidad) | `/gestion/` | No | No | Sí | Sí |
+| Gestión (Clientes, Contratos, Plantillas, Fichas, Personal, Líneas de servicio, Etiquetas, Checklist de calidad, Certificados) | `/gestion/` | No | No | Sí | Sí |
 | Administración | `/admin/` | No | No | No | Sí |
 
 Pantallas que no están en la barra de todos los roles:
 
 - **Etiquetas** (`/etiquetas/`): el senior llega desde la sección «Etiquetas» del entregable.
 - **Checklist de calidad** (`/calidad/`): el senior llega desde «Configurar los ítems del checklist» en el entregable.
+- **Certificados** (`/vigencias/`): el senior llega desde la sección «Certificados y documentos con vigencia» del entregable.
 - **Mi incorporación** (`/incorporacion/`): aparece como tarjeta en Inicio si la persona tiene un plan activo.
 
 ---
@@ -93,6 +94,8 @@ Pantallas que no están en la barra de todos los roles:
 2. **Gestión › Contratos**: crear el contrato y su senior responsable.
 3. **Gestión › Plantillas**: definir los campos obligatorios, los adjuntos requeridos y el plazo de cada tipo de entregable.
 4. **Gestión › Checklist de calidad**: agregar los ítems propios del cliente (hay cuatro generales).
+5. **Gestión › Certificados**: registrar los certificados ISO, pólizas y licencias del cliente con su fecha de vencimiento.
+6. **Gestión › Personal**: abrir a cada colaborador y registrar su celular si recibirá los avisos por WhatsApp.
 
 ### 2.2 Cargar el calendario de un contrato (junior redacta, senior confirma)
 
@@ -130,6 +133,7 @@ Pantallas que no están en la barra de todos los roles:
 1. Sección **Exportar**: generar el PDF o el Excel. Queda guardado como versión nueva.
 2. **Marcar como entregado**: indicar el medio (correo, mesa de partes, FileDoc, presencial) y la fecha del cargo.
 3. Cuando llegue el acta firmada, subirla en **Entregables › Entregas** como Recibida u Observada. Si pasan 5 días sin acta, la plataforma avisa.
+4. Si el cliente aplicó una penalidad, registrarla en la sección **Penalidades** del entregable (motivo, monto y fecha). El total se ve en **Entregables › Penalidades**.
 
 ### 2.7 Atender una urgencia
 
@@ -142,14 +146,27 @@ Pantallas que no están en la barra de todos los roles:
 
 - **Consolidado**: cifras generales, carga por persona y cuatro gráficos con filtros por cliente, sector, contrato y fechas.
 - **Consolidado › Reportes**: «Generar reporte» crea un PDF de avance. También se genera solo, con la periodicidad configurada.
-- **Indicadores**: % a tiempo, % con reproceso, tiempo promedio y observaciones por tipo.
+- **Indicadores**: % a tiempo, % con reproceso, tiempo promedio, observaciones por tipo y % de información automatizada.
+- **Entregables › Penalidades**: lo incurrido, con el total general y por cliente.
 - **Gestión › Personal**: ausencias, guardia y carga. Al asignar, la plataforma avisa si la persona está sobrecargada o ausente.
 
-### 2.9 Para todos
+### 2.9 Activar los avisos por WhatsApp (administrador)
+
+Viene apagado. Para encenderlo hace falta una cuenta de WhatsApp Business con la API en la nube de Meta:
+
+1. En Meta, crear la aplicación de WhatsApp Business, anotar el identificador del número y generar un token permanente.
+2. Crear y hacer aprobar una plantilla de mensaje con una variable en el cuerpo, por ejemplo «CertiTrack 360: {{1}}».
+3. En el archivo `.env` del servidor definir `WHATSAPP_CONECTOR=apps.alertas.whatsapp.ConectorMeta`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` y `WHATSAPP_PLANTILLA` (ver `.env.example`). Opcional: `WHATSAPP_TIPOS` para limitar qué avisos salen y `SITIO_URL` para que el mensaje lleve la dirección del aviso.
+4. Reiniciar la web y el programador. El servidor necesita salida a internet hacia `graph.facebook.com`.
+5. Registrar el celular de cada persona en **Gestión › Personal**.
+
+El programador envía los pendientes cada minuto y la alerta urgente sale al instante. Cada envío queda en **Administración › Envíos por WhatsApp** con su estado; si falla se reintenta hasta 5 veces. Para probar sin cuenta: `WHATSAPP_CONECTOR=apps.alertas.whatsapp.ConectorRegistro` (escribe el mensaje en el registro del servidor).
+
+### 2.10 Para todos
 
 - **Calendario**: plazos por mes, semana o lista, con filtros.
-- **Avisos**: vencimientos a 5 días, 48 h, 24 h y el día del plazo.
-- **Buscar**: por código, título, ID-TDR, contrato o cliente.
+- **Avisos**: vencimientos a 5 días, 48 h, 24 h y el día del plazo; certificados del cliente 30 días antes y al vencer. Con WhatsApp activado, cada aviso llega también al celular.
+- **Buscar**: por código, título, ID-TDR, contrato o cliente, y dentro del texto de los adjuntos (PDF, Word, Excel, PowerPoint, TXT).
 - **Repositorio**: plantillas, ejemplos anonimizados y procedimientos aprobados.
 - **Asistente**: preguntas en lenguaje natural; responde citando procedimientos y casos anteriores.
 
@@ -159,7 +176,7 @@ Pantallas que no están en la barra de todos los roles:
 
 Se revisaron seis documentos: dos entrevistas a juniors, una a un senior, la guía FILEKOM con respuestas, una entrevista de administración y una de contabilidad. Cada pedido se contrastó con el código, las rutas y las pruebas.
 
-**Resultado de los 44 pedidos del área de Proyectos:** 20 se cumplen, 16 se cumplen en parte, 7 no están cubiertos y 1 quedó fuera de alcance por acuerdo.
+**Resultado de los 44 pedidos del área de Proyectos:** 25 se cumplen, 11 se cumplen en parte, 7 no están cubiertos y 1 quedó fuera de alcance por acuerdo.
 
 Las entrevistas de administración y contabilidad describen otra empresa (una distribuidora), y la guía FILEKOM describe el negocio de custodia física de cajas, que opera en FileDoc. Sus 9 pedidos no se contaron; si el cliente considera que alguno debía entrar, pasa a «No cubierto».
 
@@ -172,8 +189,8 @@ Las entrevistas de administración y contabilidad describen otra empresa (una di
 | Saber qué atender primero cuando coinciden entregas | Senior, juniors | Cumple | Chip «Prioridad» en Tablero, Entregables e Inicio |
 | Atender pedidos urgentes de última hora | Junior, senior | Cumple | Sección «Alerta urgente» del entregable; franja roja |
 | Cada cliente con su propia frecuencia de reportes | Senior | Cumple | **Fichas** `/fichas/nueva/`: de Única a Semestral, incluidas Bimestral y Semestral |
-| Evitar penalidades | Senior | En parte | Campo de penalidades en la ficha y alertas. No hay seguimiento de las incurridas |
-| Que la alerta de madrugada llegue al celular | Senior | En parte | Solo dentro de la plataforma (y correo si hay servidor). Sin mensajería externa |
+| Evitar penalidades | Senior | Cumple | Penalidades pactadas en la ficha, alertas y registro de las incurridas en la sección «Penalidades» del entregable; totales en **Entregables › Penalidades** |
+| Que la alerta de madrugada llegue al celular | Senior | En parte | Envío por WhatsApp construido (ver 2.9). Falta activarlo con una cuenta de WhatsApp Business y probarlo con mensajes reales |
 
 ### Calidad y revisión
 
@@ -186,7 +203,7 @@ Las entrevistas de administración y contabilidad describen otra empresa (una di
 | Respaldo de lo entregado (acta, cargo) | Senior | Cumple | «Marcar como entregado» y `/entregas/` |
 | Reemplazar un documento sin perder el anterior | Senior | Cumple | Sección «Adjuntos y versiones» |
 | Verificar que la factura sea la correcta | Junior, senior | En parte | Sección «Factura». Base simulada; no compara montos |
-| Detectar documentos vencidos (ISO, certificados) | Junior | En parte | Ítem manual del checklist. Sin fechas ni aviso |
+| Detectar documentos vencidos (ISO, certificados) | Junior | Cumple | **Certificados** `/vigencias/`: fecha de vencimiento, aviso 30 días antes y al vencer, estado en el entregable y advertencia al enviar a revisión |
 | Número de caja y cantidad de movimientos correctos | Senior | No cubierto | Esos datos viven en FileDoc |
 
 ### Plantillas, reportes e indicadores
@@ -196,12 +213,12 @@ Las entrevistas de administración y contabilidad describen otra empresa (una di
 | Reportes e indicadores para la jefatura | Junior | Cumple | **Consolidado**, **Reportes**, **Indicadores** |
 | Medir cuánto tarda cada etapa | Junior, senior | Cumple | Sección «Tiempo por etapa»; `/tiempos/` |
 | Que quien recién entra no omita datos | Junior | Cumple | Campos obligatorios de la plantilla |
-| Plantilla de reporte con los datos del cliente | Junior | En parte | **Gestión › Plantillas**. Sin numeración automática del n.º de reporte |
+| Plantilla de reporte con los datos del cliente | Junior | Cumple | **Gestión › Plantillas**. El n.º de reporte es correlativo por contrato y tipo; se ve en el entregable y se exporta con el marcador `{{numero_reporte}}` |
 | Modelos de carta y cotización a mano | Junior | En parte | **Repositorio**. Se guardan y versionan; no se rellenan solos |
 | Reducir la digitación manual | Junior, senior | En parte | «Prellenar desde un documento». El OCR de imágenes requiere instalar Tesseract |
 | Entregar en el formato que pide el cliente | Senior, junior | En parte | Sección «Exportar». El Excel usa la plantilla del cliente; el PDF es estándar |
-| Los seis indicadores de mejora | Senior | En parte | **Indicadores**. Falta «% de información automatizada» |
-| Encontrar rápido documentos antiguos | Juniors | En parte | **Buscar**. No busca dentro del texto de los archivos |
+| Los seis indicadores de mejora | Senior | Cumple | **Indicadores**, incluido «Información automatizada» (entregables generados desde una ficha o prellenados desde un documento) |
+| Encontrar rápido documentos antiguos | Juniors | Cumple | **Buscar** también dentro del texto de los adjuntos. Los escaneados sin texto se encuentran solo por nombre |
 
 ### Sistemas e integración
 
@@ -223,7 +240,7 @@ Las entrevistas de administración y contabilidad describen otra empresa (una di
 | Resolver casos atípicos sin depender del líder | Juniors | Cumple | **Asistente**. Falta probarlo con un Ollama real |
 | No depender de una sola persona | Senior | Cumple | Sección «Responsables»: apoyos y reasignación |
 | Responsable, fechas y fuente claros en cada tarea | Junior | Cumple | Datos del entregable; visibles en tarjeta, lista y calendario |
-| Repartir la carga | Senior | En parte | Carga por persona y aviso al asignar. No reparte sola |
+| Repartir la carga | Senior | En parte | Carga por persona, aviso al asignar y entregables activos junto a cada junior en el selector. No reparte sola |
 | Métricas por persona | — | En parte | **Indicadores › Por responsable** |
 | Consultar o escalar al senior desde la herramienta | Juniors | Fuera de alcance | Descartado por acuerdo el 2026-11-02 (HU-16) |
 | Incentivos y metas | Junior, senior | No cubierto | Es política de personal, no de la plataforma |
@@ -246,11 +263,11 @@ Ordenado por importancia para el cliente.
 1. **Los avisos dependen del programador.** Sin `manage.py programador` no salen avisos de vencimiento, de acta pendiente ni reportes automáticos. Con Docker ya corre como servicio.
 2. **Movimientos y cajas.** El senior señaló el número de caja equivocado como causa principal de reprocesos. Requiere decidir con el cliente si CertiTrack debe leer los movimientos de FileDoc.
 3. **Facturación real.** La verificación usa una base simulada y no compara montos con el contrato. El conector real depende del área de Sistemas.
-4. **Vigencia de certificados.** No hay fechas de vencimiento ni aviso.
-5. **Penalidades.** Solo se anotan como texto.
-6. **Alerta urgente fuera de la plataforma.** El senior usa hoy mensajería en el teléfono.
-7. **Licitaciones.** Sin costeo, constancias de experiencia ni convocatorias.
-8. **Sin probar en condiciones reales:** el asistente con un Ollama real, el OCR con Tesseract instalado y la prueba de uso con personas del equipo.
+4. **WhatsApp sin activar.** El envío está construido y probado con un proveedor simulado; falta la cuenta de WhatsApp Business, la plantilla aprobada por Meta y una prueba con mensajes reales (ver 2.9).
+5. **Licitaciones.** Sin costeo, constancias de experiencia ni convocatorias.
+6. **Sin probar en condiciones reales:** el asistente con un Ollama real, el OCR con Tesseract instalado y la prueba de uso con personas del equipo.
+7. **Adjuntos anteriores sin texto.** Los adjuntos que ya existían no tienen su texto leído: ejecutar una vez `manage.py indexar_adjuntos`.
+8. **Lo que sigue «en parte» y no es solo código:** PDF con el formato del cliente, cartas y cotizaciones que se rellenen solas, reparto automático de la carga, integración real con FileDoc y Odoo, y un módulo de licitaciones.
 9. **Documentación:** la lista «Rutas principales» del README cita tres rutas del repositorio que ya no existen y describe `apps/reportes` como pendiente.
 
 El detalle requisito por requisito, con el archivo de código y la prueba de cada uno, está en [`trazabilidad.md`](trazabilidad.md).

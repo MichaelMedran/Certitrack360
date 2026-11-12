@@ -175,6 +175,7 @@ class ModeloTests(Base):
             "INCORPORACION": "Incorporación", "FICHA": "Ficha",
             # Sprint 3 (SDD del Sprint 3, §6.1)
             "URGENTE": "Urgente", "REPORTE": "Reporte", "CHECKLIST": "Checklist", "FACTURA": "Factura",
+            "VIGENCIA": "Vigencia",  # certificados y documentos del cliente por vencer
         })
 
     def test_todos_los_codigos_caben_y_se_guardan(self):

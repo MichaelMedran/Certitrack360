@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "apps.facturacion",
     "apps.exportacion",
     "apps.extraccion",
+    "apps.cumplimiento",  # penalidades incurridas y vigencia de certificados
 ]
 
 MIDDLEWARE = [
@@ -261,6 +262,9 @@ WHATSAPP_PREFIJO_PAIS = os.environ.get("WHATSAPP_PREFIJO_PAIS", "51").strip()
 WHATSAPP_MAX_INTENTOS = _entero("WHATSAPP_MAX_INTENTOS", "5")
 # Dirección con la que el equipo abre la plataforma (p. ej. http://certitrack.local:8000); se añade al mensaje.
 SITIO_URL = os.environ.get("SITIO_URL", "").strip().rstrip("/")
+
+# Vigencia de certificados: días antes del vencimiento en que se avisa y el documento se marca «Por vencer».
+VIGENCIA_DIAS_AVISO = _entero("VIGENCIA_DIAS_AVISO", "30")
 
 # Facturación (RF-46): conector de solo lectura. El simulado lee la tabla FacturaSimulada del servidor local.
 FACTURACION_CONECTOR = os.environ.get("FACTURACION_CONECTOR", "apps.facturacion.conector.ConectorSimulado")

@@ -81,6 +81,7 @@ def datos_consolidados(entregable):
         ("contrato", "Contrato", contrato.numero_contrato),
         ("linea_servicio", "Línea de servicio", linea),
         ("id_tdr", "ID-TDR", entregable.id_tdr or ""),
+        ("numero_reporte", "N.º de reporte", str(entregable.numero_correlativo or "")),
         ("periodo", "Periodo", periodo(entregable)),
         ("fecha_recepcion", "Fecha de recepción", _fecha(entregable.fecha_recepcion)),
         ("plazo", "Plazo", _fecha(entregable.plazo)),

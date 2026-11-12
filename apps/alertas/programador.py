@@ -33,8 +33,22 @@ def tarea_alertas():
     logger.info("Alertas de vencimiento generadas: %s", creadas)
     actas = generar_alertas_acta()  # acta de conformidad pendiente: una sola vez por entrega (RF-29)
     logger.info("Alertas de acta pendiente generadas: %s", actas)
+    tarea_vigencias()
     tarea_reporte()
     return creadas + actas
+
+
+def tarea_vigencias():
+    """Certificados y documentos del cliente por vencer o vencidos. Un fallo no debe frenar las demás alertas."""
+    from apps.cumplimiento.servicios import generar_alertas_vigencia
+
+    try:
+        creadas = generar_alertas_vigencia()
+    except Exception:  # noqa: BLE001  (se registra y se reintenta en la siguiente hora)
+        logger.exception("No se pudieron generar los avisos de vigencia")
+        return 0
+    logger.info("Avisos de vigencia de documentos generados: %s", creadas)
+    return creadas
 
 
 def tarea_reporte():

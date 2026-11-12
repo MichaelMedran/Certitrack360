@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block titulo %}Certificados y vigencias{% endblock %}
+{% block contenido %}
+{% if user.es_gerente_o_admin %}
+{% include "clientes/_pestanas.html" %}
+<h2>Certificados y documentos con vigencia</h2>
+{% else %}
+<h1>Certificados y documentos con vigencia</h1>
+{% endif %}
+<p class="suave">Certificados ISO, pólizas, licencias y otros documentos del cliente que vencen. La plataforma avisa {{ dias_aviso }} días antes y el día en que vencen, y advierte al enviar a revisión un entregable de un cliente con documentos vencidos.</p>
+
+{% if gestionables %}
+<details class="filtros"{% if preseleccionado or not documentos %} open{% endif %}>
+  <summary>Registrar un documento</summary>
+  <form method="post" action="{% url 'vigencias' %}">{% csrf_token %}
+    <div class="filtros-grid">
+      <div><label for="v-cliente">Cliente *</label>
+        <select id="v-cliente" name="cliente" required>
+          <option value="">Elija…</option>
+          {% for c in gestionables %}<option value="{{ c.pk }}"{% if preseleccionado == c.pk %} selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+        </select></div>
+      <div><label for="v-nombre">Documento *</label>
+        <input id="v-nombre" name="nombre" type="text" maxlength="150" required placeholder="p. ej. Certificado ISO 9001"></div>
+      <div><label for="v-vence">Vence el *</label>
+        <input id="v-vence" name="vence" type="date" required></div>
+      <div><label for="v-notas">Notas</label>
+        <input id="v-notas" name="notas" type="text" maxlength="255" placeholder="p. ej. emitido por…"></div>
+    </div>
+    <div class="acciones"><button class="boton">Registrar</button></div>
+  </form>
+</details>
+{% endif %}
+
+{% if documentos %}
+<div class="tabla"><table>
+  <thead><tr><th>Cliente</th><th>Documento</th><th>Vence</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+  <tbody>
+    {% for d in documentos %}
+    <tr>
+      <td>{{ d.cliente.nombre }}</td>
+      <td>{{ d.nombre }}{% if d.notas %}<br><small class="suave">{{ d.notas }}</small>{% endif %}</td>
+      <td>{{ d.vence|date:"d/m/Y" }}</td>
+      <td><span class="etiqueta {{ d.clase }}">{{ d.estado_texto }}{% if d.estado == 'por-vencer' %} · {{ d.dias }} día{{ d.dias|pluralize }}{% endif %}</span></td>
+      <td>
+        {% if d.editable %}
+        <form method="post" action="{% url 'vigencia_actualizar' d.pk %}" class="en-linea">{% csrf_token %}
+          <label class="sr-only" for="v-renovar-{{ d.pk }}">Nueva fecha de vencimiento de {{ d.nombre }}</label>
+          <input id="v-renovar-{{ d.pk }}" name="vence" type="date" required>
+          <button class="boton sec chico">Renovar</button>
+        </form>
+        <form method="post" action="{% url 'vigencia_actualizar' d.pk %}" class="en-linea">{% csrf_token %}
+          <input type="hidden" name="accion" value="retirar">
+          <button class="boton sec chico">Retirar<span class="sr-only"> {{ d.nombre }}</span></button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="tarjeta">No hay documentos con vigencia registrados.</p>
+{% endif %}
+{% endblock %}

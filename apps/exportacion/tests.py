@@ -140,7 +140,7 @@ class DatosConsolidadosTests(BaseExportacion):
         self.c1.save()
         datos = servicios.datos_consolidados(self.e1)
         claves = [c for c, _e, _v in datos]
-        self.assertEqual(claves, ["codigo", "titulo", "cliente", "contrato", "linea_servicio", "id_tdr", "periodo",
+        self.assertEqual(claves, ["codigo", "titulo", "cliente", "contrato", "linea_servicio", "id_tdr", "numero_reporte", "periodo",
                                   "fecha_recepcion", "plazo", "estado", "junior", "senior", "c_periodo", "c_nivel"])
         valores = {c: v for c, _e, v in datos}
         self.assertEqual(valores["periodo"], "noviembre de 2026")
