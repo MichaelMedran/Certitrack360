@@ -8,6 +8,7 @@ from django.db.models import Max, Q
 # se siguen ofreciendo aquí para quienes ya los usaban desde adjuntos (formularios, vistas y pruebas).
 from .archivos import NOMBRE_MAX, extensiones_permitidas, sanear_nombre, tamano_maximo_bytes, validar_archivo  # noqa: F401
 from .models import Adjunto, Entregable, HistorialEstado
+from .texto import extraer_texto
 from .tipos import TIPOS_GENERADOS, TipoAdjunto
 from .visibilidad import es_elaborador_del_entregable, es_senior_del_entregable
 
@@ -70,6 +71,7 @@ def crear_adjunto(entregable, usuario, archivo, tipo, comentario="", restaurado_
     archivo.name = nombre
     adjunto = Adjunto.objects.create(
         entregable=entregable, archivo=archivo, nombre_original=nombre, tipo=tipo, version=ultima + 1,
+        texto=extraer_texto(archivo, nombre),
         comentario=(comentario or "").strip()[:255], subido_por=usuario, bloqueado=bloqueado,
         restaurado_desde=restaurado_desde,
     )

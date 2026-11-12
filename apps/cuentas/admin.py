@@ -6,7 +6,7 @@ from .models import Ausencia, IntentoIngreso, Usuario
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (("Rol en CertiTrack", {"fields": ("rol", "puesto")}),)
+    fieldsets = UserAdmin.fieldsets + (("Rol en CertiTrack", {"fields": ("rol", "puesto", "celular")}),)
     add_fieldsets = UserAdmin.add_fieldsets + ((None, {"fields": ("rol", "puesto")}),)
     list_display = ("username", "first_name", "last_name", "rol", "puesto", "is_active")
     list_filter = ("rol", "is_active")

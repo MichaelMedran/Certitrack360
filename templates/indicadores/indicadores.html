@@ -96,6 +96,15 @@
       <p class="suave">{{ formula_observaciones }}</p>
     </details>
   </div>
+  <div class="contador">
+    Información automatizada
+    <b>{% if automatizado_pct is not None %}{{ automatizado_pct }} %{% else %}—{% endif %}</b>
+    <span>{{ automatizado_num }} de {{ periodo_total }}</span>
+    <details>
+      <summary>¿Cómo se calcula?</summary>
+      <p class="suave">{{ formula_automatizado }}</p>
+    </details>
+  </div>
 </div>
 
 <h2>Tiempo promedio por tipo de entregable</h2>

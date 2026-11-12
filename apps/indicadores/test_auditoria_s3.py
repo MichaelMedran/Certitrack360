@@ -110,7 +110,7 @@ class AuditoriaHU13Tests(Base):
     def test_criterio_4_cada_indicador_muestra_su_formula(self):
         """Criterio 4: fórmula o explicación visible en cada indicador."""
         r = self._panel(self.gerente)
-        self.assertContains(r, "¿Cómo se calcula?", count=4)
+        self.assertContains(r, "¿Cómo se calcula?", count=5)
         for formula in ("≤ plazo", "devolución", "días entre la creación y la entrega", "por tipo de error"):
             self.assertContains(r, formula)
 

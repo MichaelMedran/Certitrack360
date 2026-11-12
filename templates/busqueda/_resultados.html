@@ -116,7 +116,7 @@
     <tbody>
       {% for a in adjuntos %}
       <tr>
-        <td>{{ a.nombre_original }} · {{ a.get_tipo_display }} v{{ a.version }}</td>
+        <td>{{ a.nombre_original }} · {{ a.get_tipo_display }} v{{ a.version }}{% if a.fragmento %}<br><small class="suave">En el contenido: {{ a.fragmento }}</small>{% endif %}</td>
         <td><span class="codigo">{{ a.entregable.codigo }}</span> · {{ a.entregable.titulo }}</td>
         <td>
           <a class="boton chico sec" href="{% url 'adjunto_descargar' a.pk %}">Descargar</a>

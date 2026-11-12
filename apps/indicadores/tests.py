@@ -18,6 +18,7 @@ from apps.entregables.tests import Base
 from apps.entregables.tipos import TipoAdjunto
 from apps.indicadores.servicios import (
     FORMULA_A_TIEMPO,
+    FORMULA_AUTOMATIZADO,
     FORMULA_OBSERVACIONES,
     FORMULA_REPROCESO,
     FORMULA_TIEMPO,
@@ -258,6 +259,28 @@ class Caso24IndicadoresYVisibilidadTests(Base):
                     },
                 )
 
+    def test_informacion_automatizada_cuenta_lo_prellenado_y_lo_generado_por_ficha(self):
+        from apps.extraccion.models import Extraccion
+
+        datos = calcular_indicadores(self.gerente)
+        self.assertEqual((datos["automatizado_num"], datos["periodo_total"], datos["automatizado_pct"]), (0, 5, 0))
+
+        # Una lectura confirmada cuenta; una propuesta sin confirmar, no.
+        Extraccion.objects.create(usuario=self.s1, archivo="extracciones/tdr.pdf", nombre_original="tdr.pdf",
+                                  entregable=self.e_ok, aplicada_en=timezone.now())
+        otro = Entregable.objects.exclude(pk=self.e_ok.pk).first()
+        Extraccion.objects.create(usuario=self.s1, archivo="extracciones/b.pdf", nombre_original="b.pdf", entregable=otro)
+        datos = calcular_indicadores(self.gerente)
+        self.assertEqual((datos["automatizado_num"], datos["automatizado_pct"]), (1, 20))
+
+        html = self.client_como(self.gerente)
+        self.assertIn("Información automatizada", html)
+        self.assertIn("1 de 5", html)
+
+    def client_como(self, usuario):
+        self.client.force_login(usuario)
+        return self.client.get(reverse("indicadores")).content.decode()
+
     def test_entregable_cerrado_antes_del_sprint_2_usa_fecha_del_historial(self):
         # e_pre_s2 no tiene registro en Entrega; su fecha de entrega sale del HistorialEstado (08/10/2026 <= plazo 10/10/2026)
         datos = calcular_indicadores(self.j1, {"plantilla": self.plantilla_matriz.pk})
@@ -351,8 +374,9 @@ class Caso24IndicadoresYVisibilidadTests(Base):
         r_j1 = self.client.get(reverse("indicadores"))
         self.assertEqual(r_j1.status_code, 200)
         self.assertIn("no-store", r_j1["Cache-Control"])
-        self.assertContains(r_j1, "¿Cómo se calcula?", count=4)
-        for formula in (FORMULA_A_TIEMPO, FORMULA_REPROCESO, FORMULA_TIEMPO, FORMULA_OBSERVACIONES):
+        self.assertContains(r_j1, "¿Cómo se calcula?", count=5)
+        for formula in (FORMULA_A_TIEMPO, FORMULA_REPROCESO, FORMULA_TIEMPO, FORMULA_OBSERVACIONES,
+                        FORMULA_AUTOMATIZADO):
             self.assertContains(r_j1, formula)
         self.assertNotContains(r_j1, "<h2>Por responsable</h2>")
 

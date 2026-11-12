@@ -89,3 +89,30 @@ class Notificacion(models.Model):
         if self.entregable_id:
             return reverse("entregable_detalle", args=[self.entregable_id])
         return ""
+
+
+class EnvioWhatsApp(models.Model):
+    """Copia de un aviso enviada (o por enviar) al celular del colaborador por WhatsApp. Ver `apps/alertas/whatsapp.py`."""
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        ENVIANDO = "ENVIANDO", "Enviando"
+        ENVIADO = "ENVIADO", "Enviado"
+        FALLIDO = "FALLIDO", "Fallido"
+
+    notificacion = models.OneToOneField(Notificacion, on_delete=models.CASCADE, related_name="envio_whatsapp")
+    numero = models.CharField("número", max_length=15)
+    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.PENDIENTE, db_index=True)
+    intentos = models.PositiveSmallIntegerField(default=0)
+    error = models.CharField(max_length=500, blank=True, default="")
+    id_externo = models.CharField("identificador del proveedor", max_length=100, blank=True, default="")
+    creado_en = models.DateTimeField(auto_now_add=True)
+    enviado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-id"]
+        verbose_name = "envío por WhatsApp"
+        verbose_name_plural = "envíos por WhatsApp"
+
+    def __str__(self):
+        return f"{self.numero} · {self.get_estado_display()}"

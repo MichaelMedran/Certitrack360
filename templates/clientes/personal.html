@@ -134,8 +134,13 @@
       <label for="puesto-texto">Puesto de {{ seleccionado.nombre }}</label>
       <input id="puesto-texto" name="puesto" type="text" maxlength="100" value="{{ seleccionado.puesto }}" placeholder="p. ej. Asistente de Proyectos">
     </div>
+    <div>
+      <label for="celular-texto">Celular para avisos por WhatsApp</label>
+      <input id="celular-texto" name="celular" type="tel" maxlength="20" value="{{ seleccionado.celular }}" placeholder="p. ej. 987 654 321" aria-describedby="celular-ayuda">
+      <small id="celular-ayuda" class="suave">{% if whatsapp_activo %}Recibirá en este número una copia de sus avisos.{% else %}El envío por WhatsApp aún no está configurado en el servidor.{% endif %} Vacío: no recibe.</small>
+    </div>
   </div>
-  <button class="boton sec chico">Guardar puesto</button>
+  <button class="boton sec chico">Guardar datos</button>
 </form>
 
 <div class="tabla"><table>

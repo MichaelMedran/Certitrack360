@@ -20,6 +20,7 @@ from apps.clientes.models import Cliente, Contrato
 from apps.entregables import subestado
 from apps.entregables.filtros import entero
 from apps.entregables.models import Adjunto, Entregable
+from apps.entregables.texto import fragmento
 from apps.entregables.tipos import TipoAdjunto
 from apps.entregables.visibilidad import entregables_visibles
 from apps.repositorio.models import DocumentoRepositorio, VersionDocumento
@@ -290,9 +291,12 @@ def buscar(usuario, params=None):
     if tipo_doc:
         adj_qs = adj_qs.filter(tipo=tipo_doc)
     adj_qs = adj_qs.filter(
-        _condicion_campos(("nombre_original", "comentario"), q)
+        _condicion_campos(("nombre_original", "comentario", "texto"), q)
     ).select_related("entregable__contrato__cliente")
     adjuntos = list(adj_qs.order_by("-subido_en", "-id")[:limite])
+    for adjunto in adjuntos:
+        # Si la coincidencia está en el contenido del archivo, se muestra el trozo donde aparece.
+        adjunto.fragmento = fragmento(adjunto.texto, q.split()) if adjunto.texto else ""
 
     # 5. Repositorio
     rep_qs = documentos_visibles(usuario)

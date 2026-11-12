@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.alertas import whatsapp
 from apps.alertas.models import Notificacion
 from apps.cuentas.models import Usuario
 from apps.entregables.models import Entregable, HistorialEstado
@@ -199,6 +200,7 @@ def activar(usuario, entregable, naturaleza, plazo_esperado, ahora=None):
     ])
     _historial(entregable, usuario, "Activó la alerta urgente" + (" (fuera de horario)" if alerta.fuera_de_horario else ""))
     transaction.on_commit(lambda: _enviar_correo(alerta, usuarios))
+    whatsapp.despachar_al_confirmar()  # la alerta urgente no espera al programador
     return alerta
 
 

@@ -264,6 +264,8 @@ class Adjunto(models.Model):
     tipo = models.CharField(max_length=20, choices=TipoAdjunto.choices)
     version = models.PositiveIntegerField(default=1)
     comentario = models.CharField(max_length=255, blank=True)
+    # Texto que trae el archivo (PDF, Word, Excel, PowerPoint, TXT), para buscar dentro de su contenido. Ver texto.py.
+    texto = models.TextField(blank=True, default="", editable=False)
     subido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     subido_en = models.DateTimeField(auto_now_add=True)
     # Sprint 2 (RF-28). La versión enviada al cliente, el cargo y el acta quedan bloqueados: no se eliminan, ni siquiera

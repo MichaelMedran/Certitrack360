@@ -248,6 +248,20 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "certitrack@localhost")
 EMAIL_BACKEND = ("django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST
                  else "django.core.mail.backends.dummy.EmailBackend")
 
+# WhatsApp (opcional, apagado por defecto): copia de los avisos al celular del colaborador. Es la única salida a
+# internet además de Filedoc y solo existe si se define WHATSAPP_CONECTOR. Ver apps/alertas/whatsapp.py.
+WHATSAPP_CONECTOR = os.environ.get("WHATSAPP_CONECTOR", "").strip()
+WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN", "").strip()
+WHATSAPP_PHONE_ID = os.environ.get("WHATSAPP_PHONE_ID", "").strip()
+WHATSAPP_PLANTILLA = os.environ.get("WHATSAPP_PLANTILLA", "").strip()
+WHATSAPP_PLANTILLA_IDIOMA = os.environ.get("WHATSAPP_PLANTILLA_IDIOMA", "es").strip()
+WHATSAPP_API_URL = os.environ.get("WHATSAPP_API_URL", "https://graph.facebook.com/v21.0").strip().rstrip("/")
+WHATSAPP_TIPOS = [t.upper() for t in _lista("WHATSAPP_TIPOS", "")]  # vacío: todos los tipos de aviso
+WHATSAPP_PREFIJO_PAIS = os.environ.get("WHATSAPP_PREFIJO_PAIS", "51").strip()
+WHATSAPP_MAX_INTENTOS = _entero("WHATSAPP_MAX_INTENTOS", "5")
+# Dirección con la que el equipo abre la plataforma (p. ej. http://certitrack.local:8000); se añade al mensaje.
+SITIO_URL = os.environ.get("SITIO_URL", "").strip().rstrip("/")
+
 # Facturación (RF-46): conector de solo lectura. El simulado lee la tabla FacturaSimulada del servidor local.
 FACTURACION_CONECTOR = os.environ.get("FACTURACION_CONECTOR", "apps.facturacion.conector.ConectorSimulado")
 

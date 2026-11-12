@@ -44,6 +44,10 @@ FORMULA_TIEMPO = (
     "Promedio de días entre la creación y la entrega; y, si hay registros de tiempo, horas registradas promedio."
 )
 FORMULA_OBSERVACIONES = "Conteo de observaciones registradas en el periodo, por tipo de error."
+FORMULA_AUTOMATIZADO = (
+    "Entregables del periodo cuyos datos no se digitaron a mano (generados desde una ficha de levantamiento o "
+    "prellenados desde un documento) ÷ entregables del periodo."
+)
 
 TITULOS_FILTROS = [
     ("desde", "Desde"),
@@ -384,8 +388,22 @@ def calcular_indicadores(usuario, params=None, hoy=None):
             )
         por_responsable.sort(key=lambda fila: (-fila["entregados"], -fila["observaciones"], fila["nombre"]))
 
+    # 6. Información automatizada: entregables cuyos datos llegaron de una ficha o de la lectura de un documento
+    ids_periodo = [e.pk for e in entregables_en_periodo]
+    automatizados = set(
+        Entregable.objects.filter(pk__in=ids_periodo, items_ficha__isnull=False).values_list("pk", flat=True)
+    ) | set(
+        Entregable.objects.filter(pk__in=ids_periodo, extracciones__aplicada_en__isnull=False).values_list("pk", flat=True)
+    )
+    periodo_total = len(ids_periodo)
+    automatizado_num = len(automatizados)
+
     opciones = opciones_filtros(usuario)
     return {
+        "periodo_total": periodo_total,
+        "automatizado_num": automatizado_num,
+        "automatizado_pct": round(100 * automatizado_num / periodo_total) if periodo_total else None,
+        "formula_automatizado": FORMULA_AUTOMATIZADO,
         "filtros_activos": activos,
         "n_filtros": len(activos),
         "opciones": opciones,

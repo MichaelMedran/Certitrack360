@@ -21,6 +21,8 @@ class Usuario(AbstractUser):
     puesto = models.CharField("puesto", max_length=100, blank=True, default="")
     # Sprint 3 (RF-43): integra el grupo de guardia que recibe las alertas de urgencia fuera de horario.
     de_guardia = models.BooleanField("de guardia", default=False)
+    # Celular para recibir los avisos por WhatsApp, en formato internacional y solo dígitos. Vacío: no recibe.
+    celular = models.CharField("celular (WhatsApp)", max_length=15, blank=True, default="")
 
     objects = UsuarioManager()
 

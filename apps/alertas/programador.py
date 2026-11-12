@@ -8,6 +8,7 @@ from django.db import close_old_connections
 logger = logging.getLogger(__name__)
 
 ALERTAS_CADA_MINUTOS = 60
+WHATSAPP_CADA_MINUTOS = 1
 INDEXACION_HORA = 2  # 02:00, hora de Lima
 
 
@@ -50,6 +51,16 @@ def tarea_reporte():
     return reporte
 
 
+def tarea_whatsapp():
+    """Envía por WhatsApp los avisos pendientes (solo si el canal está configurado)."""
+    from apps.alertas import whatsapp
+
+    enviados, fallidos = whatsapp.despachar()
+    if enviados or fallidos:
+        logger.info("WhatsApp: %s enviados, %s con error", enviados, fallidos)
+    return enviados, fallidos
+
+
 def tarea_lecciones():
     from apps.conocimiento.servicios import indexar_lecciones
 
@@ -71,4 +82,9 @@ def crear_programador():
         _con_conexion_limpia(tarea_lecciones), "cron", hour=INDEXACION_HORA, minute=0, id="lecciones",
         name="Indexación de lecciones aprendidas", max_instances=1, coalesce=True,
     )
+    if settings.WHATSAPP_CONECTOR:
+        programador.add_job(
+            _con_conexion_limpia(tarea_whatsapp), "interval", minutes=WHATSAPP_CADA_MINUTOS, id="whatsapp",
+            name="Avisos por WhatsApp", max_instances=1, coalesce=True,
+        )
     return programador

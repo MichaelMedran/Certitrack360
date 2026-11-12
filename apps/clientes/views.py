@@ -8,6 +8,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from apps.alertas import whatsapp
 from apps.cuentas.models import Ausencia, Usuario
 from apps.cuentas.permisos import solo_gestion
 from apps.entregables import personal as personal_srv
@@ -153,8 +154,12 @@ def personal(request):
                 )
                 u = get_object_or_404(Usuario, pk=uid)
                 u.puesto = (request.POST.get("puesto") or "").strip()[:100]
-                u.save(update_fields=["puesto"])
-                messages.success(request, f"Se actualizó el puesto de {u.nombre}.")
+                campos = ["puesto"]
+                if "celular" in request.POST:
+                    u.celular = whatsapp.normalizar_celular(request.POST.get("celular"))
+                    campos.append("celular")
+                u.save(update_fields=campos)
+                messages.success(request, f"Se actualizaron los datos de {u.nombre}.")
                 return redirect(f"{reverse('personal')}?colaborador={u.pk}")
             if accion == "reasignar":
                 eid = entero(request.POST.get("entregable") or request.POST.get("entregable_id"))
@@ -236,6 +241,7 @@ def personal(request):
         "filtro_rol": rol,
         "filtro_q": q,
         "carga_maxima": settings.CARGA_MAXIMA_ACTIVOS,
+        "whatsapp_activo": whatsapp.activo(),
         "seleccionado": seleccionado,
         "asignaciones": asignaciones,
         "entregable_reasignar": entregable_reasignar,
