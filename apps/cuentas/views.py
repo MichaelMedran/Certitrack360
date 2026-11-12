@@ -51,3 +51,9 @@ def inicio(request):
         "mi_incorporacion": incorporacion_activa_de(request.user),
     }
     return render(request, "inicio.html", contexto)
+
+
+@login_required
+def manual(request):
+    """Manual de uso ilustrado (enlace del pie de página): capturas anotadas y diagramas de flujo, para todos los roles."""
+    return render(request, "manual/manual.html")

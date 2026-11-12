@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Manual de uso{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/manual.css' %}">{% endblock %}
+{% block contenido %}
+{# Puntas de flecha compartidas por todos los diagramas #}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="punta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1e4e8c"/></marker>
+    <marker id="punta-roja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b91c1c"/></marker>
+  </defs>
+</svg>
+
+<div class="manual-portada" id="arriba">
+  <h1>Manual de uso de CertiTrack 360</h1>
+  <p>Dónde está cada cosa, para qué sirve y qué hacer en cada momento del día. Las imágenes son pantallas reales de la plataforma con datos de demostración; pulse cualquiera para verla en grande.</p>
+  <p>Los círculos rojos numerados de cada imagen se explican en la lista que la acompaña.</p>
+</div>
+
+<div class="manual">
+<nav class="manual-indice" aria-label="Contenido del manual">
+  <strong>Contenido</strong>
+  <ol>
+    <li><a href="#recorrido">El recorrido de un entregable</a></li>
+    <li><a href="#pantalla">La pantalla y el menú</a></li>
+    <li><a href="#inicio">Inicio: cómo empezar el día</a></li>
+    <li><a href="#tablero">Tablero y tarjetas</a></li>
+    <li><a href="#entregable">La página de un entregable</a></li>
+    <li><a href="#junior">Junior: elaborar y corregir</a></li>
+    <li><a href="#senior">Senior: revisar y entregar</a></li>
+    <li><a href="#urgencia">Atender una urgencia</a></li>
+    <li><a href="#contrato-nuevo">Cuando llega un contrato</a></li>
+    <li><a href="#gerente">Gerente: seguimiento</a></li>
+    <li><a href="#herramientas">Calendario, buscar y ayuda</a></li>
+    <li><a href="#avisos">Los avisos</a></li>
+    <li><a href="#como-hago">¿Cómo hago para…?</a></li>
+  </ol>
+</nav>
+
+<div class="manual-cuerpo">
+
+<div class="manual-roles">
+  <a class="manual-rol" href="#junior"><b>Soy junior</b><span>Elaboro entregables, subo archivos y corrijo observaciones.</span></a>
+  <a class="manual-rol" href="#senior"><b>Soy senior</b><span>Reviso, apruebo, entrego al cliente y atiendo urgencias.</span></a>
+  <a class="manual-rol" href="#gerente"><b>Soy gerente</b><span>Hago seguimiento del área y configuro clientes y personal.</span></a>
+</div>
+
+{# ------------------------------------------------------------------ 1 #}
+<section id="recorrido">
+  <h2>1. El recorrido de un entregable</h2>
+  <p>Todo gira alrededor del <strong>entregable</strong>: un reporte, un informe o un acta que se le debe a un cliente. Cada entregable pasa siempre por los mismos cinco estados, de izquierda a derecha.</p>
+  <figure class="diagrama">
+    <svg viewBox="0 0 1000 250" role="img" aria-labelledby="d1-t">
+      <title id="d1-t">Los cinco estados de un entregable: Por hacer, En proceso, Revisión senior, Aprobado y Entregado. Desde Revisión senior puede volver a En proceso con observaciones.</title>
+      <rect class="d-caja gris" x="20" y="50" width="160" height="80" rx="10"/>
+      <text class="d-titulo" x="100" y="84">Por hacer</text><text class="d-texto" x="100" y="106">Registrado y asignado</text>
+      <rect class="d-caja" x="215" y="50" width="160" height="80" rx="10"/>
+      <text class="d-titulo" x="295" y="84">En proceso</text><text class="d-texto" x="295" y="106">El junior lo elabora</text>
+      <rect class="d-caja ambar" x="410" y="50" width="160" height="80" rx="10"/>
+      <text class="d-titulo" x="490" y="84">Revisión senior</text><text class="d-texto" x="490" y="106">El senior lo revisa</text>
+      <rect class="d-caja" x="605" y="50" width="160" height="80" rx="10"/>
+      <text class="d-titulo" x="685" y="84">Aprobado</text><text class="d-texto" x="685" y="106">Listo para el cliente</text>
+      <rect class="d-caja fin" x="800" y="50" width="180" height="80" rx="10"/>
+      <text class="d-titulo" x="890" y="84">Entregado</text><text class="d-texto" x="890" y="106">Falta el acta firmada</text>
+      <path class="d-flecha" d="M180 90H213" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M375 90H408" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M570 90H603" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M765 90H798" marker-end="url(#punta)"/>
+      <text class="d-quien" x="197" y="36">Junior</text>
+      <text class="d-quien" x="392" y="36">Junior</text>
+      <text class="d-quien" x="587" y="36">Senior</text>
+      <text class="d-quien" x="782" y="36">Senior</text>
+      <path class="d-flecha vuelta" d="M490 130C490 200 295 200 295 134" marker-end="url(#punta-roja)"/>
+      <text class="d-nota" x="392" y="212">Devuelto con observaciones</text>
+      <text class="d-texto" x="392" y="232">El junior corrige y lo vuelve a enviar</text>
+    </svg>
+    <figcaption>Arriba de cada flecha, quién mueve el entregable al estado siguiente. La línea roja es la devolución.</figcaption>
+  </figure>
+  <div class="nota">La plataforma no deja avanzar si falta algo obligatorio, y siempre dice qué falta. Si solo conviene revisar algo, pide una confirmación («Continuar de todos modos»).</div>
+  <h3>Qué ve cada rol</h3>
+  <div class="tabla"><table>
+    <thead><tr><th>Rol</th><th>Qué ve</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td>Junior</td><td>Solo sus entregables asignados</td><td>Elabora, sube archivos, corrige observaciones, envía a revisión y redacta fichas</td></tr>
+      <tr><td>Senior</td><td>Los entregables de sus contratos</td><td>Crea entregables, revisa, observa, aprueba, entrega, activa urgencias y confirma fichas</td></tr>
+      <tr><td>Gerente</td><td>Todo</td><td>Lo del senior, más el seguimiento general (Consolidado) y la configuración (Gestión)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+{# ------------------------------------------------------------------ 2 #}
+<section id="pantalla">
+  <h2>2. La pantalla y el menú</h2>
+  <p>La barra azul está en todas las pantallas. Desde ella se llega a todo.</p>
+  {% include "manual/_captura.html" with archivo="01-barra" alt="Barra superior de CertiTrack 360 con cuatro zonas numeradas" pie="La barra superior, tal como la ve un junior." %}
+  <ol class="leyenda">
+    <li><strong>Menú principal.</strong> La sección en la que está queda resaltada con una línea amarilla.</li>
+    <li><strong>Buscar.</strong> Escriba un código, un título, un cliente o una palabra del contenido de un archivo y pulse Enter.</li>
+    <li><strong>Avisos.</strong> El número amarillo son los avisos que no ha leído.</li>
+    <li><strong>Su nombre y su rol.</strong> A la derecha, «Salir» cierra la sesión.</li>
+  </ol>
+  <div class="tabla"><table>
+    <thead><tr><th>En el menú</th><th>Para qué sirve</th><th>Úselo cuando…</th></tr></thead>
+    <tbody>
+      <tr><td>Inicio</td><td>Su resumen: vencidos, próximos a vencer y avisos recientes</td><td>Empieza el día</td></tr>
+      <tr><td>Tablero</td><td>Sus entregables como tarjetas, una columna por estado</td><td>Quiere ver en qué está cada cosa o mover un entregable</td></tr>
+      <tr><td>Calendario</td><td>Los plazos de todos sus clientes por mes, semana o lista</td><td>Planifica la semana</td></tr>
+      <tr><td>Entregables</td><td>La lista completa con filtros y sus pestañas</td><td>Busca uno concreto o quiere crear uno</td></tr>
+      <tr><td>Repositorio</td><td>Plantillas por cliente, ejemplos y procedimientos</td><td>Necesita un formato o saber cómo se hace algo</td></tr>
+      <tr><td>Indicadores</td><td>Cinco cifras del desempeño</td><td>Quiere saber cómo va el área</td></tr>
+      <tr><td>Asistente</td><td>Responde preguntas citando procedimientos y casos anteriores</td><td>Tiene un caso atípico</td></tr>
+      <tr><td>Fichas <span class="suave">(junior y senior)</span></td><td>De aquí sale el calendario de entregas de un contrato</td><td>Llega un contrato nuevo</td></tr>
+      <tr><td>Consolidado <span class="suave">(gerente)</span></td><td>Totales del área, carga por persona, gráficos y reportes</td><td>Hace seguimiento</td></tr>
+      <tr><td>Gestión <span class="suave">(gerente)</span></td><td>Clientes, contratos, plantillas, personal y certificados</td><td>Da de alta un cliente o cambia la configuración</td></tr>
+    </tbody>
+  </table></div>
+  <p>Al final de cada pantalla, el <strong>pie de página</strong> tiene el enlace a este manual.</p>
+</section>
+
+{# ------------------------------------------------------------------ 3 #}
+<section id="inicio">
+  <h2>3. Inicio: cómo empezar el día</h2>
+  {% include "manual/_captura.html" with archivo="02-inicio" alt="Pantalla de Inicio con cuatro zonas numeradas" pie="Inicio de un junior. El senior y el gerente ven lo mismo, con los entregables de sus contratos o de toda el área." %}
+  <ol class="leyenda">
+    <li><strong>Sus cifras.</strong> Mire primero «Vencidos» (rojo) y luego «Vencen en 5 días» (ámbar).</li>
+    <li><strong>Próximos plazos.</strong> Ordenados por prioridad: lo de arriba es lo que hay que atender primero. Pulse el título para abrir el entregable.</li>
+    <li><strong>Notificaciones recientes.</strong> «Ver» lo lleva directo a lo que hay que atender.</li>
+    <li><strong>Pie de página.</strong> El enlace a este manual.</li>
+  </ol>
+  <h3>Si aparece una franja roja</h3>
+  {% include "manual/_captura.html" with archivo="03-franja-urgente" alt="Franja roja con el sello URGENTE debajo de la barra superior" pie="La franja «URGENTE» aparece en todas las pantallas de quien debe atender una alerta." %}
+  <p>Hay una alerta urgente para usted. Pulse <span class="donde">Confirmar lectura</span> para que el senior sepa que la vio; si va a atenderla, pulse <span class="donde">Aceptar el caso</span>. Ver <a href="#urgencia">Atender una urgencia</a>.</p>
+</section>
+
+{# ------------------------------------------------------------------ 4 #}
+<section id="tablero">
+  <h2>4. Tablero y tarjetas</h2>
+  <p>El Tablero muestra sus entregables como tarjetas. Cada columna es un estado, en el mismo orden del <a href="#recorrido">recorrido</a>.</p>
+  {% include "manual/_captura.html" with archivo="04-tablero" alt="Tablero con cinco columnas y tres zonas numeradas" pie="El Tablero. Para mover un entregable, arrastre su tarjeta a la columna siguiente." %}
+  <ol class="leyenda">
+    <li><strong>Filtros.</strong> Ábralos para ver solo un cliente, un contrato, una etiqueta o un rango de fechas.</li>
+    <li><strong>Columna.</strong> El nombre del estado y, entre paréntesis, cuántos entregables tiene.</li>
+    <li><strong>Tarjeta.</strong> Un entregable. Dentro de cada columna, la de más arriba es la de mayor prioridad.</li>
+  </ol>
+  <div class="nota">Solo se aceptan los movimientos que le corresponden a su rol. Soltar una tarjeta de «Aprobado» en «Entregado» abre el formulario de entrega.</div>
+  <h3>Cómo leer una tarjeta</h3>
+  <div class="capturas-par">
+    {% include "manual/_captura.html" with archivo="05-tarjeta" alt="Tarjeta de un entregable con cinco zonas numeradas" pie="Una tarjeta del Tablero." clase="estrecha" %}
+    <div>
+      <ol class="leyenda">
+        <li><strong>Prioridad</strong> (Alta, Media o Baja): qué atender primero.</li>
+        <li><strong>Urgencia por plazo:</strong> NORMAL, PRÓXIMO, CRÍTICO o VENCIDO.</li>
+        <li><strong>Título.</strong> Púlselo para abrir el entregable. Encima está su código (CT-año-número).</li>
+        <li><strong>Etiquetas</strong> con las que se clasifica.</li>
+        <li><strong>Señales:</strong> alerta urgente, correcciones pendientes, observaciones abiertas y cantidad de adjuntos.</li>
+      </ol>
+      <ul class="colores">
+        <li><span class="urgencia urgencia-normal">NORMAL</span> hay tiempo</li>
+        <li><span class="urgencia urgencia-proximo">PRÓXIMO</span> vence en 5 días o menos</li>
+        <li><span class="urgencia urgencia-critico">CRÍTICO</span> vence en 2 días o menos</li>
+        <li><span class="urgencia urgencia-vencido">VENCIDO</span> ya pasó el plazo</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------------ 5 #}
+<section id="entregable">
+  <h2>5. La página de un entregable</h2>
+  <p>Al abrir un entregable (desde el Tablero, la lista, el Calendario o un aviso) todo lo suyo está en una sola página. Arriba, el resumen; debajo, una sección para cada cosa.</p>
+  {% include "manual/_captura.html" with archivo="08-detalle-cabecera" alt="Parte superior de la página de un entregable con tres zonas numeradas" pie="La parte de arriba de un entregable «En proceso», vista por el junior asignado." %}
+  <ol class="leyenda">
+    <li><strong>Resumen.</strong> Cliente y contrato, ID-TDR y número de reporte (sale solo), plazo, estado, urgencia, prioridad y responsables.</li>
+    <li><strong>Mover entregable.</strong> El botón para pasar al estado siguiente. Solo aparece lo que usted puede hacer.</li>
+    <li><strong>Etiquetas</strong> del entregable.</li>
+  </ol>
+  <h3>Las secciones, en el orden en que aparecen</h3>
+  <div class="tabla"><table>
+    <thead><tr><th>Sección</th><th>Qué se hace ahí</th><th>Quién</th></tr></thead>
+    <tbody>
+      <tr><td>Responsables</td><td>Ver quién elabora y quién revisa; sumar a alguien de apoyo o reasignar</td><td>Senior y gerente cambian</td></tr>
+      <tr><td>Datos del entregable</td><td>Los campos que exige la plantilla del cliente</td><td>Junior</td></tr>
+      <tr><td>Adjuntos y versiones</td><td>Subir archivos; cada subida es una versión nueva</td><td>Junior y senior</td></tr>
+      <tr><td>Observaciones</td><td>Lo que hay que corregir y lo que se corrigió</td><td>Senior observa; junior corrige</td></tr>
+      <tr><td>Tiempo por etapa</td><td>Cronómetro de Recopilación, Consolidación y Revisión</td><td>Junior</td></tr>
+      <tr><td>Entregas y acta de conformidad</td><td>Registrar la entrega y subir el acta firmada</td><td>Senior</td></tr>
+      <tr><td>Alerta urgente</td><td>Activar una urgencia y responderla</td><td>Senior y gerente activan</td></tr>
+      <tr><td>Checklist por TDR</td><td>Marcar cada requisito del TDR con su sustento</td><td>Junior</td></tr>
+      <tr><td>Certificados y documentos con vigencia</td><td>Ver si algún certificado del cliente está vencido</td><td>Todos lo ven</td></tr>
+      <tr><td>Checklist de calidad</td><td>Marcar cada ítem Conforme o No conforme (aparece en revisión)</td><td>Senior</td></tr>
+      <tr><td>Factura</td><td>Verificar el número de factura</td><td>Junior verifica; senior justifica</td></tr>
+      <tr><td>Extraer datos de un documento</td><td>Que la plataforma proponga los datos leyendo un PDF</td><td>Junior y senior</td></tr>
+      <tr><td>Exportar</td><td>Generar el PDF o el Excel con el formato del cliente</td><td>Senior</td></tr>
+      <tr><td>Penalidades</td><td>Registrar la penalidad que aplicó el cliente</td><td>Senior y gerente</td></tr>
+      <tr><td>Historial</td><td>Todo lo que pasó, con fecha y autor</td><td>Todos lo ven</td></tr>
+    </tbody>
+  </table></div>
+  <p class="suave">No todas aparecen siempre: cada sección se muestra cuando aplica al estado del entregable y a su rol.</p>
+</section>
+
+{# ------------------------------------------------------------------ 6 #}
+<section id="junior">
+  <h2>6. Junior: elaborar y corregir</h2>
+  <h3>Elaborar un entregable, paso a paso</h3>
+  <ol class="pasos">
+    <li><b>Ábralo y páselo a «En proceso».</b> En el <span class="donde">Tablero</span>, pulse el título de la tarjeta de más arriba de «Por hacer». En «Mover entregable», pulse el botón.</li>
+    <li><b>Encienda el cronómetro.</b> En <span class="donde">Tiempo por etapa</span>, elija la etapa y pulse «Iniciar».
+      {% include "manual/_captura.html" with archivo="10-tiempo" alt="Sección Tiempo por etapa con dos zonas numeradas" pie="Sección «Tiempo por etapa»." %}
+      <ol class="leyenda">
+        <li>Elija la etapa y pulse <strong>Iniciar</strong>. Al terminar la etapa, <strong>Finalizar etapa</strong>.</li>
+        <li>El tiempo acumulado en cada etapa y el total.</li>
+      </ol>
+    </li>
+    <li><b>Complete los datos.</b> Si tiene el TDR o un documento con los datos, use <span class="donde">Extraer datos de un documento</span>: la plataforma propone los valores y usted los confirma. Nada se guarda sin su confirmación.
+      {% include "manual/_captura.html" with archivo="13-extraer" alt="Sección Extraer datos de un documento" pie="Elija el adjunto y pulse «Extraer datos»." %}
+    </li>
+    <li><b>Suba sus archivos.</b> En <span class="donde">Adjuntos y versiones</span>.
+      {% include "manual/_captura.html" with archivo="09-adjuntos" alt="Sección Adjuntos y versiones con dos zonas numeradas" pie="Sección «Adjuntos y versiones»." %}
+      <ol class="leyenda">
+        <li>La versión vigente de cada tipo de archivo. Arriba dice qué adjuntos exige la plantilla y si ya están.</li>
+        <li>Para subir: elija el tipo, el archivo y escriba qué cambió. Si corrige un archivo, súbalo otra vez con el mismo tipo: queda como versión nueva y la anterior se conserva.</li>
+      </ol>
+    </li>
+    <li><b>Marque el checklist del TDR.</b> En <span class="donde">Checklist por TDR</span>, marque cada requisito como cumplido y elija el documento que lo sustenta.
+      {% include "manual/_captura.html" with archivo="26-checklist-tdr" alt="Sección Checklist por TDR con la barra de cumplimiento" pie="La barra muestra el porcentaje cumplido." %}
+    </li>
+    <li><b>Revise los certificados del cliente.</b> Si alguno está vencido, no lo incluya en el entregable y avise al senior.
+      {% include "manual/_captura.html" with archivo="20-certificados" alt="Sección Certificados y documentos con vigencia con un documento vencido" pie="Rojo: vencido. Amarillo: por vencer. Verde: vigente." %}
+    </li>
+    <li><b>Verifique la factura.</b> En <span class="donde">Factura</span>, escriba el número y pulse «Verificar».
+      {% include "manual/_captura.html" with archivo="12-factura" alt="Sección Factura con el campo del número y el botón Verificar" pie="Sección «Factura»." %}
+    </li>
+    <li><b>Envíelo a revisión.</b> Arriba, en «Mover entregable», pulse <span class="donde">Pasar a «Revisión senior»</span>. Si falta un adjunto obligatorio, la plataforma lo dice y no deja avanzar.</li>
+  </ol>
+
+  <h3>Si el senior lo devuelve</h3>
+  <p>Recibirá un aviso de tipo «Observación» y la tarjeta volverá a «En proceso» con la señal «Con correcciones pendientes».</p>
+  {% include "manual/_captura.html" with archivo="11-observaciones" alt="Sección Observaciones con una observación y su acción correctiva" pie="Cada observación dice el tipo de error, qué corregir y, después, qué se hizo." %}
+  <ol class="pasos">
+    <li><b>Lea las observaciones</b> en la sección <span class="donde">Observaciones</span> del entregable.</li>
+    <li><b>Corrija y suba la versión nueva</b> en «Adjuntos y versiones».</li>
+    <li><b>Registre qué hizo</b> en cada observación y pulse «Enviar corrección».</li>
+    <li><b>Vuelva a enviarlo</b> a «Revisión senior».</li>
+  </ol>
+</section>
+
+{# ------------------------------------------------------------------ 7 #}
+<section id="senior">
+  <h2>7. Senior: revisar y entregar</h2>
+  <h3>Revisar</h3>
+  <figure class="diagrama">
+    <svg viewBox="0 0 1000 290" role="img" aria-labelledby="d2-t">
+      <title id="d2-t">Revisión: revise los archivos, complete el checklist de calidad y decida. Si todo está conforme, apruebe; si no, devuelva con observaciones.</title>
+      <rect class="d-caja ambar" x="10" y="40" width="175" height="76" rx="10"/>
+      <text class="d-titulo" x="97" y="72">En «Revisión senior»</text><text class="d-texto" x="97" y="94">Lo que espera por usted</text>
+      <rect class="d-caja" x="220" y="40" width="175" height="76" rx="10"/>
+      <text class="d-titulo" x="307" y="72">Revise los archivos</text><text class="d-texto" x="307" y="94">Adjuntos y checklist TDR</text>
+      <rect class="d-caja" x="430" y="40" width="175" height="76" rx="10"/>
+      <text class="d-titulo" x="517" y="72">Checklist de calidad</text><text class="d-texto" x="517" y="94">Conforme / No conforme</text>
+      <path class="d-rombo" d="M720 18L810 78L720 138L630 78z"/>
+      <text class="d-titulo" x="720" y="74">¿Todo</text><text class="d-titulo" x="720" y="94">conforme?</text>
+      <rect class="d-caja fin" x="845" y="40" width="145" height="76" rx="10"/>
+      <text class="d-titulo" x="917" y="72">Aprobar</text><text class="d-texto" x="917" y="94">Pasa a «Aprobado»</text>
+      <rect class="d-caja alerta" x="632" y="196" width="176" height="76" rx="10"/>
+      <text class="d-titulo" x="720" y="228">Devolver</text><text class="d-texto" x="720" y="250">Con observaciones</text>
+      <rect class="d-caja" x="330" y="196" width="250" height="76" rx="10"/>
+      <text class="d-titulo" x="455" y="228">Vuelve a «En proceso»</text><text class="d-texto" x="455" y="250">El junior recibe el aviso y corrige</text>
+      <path class="d-flecha" d="M185 78H218" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M395 78H428" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M605 78H628" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M810 78H843" marker-end="url(#punta)"/>
+      <text class="d-si" x="826" y="68">Sí</text>
+      <path class="d-flecha vuelta" d="M720 138V194" marker-end="url(#punta-roja)"/>
+      <text class="d-nota" x="742" y="172">No</text>
+      <path class="d-flecha vuelta" d="M632 234H582" marker-end="url(#punta-roja)"/>
+    </svg>
+    <figcaption>La revisión termina en una de dos salidas: aprobar o devolver.</figcaption>
+  </figure>
+  <ol class="pasos">
+    <li><b>Abra lo que espera por usted.</b> En el <span class="donde">Tablero</span>, columna «Revisión senior».</li>
+    <li><b>Complete el checklist de calidad.</b> Marque cada ítem. Un «No conforme» exige escribir la observación.
+      {% include "manual/_captura.html" with archivo="29-calidad" alt="Sección Checklist de calidad con cuatro ítems para marcar Conforme o No conforme" pie="Sección «Checklist de calidad». Sin una revisión conforme no se puede aprobar." %}
+    </li>
+    <li><b>Decida.</b> En «Mover entregable»: <span class="donde">Pasar a «Aprobado»</span>, o elija el tipo de error, describa qué corregir y pulse <span class="donde">Devolver</span>.
+      {% include "manual/_captura.html" with archivo="30-mover-revision" alt="Mover entregable en revisión: botón para aprobar y formulario para devolver" pie="Aprobar o devolver. Para aprobar, la factura debe estar correcta o justificada." %}
+    </li>
+  </ol>
+
+  <h3>Entregar al cliente</h3>
+  <ol class="pasos">
+    <li><b>Genere el documento.</b> En <span class="donde">Exportar</span>, elija PDF o Excel. Queda guardado como versión nueva.
+      {% include "manual/_captura.html" with archivo="23-exportar" alt="Sección Exportar con los botones Exportar a PDF y Exportar a Excel" pie="El Excel usa el formato del cliente si está cargado en el Repositorio." %}
+    </li>
+    <li><b>Marque la entrega.</b> Pulse <span class="donde">Marcar como entregado</span> e indique la fecha, el medio y el cargo de recepción.
+      {% include "manual/_captura.html" with archivo="27-entregar" alt="Formulario Marcar como entregado con fecha, medio, cargo de recepción y versión enviada" pie="Sin el cargo de recepción no se puede marcar como entregado." %}
+    </li>
+    <li><b>Suba el acta firmada</b> cuando llegue, en <span class="donde">Entregas y acta de conformidad</span>. Si pasan 5 días sin acta, la plataforma se lo recuerda.</li>
+    <li><b>Si hubo penalidad, regístrela.</b> En <span class="donde">Penalidades</span>. La plataforma avisa cuántos días de atraso tuvo el entregable.
+      {% include "manual/_captura.html" with archivo="21-penalidades" alt="Sección Penalidades con el aviso de atraso, una penalidad registrada y el total" pie="Arriba, lo que dice el TDR; debajo, lo que realmente se incurrió." %}
+    </li>
+  </ol>
+
+  <h3>Registrar un entregable suelto</h3>
+  <p>En <span class="donde">Entregables › Nuevo entregable</span>, elija la plantilla del cliente y complete el formulario. Puede prellenarlo desde un documento.</p>
+  {% include "manual/_captura.html" with archivo="28-nuevo" alt="Formulario Nuevo entregable con el selector de junior señalado" pie="Formulario «Nuevo entregable»." %}
+  <ol class="leyenda">
+    <li><strong>Junior asignado.</strong> Junto a cada nombre se ve cuántos entregables activos tiene, para repartir la carga. Si está sobrecargado o ausente, la plataforma avisa.</li>
+  </ol>
+
+  <h3>Sumar apoyo o reasignar</h3>
+  {% include "manual/_captura.html" with archivo="22-responsables" alt="Sección Responsables con las opciones Reasignar responsable principal y Sumar responsable de apoyo" pie="Sección «Responsables»: nadie queda como único responsable si usted suma a alguien de apoyo." %}
+</section>
+
+{# ------------------------------------------------------------------ 8 #}
+<section id="urgencia">
+  <h2>8. Atender una urgencia</h2>
+  <figure class="diagrama">
+    <svg viewBox="0 0 1000 150" role="img" aria-labelledby="d3-t">
+      <title id="d3-t">Urgencia: el senior activa la alerta, aparece la franja roja a la guardia y a los responsables, cada uno confirma la lectura, uno acepta el caso y la alerta se cierra.</title>
+      <rect class="d-caja" x="10" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="95" y="64">Activar y avisar</text><text class="d-texto" x="95" y="86">Senior o gerente</text>
+      <rect class="d-caja alerta" x="215" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="300" y="64">Franja «URGENTE»</text><text class="d-texto" x="300" y="86">Guardia y responsables</text>
+      <rect class="d-caja" x="420" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="505" y="64">Confirmar lectura</text><text class="d-texto" x="505" y="86">Cada persona avisada</text>
+      <rect class="d-caja" x="625" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="710" y="64">Aceptar el caso</text><text class="d-texto" x="710" y="86">Una sola persona</text>
+      <rect class="d-caja fin" x="830" y="30" width="160" height="80" rx="10"/>
+      <text class="d-titulo" x="910" y="64">Alerta cerrada</text><text class="d-texto" x="910" y="86">Queda en el historial</text>
+      <path class="d-flecha" d="M180 70H213" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M385 70H418" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M590 70H623" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M795 70H828" marker-end="url(#punta)"/>
+    </svg>
+  </figure>
+  {% include "manual/_captura.html" with archivo="25-alerta-urgente" alt="Sección Alerta urgente con la opción Activar alerta urgente" pie="Sección «Alerta urgente» del entregable. Abra «Activar alerta urgente», indique la naturaleza y el plazo esperado." %}
+  <p>Si el administrador activó los avisos por WhatsApp, la alerta llega además al celular de cada persona avisada. La guardia se define en <span class="donde">Gestión › Personal</span>.</p>
+</section>
+
+{# ------------------------------------------------------------------ 9 #}
+<section id="contrato-nuevo">
+  <h2>9. Cuando llega un contrato</h2>
+  <p>La <strong>ficha de levantamiento</strong> convierte lo que pide el TDR en el calendario de entregas del contrato. Se hace una sola vez por contrato.</p>
+  <figure class="diagrama">
+    <svg viewBox="0 0 1000 150" role="img" aria-labelledby="d4-t">
+      <title id="d4-t">Ficha: el junior la redacta, revisa la vista previa del cronograma, pide confirmación, el senior confirma y se crean los entregables.</title>
+      <rect class="d-caja" x="10" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="95" y="64">Redactar la ficha</text><text class="d-texto" x="95" y="86">Junior</text>
+      <rect class="d-caja" x="215" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="300" y="64">Vista previa</text><text class="d-texto" x="300" y="86">Quite lo que no aplique</text>
+      <rect class="d-caja" x="420" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="505" y="64">Pedir confirmación</text><text class="d-texto" x="505" y="86">Avisa al senior</text>
+      <rect class="d-caja ambar" x="625" y="30" width="170" height="80" rx="10"/>
+      <text class="d-titulo" x="710" y="64">Confirmar</text><text class="d-texto" x="710" y="86">Senior del contrato</text>
+      <rect class="d-caja fin" x="830" y="30" width="160" height="80" rx="10"/>
+      <text class="d-titulo" x="910" y="64">Entregables</text><text class="d-texto" x="910" y="86">Creados con su plazo</text>
+      <path class="d-flecha" d="M180 70H213" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M385 70H418" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M590 70H623" marker-end="url(#punta)"/>
+      <path class="d-flecha" d="M795 70H828" marker-end="url(#punta)"/>
+    </svg>
+  </figure>
+  {% include "manual/_captura.html" with archivo="15-ficha-nueva" alt="Formulario Nueva ficha de levantamiento con sus tres bloques" pie="Fichas › Nueva ficha. Tres bloques: datos del TDR, estado documental inicial y entregables que exige el TDR." %}
+  <ol class="pasos">
+    <li><b>Datos del TDR:</b> contrato, ID-TDR, archivo del TDR, requerimientos, formatos y penalidades.</li>
+    <li><b>Estado documental inicial:</b> qué documentos hay y cuáles faltan al empezar.</li>
+    <li><b>Entregables que exige el TDR:</b> una fila por cada uno, con su plantilla, su primera fecha y su frecuencia: Única, Semanal, Quincenal, Mensual, Bimestral, Trimestral o Semestral.</li>
+  </ol>
+</section>
+
+{# ------------------------------------------------------------------ 10 #}
+<section id="gerente">
+  <h2>10. Gerente: seguimiento</h2>
+  <h3>Consolidado: el estado de toda el área</h3>
+  {% include "manual/_captura.html" with archivo="31-consolidado" alt="Pantalla Consolidado con los totales del área y los resúmenes por cliente" pie="Consolidado. La pestaña «Reportes» genera el informe de avance en PDF." %}
+  {% include "manual/_captura.html" with archivo="38-graficos" alt="Cuatro gráficos gerenciales: activos por persona, cumplidos en plazo, tiempo por cliente y observaciones por tipo" pie="Más abajo, los gráficos gerenciales. Cada uno tiene «Ver tabla de datos»." %}
+  <h3>Indicadores</h3>
+  {% include "manual/_captura.html" with archivo="32-indicadores" alt="Pantalla Indicadores con cinco contadores y tablas de desglose" pie="Cinco indicadores, cada uno con «¿Cómo se calcula?». Se filtran por fechas, cliente, tipo de entregable y responsable." %}
+  <h3>Personal: carga, ausencias, guardia y celular</h3>
+  {% include "manual/_captura.html" with archivo="33-personal" alt="Pantalla Gestión, Personal con la tabla de colaboradores y su carga" pie="Gestión › Personal. Pulse el nombre de un colaborador para ver sus asignaciones." %}
+  {% include "manual/_captura.html" with archivo="39-personal-celular" alt="Formulario del colaborador con el campo Celular para avisos por WhatsApp señalado" pie="Al abrir a un colaborador." %}
+  <ol class="leyenda">
+    <li><strong>Celular para avisos por WhatsApp.</strong> Con el número registrado, la persona recibe una copia de sus avisos en el celular (si el administrador activó el envío).</li>
+  </ol>
+  <h3>Certificados de los clientes</h3>
+  {% include "manual/_captura.html" with archivo="34-certificados-pantalla" alt="Pantalla Certificados con tres documentos y su estado de vigencia" pie="Gestión › Certificados. «Renovar» cambia la fecha; «Retirar» lo quita de la lista." %}
+  <h3>Penalidades incurridas</h3>
+  {% include "manual/_captura.html" with archivo="35-penalidades-pestana" alt="Pestaña Penalidades con el total incurrido y el detalle" pie="Entregables › Penalidades: el total general y por cliente." %}
+  <h3>Reportes y configuración</h3>
+  {% include "manual/_captura.html" with archivo="36-reportes" alt="Pantalla Reportes con los reportes generados y la periodicidad automática" pie="Consolidado › Reportes: «Generar reporte» crea el PDF; abajo se define cada cuánto se genera solo." %}
+  {% include "manual/_captura.html" with archivo="37-gestion" alt="Pantalla Gestión con sus pestañas" pie="Gestión. Para un cliente nuevo: Clientes, luego Contratos, Plantillas, Checklist de calidad y Certificados." %}
+</section>
+
+{# ------------------------------------------------------------------ 11 #}
+<section id="herramientas">
+  <h2>11. Calendario, lista, buscar y ayuda</h2>
+  <h3>Calendario</h3>
+  {% include "manual/_captura.html" with archivo="06-calendario" alt="Calendario de plazos del mes con los entregables en colores según su urgencia" pie="El color de cada entregable es su urgencia. Arriba a la derecha se cambia entre mes, semana y lista." %}
+  <h3>Lista de entregables y sus pestañas</h3>
+  {% include "manual/_captura.html" with archivo="07-entregables" alt="Lista de entregables con tres zonas numeradas" pie="Entregables." %}
+  <ol class="leyenda">
+    <li><strong>Pestañas:</strong> Observaciones, Entregas, Tiempos, Checklists y Penalidades reúnen lo de todos sus entregables.</li>
+    <li><strong>Filtros</strong> por cliente, contrato, estado, fechas y etiquetas.</li>
+    <li><strong>Cada fila es un entregable.</strong> Pulse el título para abrirlo.</li>
+  </ol>
+  <h3>Buscar</h3>
+  {% include "manual/_captura.html" with archivo="18-buscar" alt="Resultados de la búsqueda agrupados en entregables, adjuntos y repositorio" pie="La búsqueda agrupa los resultados. En los adjuntos, «En el contenido» muestra el trozo del archivo donde aparece la palabra." %}
+  <h3>Repositorio</h3>
+  {% include "manual/_captura.html" with archivo="16-repositorio" alt="Repositorio de plantillas y ejemplos con sus tres pestañas" pie="Tres pestañas: plantillas de clientes, ejemplos anonimizados y procedimientos." %}
+  <h3>Asistente</h3>
+  {% include "manual/_captura.html" with archivo="17-asistente" alt="Asistente de lecciones aprendidas con la caja para escribir una consulta" pie="Escriba la duda como se la preguntaría a un compañero. Responde citando sus fuentes." %}
+  <h3>Historial de un entregable</h3>
+  {% include "manual/_captura.html" with archivo="14-historial" alt="Sección Historial con fecha, evento y usuario" pie="Al final de cada entregable: quién hizo qué y cuándo." %}
+</section>
+
+{# ------------------------------------------------------------------ 12 #}
+<section id="avisos">
+  <h2>12. Los avisos</h2>
+  {% include "manual/_captura.html" with archivo="19-avisos" alt="Pantalla Notificaciones con la lista de avisos sin leer" pie="Avisos. «Ver» lleva a lo que hay que atender; «Marcar como leída» lo quita del contador." %}
+  <h3>Cuándo avisa un plazo</h3>
+  <figure class="diagrama">
+    <svg viewBox="0 0 1000 150" role="img" aria-labelledby="d5-t">
+      <title id="d5-t">Avisos de vencimiento: cinco días antes, cuarenta y ocho horas antes, veinticuatro horas antes y el mismo día del plazo.</title>
+      <path class="d-flecha" d="M40 60H960" marker-end="url(#punta)"/>
+      <circle cx="140" cy="60" r="12" fill="#1e4e8c"/><text class="d-titulo" x="140" y="100">5 días antes</text><text class="d-texto" x="140" y="120">Pasa a PRÓXIMO</text>
+      <circle cx="360" cy="60" r="12" fill="#b45309"/><text class="d-titulo" x="360" y="100">48 horas antes</text><text class="d-texto" x="360" y="120">Pasa a CRÍTICO</text>
+      <circle cx="580" cy="60" r="12" fill="#b45309"/><text class="d-titulo" x="580" y="100">24 horas antes</text><text class="d-texto" x="580" y="120">Último recordatorio</text>
+      <circle cx="800" cy="60" r="12" fill="#b91c1c"/><text class="d-titulo" x="800" y="100">El día del plazo</text><text class="d-texto" x="800" y="120">Después: VENCIDO</text>
+      <text class="d-quien" x="500" y="28">Cada aviso llega una sola vez al junior asignado y al senior revisor</text>
+    </svg>
+  </figure>
+  <div class="tabla"><table>
+    <thead><tr><th>Aviso</th><th>Cuándo llega</th><th>A quién</th></tr></thead>
+    <tbody>
+      <tr><td>Vencimiento</td><td>5 días, 48 horas y 24 horas antes, y el día del plazo</td><td>Junior asignado y senior revisor</td></tr>
+      <tr><td>Asignación</td><td>Se le asigna un entregable</td><td>Junior</td></tr>
+      <tr><td>Verificación</td><td>Un entregable pasa a Revisión senior</td><td>Senior</td></tr>
+      <tr><td>Observación</td><td>El senior devuelve un entregable</td><td>Junior</td></tr>
+      <tr><td>Corrección</td><td>El junior registró lo que corrigió</td><td>Senior</td></tr>
+      <tr><td>Acta</td><td>Pasaron 5 días desde la entrega sin acta firmada</td><td>Junior y senior</td></tr>
+      <tr><td>Urgente</td><td>Se activó una alerta urgente</td><td>Guardia y responsables</td></tr>
+      <tr><td>Ficha</td><td>Una ficha espera confirmación</td><td>Senior del contrato</td></tr>
+      <tr><td>Vigencia</td><td>Un certificado del cliente vence en 30 días o ya venció</td><td>Senior del contrato y gerentes</td></tr>
+      <tr><td>Reporte</td><td>Se generó un reporte de avance</td><td>Gerentes</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+{# ------------------------------------------------------------------ 13 #}
+<section id="como-hago">
+  <h2>13. ¿Cómo hago para…?</h2>
+  <div class="tabla"><table>
+    <thead><tr><th>Quiero…</th><th>Hago esto</th></tr></thead>
+    <tbody>
+      <tr><td>Saber qué atender primero</td><td><a href="{% url 'tablero' %}">Tablero</a>: la tarjeta de más arriba de cada columna</td></tr>
+      <tr><td>Encontrar un entregable antiguo</td><td>Caja «Buscar» de la barra: código, título, ID-TDR o una palabra del contenido de sus archivos</td></tr>
+      <tr><td>Recuperar una versión anterior de un archivo</td><td>Entregable › Adjuntos y versiones › versiones anteriores</td></tr>
+      <tr><td>Reemplazar un documento</td><td>Súbalo de nuevo con el mismo tipo; la versión anterior se conserva</td></tr>
+      <tr><td>Ver por qué me devolvieron algo</td><td>Entregable › Observaciones</td></tr>
+      <tr><td>Saber quién movió un entregable y cuándo</td><td>Entregable › Historial</td></tr>
+      <tr><td>Ver todas las fechas del mes</td><td><a href="{% url 'calendario' %}">Calendario</a>, vista de mes</td></tr>
+      <tr><td>Conseguir el formato de un cliente</td><td><a href="{% url 'repositorio' %}">Repositorio</a>, filtrando por cliente</td></tr>
+      <tr><td>Entregar con el formato del cliente</td><td>Entregable › Exportar › Exportar a Excel</td></tr>
+      <tr><td>Saber si un certificado del cliente está vigente</td><td>Entregable › Certificados y documentos con vigencia</td></tr>
+      <tr><td>Saber qué número de reporte toca</td><td>Está en el resumen del entregable, bajo «ID-TDR · Línea»; sale solo</td></tr>
+      <tr><td>Pedir ayuda con la carga</td><td>Avise a su senior: él suma a alguien de apoyo en «Responsables»</td></tr>
+      <tr><td>Registrar una ausencia</td><td>La registra el gerente en Gestión › Personal</td></tr>
+      <tr><td>Recibir los avisos por WhatsApp</td><td>Pida al gerente que registre su celular en Gestión › Personal</td></tr>
+      <tr><td>Imprimir este manual</td><td>Use «Imprimir» del navegador (Ctrl + P): sale sin la barra ni el índice</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Reglas que conviene recordar</h3>
+  <ul>
+    <li><strong>Nada se pierde:</strong> cada archivo subido es una versión y cada cambio queda en el historial.</li>
+    <li><strong>Lo que no ve, no le corresponde:</strong> si un enlace responde «no encontrado», el entregable no es de sus contratos.</li>
+    <li><strong>La sesión se cierra sola</strong> tras 60 minutos sin actividad. Tras 5 intentos fallidos de ingreso, la cuenta se bloquea 15 minutos.</li>
+    <li><strong>Los pedidos del cliente que llegan por correo o WhatsApp</strong> deben registrarse como entregable para que entren al calendario y a las alertas.</li>
+  </ul>
+  <p class="volver-arriba"><a href="#arriba">↑ Volver al inicio del manual</a></p>
+</section>
+
+</div>
+</div>
+{% endblock %}

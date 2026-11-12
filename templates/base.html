@@ -52,6 +52,15 @@
   {% for m in messages %}<div class="aviso aviso-{{ m.tags }}" role="{% if m.level >= 40 %}alert{% else %}status{% endif %}">{{ m }}</div>{% endfor %}
   {% block contenido %}{% endblock %}
 </main>
+{% if user.is_authenticated %}
+<footer class="pie">
+  <span>CertiTrack 360 · Área de Proyectos</span>
+  <nav aria-label="Ayuda">
+    <a href="{% url 'manual' %}"{% if seccion == 'manual' %} aria-current="page"{% endif %}>Manual de uso</a>
+    <a href="{% url 'manual' %}#como-hago">¿Cómo hago para…?</a>
+  </nav>
+</footer>
+{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

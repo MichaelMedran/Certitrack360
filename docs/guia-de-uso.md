@@ -23,7 +23,7 @@ CertiTrack 360 es una plataforma web interna para el área de Proyectos. Sigue c
 | **Por hacer** | Se crea a mano (senior, gerente) o sale de una ficha de levantamiento | Cliente, contrato, plantilla, ID-TDR, fecha de recepción y campos obligatorios |
 | **En proceso** | Junior asignado | — |
 | **Revisión senior** | Junior lo envía | Adjuntos requeridos; si el checklist del TDR tiene obligatorios pendientes, pide confirmación |
-| **Listo para entrega** (aprobado) | Senior del entregable, gerente o admin | Revisión de calidad conforme y factura sin observación (o justificada) |
+| **Aprobado** | Senior del entregable, gerente o admin | Revisión de calidad conforme y factura sin observación (o justificada) |
 | **Entregado** | Senior, gerente o admin | Cargo de recepción (medio y fecha); después se sube el acta |
 
 Si el senior observa algo, el entregable vuelve a «En proceso» con sus observaciones, y el junior registra la corrección.
@@ -126,7 +126,7 @@ Pantallas que no están en la barra de todos los roles:
 1. Sección **Checklist de calidad**: marcar cada ítem Conforme o No conforme. Un «No conforme» exige observación y devuelve el entregable.
 2. Sección **Observaciones**: registrar lo que hay que corregir, con su tipo. El junior anota la corrección y el senior la confirma.
 3. Si la factura salió observada, corregir el número o justificarla.
-4. Mover a «Listo para entrega». Sin revisión conforme no se puede.
+4. Mover a «Aprobado». Sin revisión conforme no se puede.
 
 ### 2.6 Exportar y entregar (senior)
 

@@ -1,0 +1,5 @@
+{% load static %}{# Captura de pantalla del manual. Variables: archivo (sin extensión), alt, pie y, opcional, clase. Al pulsarla se abre en grande. #}
+<figure class="captura{% if clase %} {{ clase }}{% endif %}">
+  <a href="{% static 'manual/'|add:archivo|add:'.png' %}" title="Abrir la imagen en grande"><img src="{% static 'manual/'|add:archivo|add:'.png' %}" alt="{{ alt }}" loading="lazy"></a>
+  <figcaption>{{ pie }}</figcaption>
+</figure>

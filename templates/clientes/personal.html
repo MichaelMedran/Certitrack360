@@ -136,7 +136,7 @@
     </div>
     <div>
       <label for="celular-texto">Celular para avisos por WhatsApp</label>
-      <input id="celular-texto" name="celular" type="tel" maxlength="20" value="{{ seleccionado.celular }}" placeholder="p. ej. 987 654 321" aria-describedby="celular-ayuda">
+      <input id="celular-texto" name="celular" type="text" inputmode="tel" maxlength="20" value="{{ seleccionado.celular }}" placeholder="p. ej. 987 654 321" aria-describedby="celular-ayuda">
       <small id="celular-ayuda" class="suave">{% if whatsapp_activo %}Recibirá en este número una copia de sus avisos.{% else %}El envío por WhatsApp aún no está configurado en el servidor.{% endif %} Vacío: no recibe.</small>
     </div>
   </div>

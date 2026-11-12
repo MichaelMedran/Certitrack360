@@ -337,3 +337,53 @@ class PlantillaBaseTests(Base):
         self.client.force_login(self.j1)
         html = self.client.get(reverse("tablero")).content.decode()
         self.assertEqual(re.findall(r'<a [^>]*aria-current="page"[^>]*>([^<]*)</a>', html), ["Tablero"])
+
+
+class ManualDeUsoTests(Base):
+    """Manual ilustrado al que lleva el pie de página: lo ven todos los roles y no pide nada fuera del servidor."""
+
+    def test_el_pie_de_pagina_lleva_al_manual_en_todas_las_pantallas(self):
+        self.client.force_login(self.j1)
+        for nombre in ("inicio", "tablero", "entregables", "calendario", "notificaciones", "manual"):
+            with self.subTest(pantalla=nombre):
+                html = self.client.get(reverse(nombre)).content.decode()
+                pie = html.split('<footer class="pie">')[1].split("</footer>")[0]
+                self.assertIn(f'href="{reverse("manual")}"', pie)
+                self.assertIn("Manual de uso", pie)
+        self.assertIn('aria-current="page">Manual de uso</a>', self.client.get(reverse("manual")).content.decode())
+
+    def test_sin_sesion_no_hay_pie_y_el_manual_pide_ingresar(self):
+        self.assertNotIn('class="pie"', self.client.get(reverse("login")).content.decode())
+        self.assertRedirects(self.client.get(reverse("manual")), f'{reverse("login")}?next={reverse("manual")}')
+
+    def test_todos_los_roles_ven_el_manual_completo(self):
+        for usuario in (self.j1, self.s1, self.gerente, self.admin):
+            with self.subTest(rol=usuario.rol):
+                self.client.force_login(usuario)
+                r = self.client.get(reverse("manual"))
+                self.assertEqual(r.status_code, 200)
+                html = r.content.decode()
+                self.assertEqual(html.count("<h1"), 1)
+                for ancla in ("recorrido", "pantalla", "inicio", "tablero", "entregable", "junior", "senior", "urgencia",
+                              "contrato-nuevo", "gerente", "herramientas", "avisos", "como-hago"):
+                    self.assertIn(f'<section id="{ancla}">', html)
+                    self.assertIn(f'href="#{ancla}"', html)
+
+    def test_las_capturas_existen_y_tienen_texto_alternativo(self):
+        self.client.force_login(self.j1)
+        html = self.client.get(reverse("manual")).content.decode()
+        imagenes = re.findall(r'<img src="/static/(manual/[^"]+)" alt="([^"]*)"', html)
+        self.assertGreaterEqual(len(imagenes), 30)
+        for ruta, alt in imagenes:
+            with self.subTest(ruta=ruta):
+                self.assertIsNotNone(finders.find(ruta), ruta)
+                self.assertGreater(len(alt), 15)
+        self.assertGreaterEqual(html.count("<svg viewBox"), 5)  # diagramas de flujo
+        self.assertEqual(html.count('role="img" aria-labelledby'), html.count("<svg viewBox"))
+
+    def test_el_manual_no_pide_recursos_externos_ni_scripts_en_linea(self):
+        self.client.force_login(self.j1)
+        html = self.client.get(reverse("manual")).content.decode()
+        self.assertIsNone(re.search(r"""(?:src|href|action)=["']\s*(?:https?:)?//""", html, re.I))
+        self.assertNotIn("<script>", html)
+        self.assertIsNotNone(finders.find("css/manual.css"))

@@ -21,6 +21,7 @@ SECCIONES = {
     "fichas": "gestion", "ficha_nueva": "gestion", "ficha_detalle": "gestion",
     "ficha_vista_previa": "gestion", "ficha_confirmar": "gestion",
     "notificaciones": "avisos",
+    "manual": "manual",  # enlace del pie de página
     # Sprint 3 (SDD del Sprint 3, §9): todo lo nuevo vive en pestañas de secciones existentes.
     "checklists": "entregables", "etiquetas": "gestion", "calidad": "gestion", "reportes": "consolidado",
     "reporte_generar": "consolidado", "reporte_detalle": "consolidado", "reporte_pdf": "consolidado",

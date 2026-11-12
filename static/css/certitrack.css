@@ -156,3 +156,8 @@ details.versiones summary{cursor:pointer;font-weight:600}
 #calendario .fc-daygrid-event{white-space:normal}
 #calendario .fc-daygrid-block-event .fc-event-title{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 @media(max-width:900px){.tablero{grid-template-columns:repeat(5,230px)}.barra{gap:.5rem}}
+
+/* Pie de página: acceso al manual de uso */
+.pie{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem 1.5rem;max-width:1280px;margin:1.5rem auto 0;padding:1rem 1.25rem 1.5rem;border-top:1px solid var(--borde);color:var(--suave);font-size:.9rem}
+.pie nav{display:flex;flex-wrap:wrap;gap:1.25rem}
+.pie a[aria-current=page]{font-weight:700}

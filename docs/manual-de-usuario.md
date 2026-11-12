@@ -2,6 +2,8 @@
 
 Este manual es para quien usa la plataforma todos los días: junior, senior y gerente del área de Proyectos. Explica dónde está cada cosa, para qué sirve y qué hacer en cada momento de la jornada.
 
+La versión ilustrada, con capturas de pantalla anotadas y diagramas de flujo, está dentro de la propia plataforma: enlace **Manual de uso** del pie de página (`/manual/`).
+
 Para instalar o configurar el servidor, ver [`despliegue.md`](despliegue.md). Para el detalle de qué pidió el cliente y cómo se cubre, ver [`guia-de-uso.md`](guia-de-uso.md).
 
 ---
@@ -15,7 +17,7 @@ CertiTrack 360 sigue cada **entregable** (un reporte, un informe, un acta) desde
 | **Por hacer** | Está registrado y asignado, nadie lo empezó | El junior asignado |
 | **En proceso** | El junior lo está elaborando o corrigiendo | El junior, al enviarlo a revisión |
 | **Revisión senior** | Espera la revisión del senior | El senior: lo aprueba o lo devuelve con observaciones |
-| **Listo para entrega** | Aprobado; falta enviarlo al cliente | El senior, al registrar la entrega |
+| **Aprobado** | El senior lo aprobó; falta enviarlo al cliente | El senior, al registrar la entrega |
 | **Entregado** | Se envió al cliente; queda pendiente el acta firmada | — |
 
 La plataforma no deja avanzar si falta algo obligatorio, y siempre dice qué falta.
@@ -143,7 +145,7 @@ No todas las secciones aparecen siempre: cada una se muestra cuando aplica al es
 1. Ábralo desde la columna «Revisión senior».
 2. Revise los archivos en **Adjuntos y versiones** y el **Checklist por TDR**.
 3. Complete el **Checklist de calidad**, marcando cada ítem Conforme o No conforme.
-4. Si todo está bien, páselo a **Listo para entrega**. La plataforma exige la revisión de calidad conforme y la factura sin observación (o justificada).
+4. Si todo está bien, páselo a **Aprobado**. La plataforma exige la revisión de calidad conforme y la factura sin observación (o justificada).
 5. Si hay algo que corregir, pulse **Devolver**, registre las observaciones con su tipo de error y el junior recibirá el aviso. Use **+ Otra observación** para registrar varias a la vez.
 
 ### Entregar al cliente
