@@ -271,6 +271,19 @@ class PlantillaBaseTests(Base):
         for entidad in ("clientes", "contratos", "plantillas"):
             yield f"nuevo {entidad}", self.client.get(reverse("adm_nuevo", args=[entidad])).content.decode()
 
+    def test_junior_y_senior_llegan_a_fichas_desde_la_barra(self):
+        enlace = f'<a href="{reverse("fichas")}"'
+        for usuario in (self.j1, self.s1):
+            with self.subTest(usuario=usuario.username):
+                self.client.force_login(usuario)
+                self.assertIn(f"{enlace}>Fichas</a>", self.client.get(reverse("inicio")).content.decode())
+                self.assertIn(f'{enlace} aria-current="page">Fichas</a>',
+                              self.client.get(reverse("fichas")).content.decode())
+        # Gerente y admin ya llegan por la pestaña «Fichas» de Gestión: no se duplica en la barra.
+        self.client.force_login(self.gerente)
+        barra = self.client.get(reverse("inicio")).content.decode().split("</header>")[0]
+        self.assertNotIn(enlace, barra)
+
     def test_es_un_documento_en_espanol_con_salto_al_contenido(self):
         for nombre, html in self.paginas():
             with self.subTest(pantalla=nombre):

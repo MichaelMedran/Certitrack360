@@ -30,6 +30,9 @@
     {% if user.es_gerente_o_admin %}
     <a href="{% url 'consolidado' %}"{% if seccion == 'consolidado' %} aria-current="page"{% endif %}>Consolidado</a>
     <a href="{% url 'gestion' %}"{% if seccion == 'gestion' %} aria-current="page"{% endif %}>Gestión</a>
+    {% else %}
+    {# Junior y senior no ven «Gestión», pero sí redactan y confirman fichas de levantamiento. #}
+    <a href="{% url 'fichas' %}"{% if entidad == 'fichas' %} aria-current="page"{% endif %}>Fichas</a>
     {% endif %}
     {% if user.rol == 'ADMIN' %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
   </nav>

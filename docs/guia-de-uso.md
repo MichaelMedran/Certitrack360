@@ -1,6 +1,6 @@
 # CertiTrack 360 — Guía de uso y verificación contra las entrevistas
 
-Estado al 2026-11-11, rama `sprint-3` (Sprints 1, 2 y 3 completos, 1214 pruebas en verde).
+Estado al 2026-11-12, rama `sprint-3` (Sprints 1, 2 y 3 completos, 1216 pruebas en verde).
 
 Esta guía tiene tres partes:
 
@@ -72,13 +72,13 @@ Tras 5 intentos fallidos de ingreso, la cuenta queda bloqueada 15 minutos desde 
 | Indicadores | `/indicadores/` | Sí | Sí | Sí | Sí |
 | Asistente | `/asistente/` | Sí | Sí | Sí | Sí |
 | Buscar y Avisos | `/buscar/`, `/notificaciones/` | Sí | Sí | Sí | Sí |
+| Fichas | `/fichas/` | Sí | Sí | En Gestión | En Gestión |
 | Consolidado (pestaña Reportes) | `/consolidado/`, `/reportes/` | No | No | Sí | Sí |
 | Gestión (Clientes, Contratos, Plantillas, Fichas, Personal, Líneas de servicio, Etiquetas, Checklist de calidad) | `/gestion/` | No | No | Sí | Sí |
 | Administración | `/admin/` | No | No | No | Sí |
 
 Pantallas que no están en la barra de todos los roles:
 
-- **Fichas de levantamiento** (`/fichas/`): el junior y el senior las usan, pero solo llegan por la dirección o por un aviso (ver [lo que falta](#4-lo-que-falta)).
 - **Etiquetas** (`/etiquetas/`): el senior llega desde la sección «Etiquetas» del entregable.
 - **Checklist de calidad** (`/calidad/`): el senior llega desde «Configurar los ítems del checklist» en el entregable.
 - **Mi incorporación** (`/incorporacion/`): aparece como tarjeta en Inicio si la persona tiene un plan activo.
@@ -96,8 +96,8 @@ Pantallas que no están en la barra de todos los roles:
 
 ### 2.2 Cargar el calendario de un contrato (junior redacta, senior confirma)
 
-1. Abrir `/fichas/nueva/` y elegir el contrato.
-2. Anotar lo que pide el TDR: ítems, frecuencia (Única, Semanal, Quincenal, Mensual, Trimestral) y penalidades.
+1. Abrir **Fichas › Nueva ficha** (`/fichas/nueva/`) y elegir el contrato.
+2. Anotar lo que pide el TDR: ítems, frecuencia (Única, Semanal, Quincenal, Mensual, Bimestral, Trimestral, Semestral) y penalidades.
 3. Revisar la vista previa del cronograma y quitar las entregas que no correspondan.
 4. El senior del contrato confirma: se crean todos los entregables con su código `CT-AAAA-NNNNN`, su plazo y su checklist del TDR.
 
@@ -159,7 +159,7 @@ Pantallas que no están en la barra de todos los roles:
 
 Se revisaron seis documentos: dos entrevistas a juniors, una a un senior, la guía FILEKOM con respuestas, una entrevista de administración y una de contabilidad. Cada pedido se contrastó con el código, las rutas y las pruebas.
 
-**Resultado de los 44 pedidos del área de Proyectos:** 19 se cumplen, 17 se cumplen en parte, 7 no están cubiertos y 1 quedó fuera de alcance por acuerdo.
+**Resultado de los 44 pedidos del área de Proyectos:** 20 se cumplen, 16 se cumplen en parte, 7 no están cubiertos y 1 quedó fuera de alcance por acuerdo.
 
 Las entrevistas de administración y contabilidad describen otra empresa (una distribuidora), y la guía FILEKOM describe el negocio de custodia física de cajas, que opera en FileDoc. Sus 9 pedidos no se contaron; si el cliente considera que alguno debía entrar, pasa a «No cubierto».
 
@@ -171,7 +171,7 @@ Las entrevistas de administración y contabilidad describen otra empresa (una di
 | Alertas y recordatorios antes del vencimiento | Junior, senior | Cumple | **Avisos** `/notificaciones/` e Inicio. Requiere el programador en marcha |
 | Saber qué atender primero cuando coinciden entregas | Senior, juniors | Cumple | Chip «Prioridad» en Tablero, Entregables e Inicio |
 | Atender pedidos urgentes de última hora | Junior, senior | Cumple | Sección «Alerta urgente» del entregable; franja roja |
-| Cada cliente con su propia frecuencia de reportes | Senior | En parte | `/fichas/nueva/`. Falta cada 2 y cada 6 meses |
+| Cada cliente con su propia frecuencia de reportes | Senior | Cumple | **Fichas** `/fichas/nueva/`: de Única a Semestral, incluidas Bimestral y Semestral |
 | Evitar penalidades | Senior | En parte | Campo de penalidades en la ficha y alertas. No hay seguimiento de las incurridas |
 | Que la alerta de madrugada llegue al celular | Senior | En parte | Solo dentro de la plataforma (y correo si hay servidor). Sin mensajería externa |
 
@@ -243,16 +243,14 @@ Las entrevistas de administración y contabilidad describen otra empresa (una di
 
 Ordenado por importancia para el cliente.
 
-1. **Enlace a Fichas para junior y senior.** `/fichas/` es donde arranca el calendario de cada cliente, y solo está en Gestión, que ven gerente y admin.
-2. **Los avisos dependen del programador.** Sin `manage.py programador` no salen avisos de vencimiento, de acta pendiente ni reportes automáticos. Con Docker ya corre como servicio.
-3. **Frecuencias cada 2 y cada 6 meses.** El senior las mencionó; la ficha solo llega a Trimestral.
-4. **Movimientos y cajas.** El senior señaló el número de caja equivocado como causa principal de reprocesos. Requiere decidir con el cliente si CertiTrack debe leer los movimientos de FileDoc.
-5. **Facturación real.** La verificación usa una base simulada y no compara montos con el contrato. El conector real depende del área de Sistemas.
-6. **Vigencia de certificados.** No hay fechas de vencimiento ni aviso.
-7. **Penalidades.** Solo se anotan como texto.
-8. **Alerta urgente fuera de la plataforma.** El senior usa hoy mensajería en el teléfono.
-9. **Licitaciones.** Sin costeo, constancias de experiencia ni convocatorias.
-10. **Sin probar en condiciones reales:** el asistente con un Ollama real, el OCR con Tesseract instalado y la prueba de uso con personas del equipo.
-11. **Documentación:** la lista «Rutas principales» del README cita tres rutas del repositorio que ya no existen y describe `apps/reportes` como pendiente.
+1. **Los avisos dependen del programador.** Sin `manage.py programador` no salen avisos de vencimiento, de acta pendiente ni reportes automáticos. Con Docker ya corre como servicio.
+2. **Movimientos y cajas.** El senior señaló el número de caja equivocado como causa principal de reprocesos. Requiere decidir con el cliente si CertiTrack debe leer los movimientos de FileDoc.
+3. **Facturación real.** La verificación usa una base simulada y no compara montos con el contrato. El conector real depende del área de Sistemas.
+4. **Vigencia de certificados.** No hay fechas de vencimiento ni aviso.
+5. **Penalidades.** Solo se anotan como texto.
+6. **Alerta urgente fuera de la plataforma.** El senior usa hoy mensajería en el teléfono.
+7. **Licitaciones.** Sin costeo, constancias de experiencia ni convocatorias.
+8. **Sin probar en condiciones reales:** el asistente con un Ollama real, el OCR con Tesseract instalado y la prueba de uso con personas del equipo.
+9. **Documentación:** la lista «Rutas principales» del README cita tres rutas del repositorio que ya no existen y describe `apps/reportes` como pendiente.
 
 El detalle requisito por requisito, con el archivo de código y la prueba de cada uno, está en [`trazabilidad.md`](trazabilidad.md).

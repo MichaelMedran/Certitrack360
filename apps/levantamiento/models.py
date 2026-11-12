@@ -96,7 +96,9 @@ class ItemFicha(models.Model):
         SEMANAL = "SEMANAL", "Semanal"
         QUINCENAL = "QUINCENAL", "Quincenal"
         MENSUAL = "MENSUAL", "Mensual"
+        BIMESTRAL = "BIMESTRAL", "Bimestral"
         TRIMESTRAL = "TRIMESTRAL", "Trimestral"
+        SEMESTRAL = "SEMESTRAL", "Semestral"
 
     ficha = models.ForeignKey(FichaLevantamiento, on_delete=models.CASCADE, related_name="items")
     nombre = models.CharField(max_length=150)

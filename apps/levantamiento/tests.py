@@ -244,6 +244,41 @@ class Caso21GeneracionDeEntregablesTests(FichaBase):
             ],
         )
 
+    def test_frecuencias_bimestral_y_semestral(self):
+        ficha = self.crear_ficha_borrador()
+        Contrato.objects.filter(pk=self.c1.pk).update(fecha_fin=datetime.date(2028, 3, 31))
+        self.c1.refresh_from_db()
+        ficha.contrato = self.c1
+
+        # Bimestral con día 31: se ajusta al último día de los meses más cortos.
+        it_bim = self.agregar_item(
+            ficha, nombre="Reporte bimestral", frecuencia=ItemFicha.Frecuencia.BIMESTRAL,
+            primera_fecha=datetime.date(2027, 8, 31), hasta=datetime.date(2028, 2, 29),
+        )
+        self.assertEqual(
+            servicios.fechas_item(it_bim),
+            [
+                (datetime.date(2027, 8, 31), "Reporte bimestral — 2027-B4"),
+                (datetime.date(2027, 10, 31), "Reporte bimestral — 2027-B5"),
+                (datetime.date(2027, 12, 31), "Reporte bimestral — 2027-B6"),
+                (datetime.date(2028, 2, 29), "Reporte bimestral — 2028-B1"),
+            ],
+        )
+
+        # Semestral sin «hasta»: usa fecha_fin del contrato.
+        it_sem = self.agregar_item(
+            ficha, nombre="Informe semestral", frecuencia=ItemFicha.Frecuencia.SEMESTRAL,
+            primera_fecha=datetime.date(2027, 1, 15), hasta=None,
+        )
+        self.assertEqual(
+            servicios.fechas_item(it_sem),
+            [
+                (datetime.date(2027, 1, 15), "Informe semestral — 2027-S1"),
+                (datetime.date(2027, 7, 15), "Informe semestral — 2027-S2"),
+                (datetime.date(2028, 1, 15), "Informe semestral — 2028-S1"),
+            ],
+        )
+
     def test_caso_21_plazos_pasados_se_descartan_con_aviso(self):
         ficha = self.crear_ficha_borrador()
         hace_dos_semanas = self.hoy - datetime.timedelta(days=14)

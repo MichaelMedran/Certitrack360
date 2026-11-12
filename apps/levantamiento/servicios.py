@@ -164,10 +164,18 @@ def fechas_item(item, fecha_fin_contrato=None):
         elif frec == ItemFicha.Frecuencia.MENSUAL:
             fecha = _sumar_meses(inicio, paso)
             titulo = f"{item.nombre} — {fecha:%Y-%m}"
+        elif frec == ItemFicha.Frecuencia.BIMESTRAL:
+            fecha = _sumar_meses(inicio, 2 * paso)
+            bimestre = (fecha.month - 1) // 2 + 1
+            titulo = f"{item.nombre} — {fecha.year}-B{bimestre}"
         elif frec == ItemFicha.Frecuencia.TRIMESTRAL:
             fecha = _sumar_meses(inicio, 3 * paso)
             trimestre = (fecha.month - 1) // 3 + 1
             titulo = f"{item.nombre} — {fecha.year}-T{trimestre}"
+        elif frec == ItemFicha.Frecuencia.SEMESTRAL:
+            fecha = _sumar_meses(inicio, 6 * paso)
+            semestre = (fecha.month - 1) // 6 + 1
+            titulo = f"{item.nombre} — {fecha.year}-S{semestre}"
         else:
             break
         if fecha > fin:
