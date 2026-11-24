@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propuesta 3: Operación Ágil · CertiTrack 360</title>
+  <link rel="stylesheet" href="propuesta-3-operacion.css">
+  <style>
+    .vista { display: none; }
+    .vista.activa { display: block; }
+    .demo-bar {
+      background: #020617; color: #e2e8f0; padding: .4rem 1.25rem;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; font-size: .82rem;
+    }
+    .demo-switcher { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .demo-switcher button {
+      background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2);
+      padding: .22rem .65rem; border-radius: 5px; cursor: pointer; font: inherit; font-size: .8rem;
+    }
+    .demo-switcher button.activo { background: #4338ca; border-color: #818cf8; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <span><strong>Propuesta 3 · Operación Ágil</strong> (Barra dual compacta + Stepper de flujo + Alta densidad)</span>
+  <div class="demo-switcher">
+    <button type="button" class="activo" onclick="ver('inicio', this)">Inicio</button>
+    <button type="button" onclick="ver('tablero', this)">Tablero Kanban</button>
+    <button type="button" onclick="ver('detalle', this)">Detalle con Stepper</button>
+    <button type="button" onclick="ver('login', this)">Login</button>
+  </div>
+  <a href="index.html" style="color:#a5b4fc">← Volver al comparador</a>
+</div>
+
+<header>
+  <div class="hdr-top">
+    <div class="hdr-brand">CertiTrack 360 <span class="hdr-badge-env">Sprint 3</span></div>
+    <div class="hdr-search"><input type="search" placeholder="Buscar código CT, cliente, TDR o texto dentro de PDFs…"></div>
+    <div class="hdr-user">
+      <a href="#" style="color:#e0e7ff">Avisos (3)</a>
+      <span>Carlos Mendoza · Senior</span>
+      <button type="button" class="btn btn-sm" onclick="ver('login')">Salir</button>
+    </div>
+  </div>
+  <nav class="hdr-subnav" aria-label="Secciones">
+    <button class="subnav-btn activo" onclick="ver('inicio')">Inicio</button>
+    <button class="subnav-btn" onclick="ver('tablero')">Tablero</button>
+    <button class="subnav-btn" onclick="ver('detalle')">Entregables</button>
+    <button class="subnav-btn" type="button">Calendario</button>
+    <button class="subnav-btn" type="button">Checklists</button>
+    <button class="subnav-btn" type="button">Repositorio</button>
+    <button class="subnav-btn" type="button">Indicadores</button>
+    <button class="subnav-btn" type="button">Asistente</button>
+    <button class="subnav-btn" type="button">Consolidado</button>
+    <button class="subnav-btn" type="button">Gestión</button>
+  </nav>
+</header>
+
+<div class="alert-urgent" role="alert">
+  <span class="alert-urgent-flag">URGENTE</span>
+  <span><strong>Banco Andino</strong> · Adenda contractual solicitada · Plazo 25/11/2026 17:00 · <a href="#" style="color:#fff;text-decoration:underline" onclick="ver('detalle');return false;">CT-2026-00014</a></span>
+  <div style="margin-left:auto;display:flex;gap:.4rem">
+    <button class="btn btn-sm">Confirmar lectura</button>
+    <button class="btn btn-sm">Aceptar caso</button>
+  </div>
+</div>
+
+<main class="wrap">
+  <!-- ==================== INICIO COMPACTO ==================== -->
+  <section id="vista-inicio" class="vista activa">
+    <div class="toolbar">
+      <h1>Panel operativo · Carlos Mendoza</h1>
+      <div style="display:flex;gap:.45rem">
+        <button class="btn" onclick="ver('tablero')">Ir al tablero</button>
+        <button class="btn btn-primary">+ Nuevo entregable</button>
+      </div>
+    </div>
+
+    <div class="metrics-strip">
+      <div class="metric-cell"><div class="metric-k">Activos</div><div class="metric-v">18</div></div>
+      <div class="metric-cell"><div class="metric-k">Vencidos</div><div class="metric-v err">2</div></div>
+      <div class="metric-cell"><div class="metric-k">Próx. 5 días</div><div class="metric-v crit">5</div></div>
+      <div class="metric-cell"><div class="metric-k">En revisión senior</div><div class="metric-v" style="color:var(--indigo)">4</div></div>
+    </div>
+
+    <div class="split-2">
+      <div class="panel">
+        <h2 style="margin:0 0 .7rem;font-size:1rem">Cola de vencimientos prioritarios</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Código</th><th>Entregable / Cliente</th><th>Plazo</th><th>Urgencia</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>CT-2026-00014</strong></td>
+                <td><a href="#" onclick="ver('detalle');return false;"><strong>Informe técnico mensual #04</strong></a><br><span style="color:var(--soft);font-size:.8rem">Banco Andino · TDR-BAF-04</span></td>
+                <td>25/11/2026</td>
+                <td><span class="tag tag-err">URGENTE · Vencido</span></td>
+                <td><span class="tag tag-crit">En corrección</span></td>
+              </tr>
+              <tr>
+                <td><strong>CT-2026-00021</strong></td>
+                <td><a href="#" onclick="ver('detalle');return false;"><strong>Acta de conformidad 08</strong></a><br><span style="color:var(--soft);font-size:.8rem">Financiera Sur · CON-FCS-2026-03</span></td>
+                <td>26/11/2026</td>
+                <td><span class="tag tag-crit">Crítico</span></td>
+                <td><span class="tag tag-indigo">Revisión senior</span></td>
+              </tr>
+              <tr>
+                <td><strong>CT-2026-00027</strong></td>
+                <td><a href="#" onclick="ver('detalle');return false;"><strong>Matriz de riesgos Q4</strong></a><br><span style="color:var(--soft);font-size:.8rem">Caja Metropolitana</span></td>
+                <td>29/11/2026</td>
+                <td><span class="tag tag-warn">Próximo</span></td>
+                <td><span class="tag tag-gray">Por hacer</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 style="margin:0 0 .7rem;font-size:1rem">Actividad y avisos</h2>
+        <div style="display:flex;flex-direction:column;gap:.7rem;font-size:.87rem">
+          <div style="padding:.6rem;background:var(--indigo-soft);border:1px solid #c7d2fe;border-radius:6px">
+            <span class="tag tag-indigo">Sin leer</span> <strong>junior2</strong> registró acción correctiva en CT-2026-00014.
+          </div>
+          <div style="padding:.6rem;background:var(--warn-bg);border:1px solid var(--warn-bd);border-radius:6px">
+            <span class="tag tag-warn">Acta pendiente</span> Entrega de Banco Andino supera 5 días sin acta de conformidad.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TABLERO DENSO ==================== -->
+  <section id="vista-tablero" class="vista">
+    <div class="toolbar">
+      <h1>Tablero de control</h1>
+      <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+        <span class="tag tag-indigo">Cliente: Todos</span>
+        <span class="tag tag-gray">Orden: Urgencia</span>
+        <button class="btn btn-primary">+ Nuevo entregable</button>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="col">
+        <div class="col-h"><span>Por hacer</span><span>1</span></div>
+        <article class="ticket urg-proximo">
+          <div style="display:flex;justify-content:space-between"><strong>CT-2026-00027</strong><span class="tag tag-warn">Próximo</span></div>
+          <div style="margin:.25rem 0"><a href="#" onclick="ver('detalle');return false;"><strong>Matriz de riesgos Q4</strong></a></div>
+          <div style="color:var(--muted);font-size:.8rem">Caja Metropolitana</div>
+          <div class="ticket-foot"><span>junior1</span><span>Adj 0 · 29/11</span></div>
+        </article>
+      </div>
+      <div class="col">
+        <div class="col-h"><span>En proceso</span><span>2</span></div>
+        <article class="ticket urg-vencido">
+          <div style="display:flex;justify-content:space-between"><strong>CT-2026-00014</strong><span class="tag tag-err">Vencido</span></div>
+          <div style="margin:.25rem 0"><a href="#" onclick="ver('detalle');return false;"><strong>Informe técnico mensual #04</strong></a></div>
+          <div style="color:var(--muted);font-size:.8rem">Banco Andino</div>
+          <div style="margin-top:.35rem"><span class="tag tag-crit">1 obs. en corrección</span></div>
+          <div class="ticket-foot"><span>junior2</span><span>Adj 2/2 · 03:40 h</span></div>
+        </article>
+        <article class="ticket urg-critico">
+          <div style="display:flex;justify-content:space-between"><strong>CT-2026-00019</strong><span class="tag tag-crit">Crítico</span></div>
+          <div style="margin:.25rem 0"><a href="#" onclick="ver('detalle');return false;"><strong>Informe de custodia mensual</strong></a></div>
+          <div style="color:var(--muted);font-size:.8rem">Financiera Sur</div>
+          <div style="margin-top:.35rem"><span class="tag tag-err">Falta Borrador</span></div>
+          <div class="ticket-foot"><span>junior2</span><span>Adj 0/1 · 26/11</span></div>
+        </article>
+      </div>
+      <div class="col">
+        <div class="col-h"><span>Revisión senior</span><span>1</span></div>
+        <article class="ticket urg-critico">
+          <div style="display:flex;justify-content:space-between"><strong>CT-2026-00021</strong><span class="tag tag-crit">Crítico</span></div>
+          <div style="margin:.25rem 0"><a href="#" onclick="ver('detalle');return false;"><strong>Acta de conformidad 08</strong></a></div>
+          <div style="color:var(--muted);font-size:.8rem">Financiera Sur</div>
+          <div class="ticket-foot"><span>junior1</span><span>TDR 4/4 · 26/11</span></div>
+        </article>
+      </div>
+      <div class="col">
+        <div class="col-h"><span>Aprobado</span><span>1</span></div>
+        <article class="ticket">
+          <div style="display:flex;justify-content:space-between"><strong>CT-2026-00011</strong><span class="tag tag-ok">Normal</span></div>
+          <div style="margin:.25rem 0"><a href="#" onclick="ver('detalle');return false;"><strong>Reporte de digitalización</strong></a></div>
+          <div class="ticket-foot"><span>junior3</span><span>Listo para entrega</span></div>
+        </article>
+      </div>
+      <div class="col">
+        <div class="col-h"><span>Entregado</span><span>1</span></div>
+        <article class="ticket">
+          <div style="display:flex;justify-content:space-between"><strong>CT-2026-00005</strong><span class="tag tag-ok">Acta recibida</span></div>
+          <div style="margin:.25rem 0"><a href="#" onclick="ver('detalle');return false;"><strong>Informe mensual #03</strong></a></div>
+          <div class="ticket-foot"><span>junior1</span><span>15/11/2026</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== DETALLE CON STEPPER ==================== -->
+  <section id="vista-detalle" class="vista">
+    <div class="toolbar">
+      <div>
+        <div style="display:flex;gap:.4rem;align-items:center;margin-bottom:.25rem">
+          <span class="tag tag-gray">CT-2026-00014</span>
+          <span class="tag tag-err">URGENTE · Vencido</span>
+          <span class="tag tag-crit">Con correcciones pendientes</span>
+        </div>
+        <h1>Informe técnico mensual #04</h1>
+      </div>
+      <div style="display:flex;gap:.45rem">
+        <button class="btn" onclick="ver('tablero')">← Tablero</button>
+        <button class="btn btn-primary">Pasar a «Revisión senior»</button>
+      </div>
+    </div>
+
+    <!-- Stepper explícito del flujo HU-04 -->
+    <div class="stepper" aria-label="Progreso del entregable">
+      <div class="step done">1. Por hacer</div>
+      <div class="step current">2. En proceso (actual)</div>
+      <div class="step">3. Revisión senior</div>
+      <div class="step">4. Aprobado</div>
+      <div class="step">5. Entregado</div>
+    </div>
+
+    <div class="split-2">
+      <div class="panel">
+        <h2 style="margin:0 0 .7rem;font-size:1rem">Adjuntos, observaciones y checklist TDR</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Documento</th><th>Estado</th><th>Versión</th><th>Acción</th></tr></thead>
+            <tbody>
+              <tr><td><strong>informe_octubre_baf_v2.pdf</strong></td><td><span class="tag tag-ok">Cumple</span></td><td><span class="tag tag-indigo">Vigente · v2</span></td><td><button class="btn btn-sm">Descargar</button></td></tr>
+              <tr><td>anexo_indicadores_oct.xlsx</td><td><span class="tag tag-ok">Cumple</span></td><td><span class="tag tag-gray">v1</span></td><td><button class="btn btn-sm">Descargar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 style="margin:0 0 .7rem;font-size:1rem">Resumen operativo</h2>
+        <p style="margin:.25rem 0"><strong>Cliente:</strong> Banco Andino (CON-BAF-2026-01)</p>
+        <p style="margin:.25rem 0"><strong>Plazo:</strong> 25/11/2026</p>
+        <p style="margin:.25rem 0"><strong>Junior:</strong> Lucía Paredes · <strong>Senior:</strong> Carlos Mendoza</p>
+        <p style="margin:.25rem 0"><strong>Tiempo acumulado:</strong> 03 h 40 min</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LOGIN ==================== -->
+  <section id="vista-login" class="vista">
+    <div class="login-box">
+      <h1 style="margin:0 0 .2rem;font-size:1.35rem">CertiTrack 360</h1>
+      <p style="margin:0 0 1.2rem;color:var(--muted);font-size:.88rem">Acceso al panel operativo de entregables</p>
+      <div class="field"><label for="u3">Usuario</label><input id="u3" type="text" value="senior1"></div>
+      <div class="field"><label for="p3">Contraseña</label><input id="p3" type="password" value="••••••••"></div>
+      <button type="button" class="btn btn-primary" style="width:100%;justify-content:center" onclick="ver('inicio')">Ingresar</button>
+    </div>
+  </section>
+</main>
+
+<script>
+function ver(id, btn) {
+  document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+  document.getElementById('vista-' + id).classList.add('activa');
+  if (btn) {
+    document.querySelectorAll('.demo-switcher button').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+  }
+}
+</script>
+</body>
+</html>

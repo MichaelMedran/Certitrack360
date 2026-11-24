@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propuestas UX/UI · CertiTrack 360 (Sprint 3)</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --card: #ffffff; --ink: #0f172a; --muted: #475569; --border: #e2e8f0;
+      --font: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.5; }
+    .top {
+      background: #0f172a; color: #fff; padding: 1.4rem 1.5rem;
+    }
+    .top-inner { max-width: 1200px; margin: 0 auto; }
+    .top h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+    .top p { margin: 0; color: #cbd5e1; font-size: .95rem; }
+
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.15rem; margin-bottom: 1.5rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem;
+      display: flex; flex-direction: column; gap: .75rem; box-shadow: 0 2px 10px rgba(15,23,42,.05);
+    }
+    .swatches { display: flex; gap: .4rem; }
+    .swatch { width: 28px; height: 28px; border-radius: 7px; border: 1px solid rgba(0,0,0,.1); }
+    .card h2 { margin: 0; font-size: 1.15rem; }
+    .card p { margin: 0; color: var(--muted); font-size: .92rem; }
+    .bullets { margin: 0; padding-left: 1.15rem; font-size: .88rem; color: var(--muted); }
+    .actions { margin-top: auto; display: flex; gap: .5rem; flex-wrap: wrap; padding-top: .5rem; }
+    .btn {
+      display: inline-block; padding: .48rem .95rem; border-radius: 8px; text-decoration: none;
+      font-weight: 600; font-size: .88rem; border: 1px solid var(--border); color: var(--ink); background: #fff; cursor: pointer;
+    }
+    .btn-primary { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+    .files { background: #f1f5f9; border-radius: 8px; padding: .55rem .75rem; font-size: .8rem; color: #334155; }
+
+    .preview-box {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+      box-shadow: 0 6px 22px rgba(15,23,42,.08);
+    }
+    .preview-bar {
+      background: #f1f5f9; border-bottom: 1px solid var(--border); padding: .6rem 1rem;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem;
+    }
+    iframe { width: 100%; height: 740px; border: 0; display: block; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <h1>CertiTrack 360 · Galería de Propuestas UX/UI (HTML + CSS)</h1>
+      <p>3 propuestas 100% locales (sin CDNs ni fuentes externas) listas para elegir y pasar el HTML/CSS a la app.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="cards">
+      <article class="card">
+        <div class="swatches">
+          <span class="swatch" style="background:#0f172a" title="Sidebar"></span>
+          <span class="swatch" style="background:#1d4ed8" title="Primario"></span>
+          <span class="swatch" style="background:#f8fafc" title="Fondo"></span>
+          <span class="swatch" style="background:#991b1b" title="Urgente"></span>
+        </div>
+        <h2>1. Ejecutivo Claro</h2>
+        <p>Reemplaza la barra saturada por un <strong>sidebar agrupado por área</strong> (Operación, Conocimiento, Gerencia) + topbar limpia con buscador y detalle en 2 columnas con rail fijo.</p>
+        <ul class="bullets">
+          <li>Mejor orden cuando el usuario tiene 10+ secciones.</li>
+          <li>Detalle con pestañas (Adjuntos, Observaciones, Checklist, Tiempos).</li>
+        </ul>
+        <div class="files">Archivos: <code>propuesta-1-ejecutivo.html</code> · <code>propuesta-1-ejecutivo.css</code></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="cargar('propuesta-1-ejecutivo.html', 'Propuesta 1 · Ejecutivo Claro')">Previsualizar aquí</button>
+          <a class="btn" href="propuesta-1-ejecutivo.html" target="_blank">Abrir pantalla completa</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatches">
+          <span class="swatch" style="background:#0f766e" title="Verde Petróleo"></span>
+          <span class="swatch" style="background:#f6f5f1" title="Alabastro"></span>
+          <span class="swatch" style="background:#881337" title="Urgente"></span>
+          <span class="swatch" style="background:#18181b" title="Tinta"></span>
+        </div>
+        <h2>2. Estudio Bento</h2>
+        <p>Mantiene una <strong>barra superior minimalista</strong> (muy fácil de migrar sobre el <code>base.html</code> actual) y ordena el Inicio en un <strong>Bento Grid</strong> cálido y aireado.</p>
+        <ul class="bullets">
+          <li>Menor cambio estructural en plantillas Django.</li>
+          <li>Estética cálida y moderna, ideal para uso diario.</li>
+        </ul>
+        <div class="files">Archivos: <code>propuesta-2-bento.html</code> · <code>propuesta-2-bento.css</code></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="cargar('propuesta-2-bento.html', 'Propuesta 2 · Estudio Bento')">Previsualizar aquí</button>
+          <a class="btn" href="propuesta-2-bento.html" target="_blank">Abrir pantalla completa</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="swatches">
+          <span class="swatch" style="background:#111827" title="Cabecera"></span>
+          <span class="swatch" style="background:#4338ca" title="Índigo"></span>
+          <span class="swatch" style="background:#f1f5f9" title="Fondo"></span>
+          <span class="swatch" style="background:#7f1d1d" title="Urgente"></span>
+        </div>
+        <h2>3. Operación Ágil</h2>
+        <p>Pensada para <strong>alta densidad ordenada</strong>: barra dual compacta, métricas en cinta única, Kanban compacto con datos clave al pie y <strong>stepper de 5 estados</strong> en el detalle.</p>
+        <ul class="bullets">
+          <li>Se ven más tarjetas y filas por pantalla sin ruido.</li>
+          <li>Flujo del entregable visible paso a paso en el detalle.</li>
+        </ul>
+        <div class="files">Archivos: <code>propuesta-3-operacion.html</code> · <code>propuesta-3-operacion.css</code></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="cargar('propuesta-3-operacion.html', 'Propuesta 3 · Operación Ágil')">Previsualizar aquí</button>
+          <a class="btn" href="propuesta-3-operacion.html" target="_blank">Abrir pantalla completa</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="preview-box">
+      <div class="preview-bar">
+        <strong id="preview-title">Vista previa: Propuesta 1 · Ejecutivo Claro</strong>
+        <div style="display:flex;gap:.4rem">
+          <button class="btn" onclick="ancho('100%')">Escritorio</button>
+          <button class="btn" onclick="ancho('410px')">Móvil</button>
+        </div>
+      </div>
+      <iframe id="frame" src="propuesta-1-ejecutivo.html" title="Vista previa de propuesta UX"></iframe>
+    </div>
+  </main>
+
+  <script>
+    function cargar(url, titulo) {
+      document.getElementById('frame').src = url;
+      document.getElementById('preview-title').textContent = 'Vista previa: ' + titulo;
+    }
+    function ancho(w) {
+      var f = document.getElementById('frame');
+      f.style.width = w;
+      f.style.margin = (w === '100%') ? '0' : '0 auto';
+    }
+  </script>
+</body>
+</html>

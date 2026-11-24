@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ejecutivo Claro v2 · CertiTrack 360 (Paleta Certicom)</title>
+  <link rel="stylesheet" href="propuesta-1-ejecutivo.css">
+  <style>
+    .vista { display: none; }
+    .vista.activa { display: block; }
+    .demo-bar {
+      background: #0A192F; color: #c1cdd9; padding: .4rem 1.25rem;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; font-size: .8rem;
+    }
+    .demo-switcher { display: flex; gap: .3rem; flex-wrap: wrap; }
+    .demo-switcher button {
+      background: rgba(255,255,255,.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,.15);
+      padding: .2rem .6rem; border-radius: 6px; cursor: pointer; font: inherit; font-size: .78rem;
+    }
+    .demo-switcher button.activo { background: #00A8E8; border-color: #00A8E8; color: #fff; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- Barra del demo (no es parte de la propuesta) -->
+<div class="demo-bar">
+  <span><strong>Propuesta Ejecutivo Claro v2</strong> — Paleta Certicom (#162A4C + #00A8E8)</span>
+  <div class="demo-switcher" role="tablist">
+    <button type="button" class="activo" onclick="ver('inicio', this)">Inicio</button>
+    <button type="button" onclick="ver('tablero', this)">Tablero Kanban</button>
+    <button type="button" onclick="ver('detalle', this)">Detalle</button>
+    <button type="button" onclick="ver('login', this)">Login</button>
+  </div>
+  <a href="index.html" style="color:#7dd3fc">← Comparador</a>
+</div>
+
+<div class="app-shell" id="shell">
+  <!-- ============================================================
+       SIDEBAR — agrupado por área, fijo a la izquierda
+       ============================================================ -->
+  <aside class="sidebar" aria-label="Navegación principal">
+    <div class="brand">
+      <div class="brand-mark">CT</div>
+      <div>
+        <div>CertiTrack 360</div>
+        <div style="font-size:.7rem;color:#64748b;font-weight:400">Área de Proyectos</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Operación diaria</div>
+      <div class="nav-list">
+        <button class="nav-item activo" onclick="ver('inicio')"><span class="nav-item-left">📊 Inicio</span></button>
+        <button class="nav-item" onclick="ver('tablero')"><span class="nav-item-left">📋 Tablero Kanban</span><span class="nav-badge">14</span></button>
+        <button class="nav-item" onclick="ver('detalle')"><span class="nav-item-left">📄 Entregables</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">📅 Calendario</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">📝 Fichas</span></button>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Conocimiento y control</div>
+      <div class="nav-list">
+        <button class="nav-item" type="button"><span class="nav-item-left">📁 Repositorio</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">📈 Indicadores</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">🤖 Asistente</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">✅ Checklists</span></button>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Gerencia y administración</div>
+      <div class="nav-list">
+        <button class="nav-item" type="button"><span class="nav-item-left">🏢 Consolidado</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">📑 Reportes</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">⚙️ Gestión</span></button>
+        <button class="nav-item" type="button"><span class="nav-item-left">🛠️ Administración</span><span class="badge badge-neutral" style="font-size:.65rem;padding:.05rem .35rem">Admin</span></button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="#" style="color:#94a3b8">Manual de uso</a>
+      <span>¿Cómo hago para…?</span>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       ÁREA PRINCIPAL
+       ============================================================ -->
+  <div class="main-area">
+
+    <!-- TOPBAR (buscador + usuario) -->
+    <header class="topbar">
+      <div class="search-box">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" placeholder="Buscar código CT, cliente, TDR o contenido…">
+      </div>
+      <div class="topbar-right">
+        <a href="#" class="btn btn-sec btn-sm">🔔 Avisos <span class="badge badge-warn" style="margin-left:.2rem">3</span></a>
+        <div class="user-pill">
+          <div class="avatar">CM</div>
+          <span><strong>Carlos Mendoza</strong> <span style="color:var(--text-soft)">· Senior</span></span>
+        </div>
+        <button type="button" class="btn btn-sec btn-sm" onclick="ver('login')">Salir</button>
+      </div>
+    </header>
+
+    <!-- FRANJA URGENTE -->
+    <div class="urgent-strip" role="alert">
+      <span class="urgent-tag">URGENTE</span>
+      <span><strong>Banco Andino</strong> · Adenda contractual solicitada por Gerencia Legal · Plazo 25/11/2026 17:00 · <a href="#" onclick="ver('detalle');return false;">CT-2026-00014</a></span>
+      <div class="urgent-actions">
+        <button class="btn btn-white btn-sm">Confirmar lectura</button>
+        <button class="btn btn-ghost-white btn-sm">Aceptar caso</button>
+      </div>
+    </div>
+
+    <main class="page-wrap">
+
+      <!-- ==================== INICIO ==================== -->
+      <section id="vista-inicio" class="vista activa">
+        <div class="page-head">
+          <div>
+            <h1>Hola, Carlos</h1>
+            <p class="subtitle">Resumen operativo de los contratos a tu cargo.</p>
+          </div>
+          <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+            <button class="btn btn-sec" onclick="ver('tablero')">Abrir tablero</button>
+            <button class="btn btn-primary">+ Nuevo entregable</button>
+          </div>
+        </div>
+
+        <!-- KPIs en fila horizontal (nunca cascada) -->
+        <div class="kpi-strip">
+          <div class="kpi-card kpi-accent">
+            <span class="kpi-label">Entregables activos</span>
+            <span class="kpi-value sky">18</span>
+            <span class="kpi-foot">4 contratos en curso</span>
+          </div>
+          <div class="kpi-card kpi-err">
+            <span class="kpi-label">Vencidos</span>
+            <span class="kpi-value err">2</span>
+            <span class="kpi-foot">Requieren atención inmediata</span>
+          </div>
+          <div class="kpi-card kpi-crit">
+            <span class="kpi-label">Vencen en 5 días</span>
+            <span class="kpi-value crit">5</span>
+            <span class="kpi-foot">2 en nivel crítico (≤ 48 h)</span>
+          </div>
+          <div class="kpi-card kpi-primary">
+            <span class="kpi-label">En revisión senior</span>
+            <span class="kpi-value">4</span>
+            <span class="kpi-foot">Listos para validar</span>
+          </div>
+        </div>
+
+        <!-- Contenido en 2 columnas lado a lado -->
+        <div class="grid-2col">
+          <!-- Col izquierda: tabla de plazos -->
+          <div class="card">
+            <div class="card-title">
+              <span>Próximos plazos</span>
+              <a href="#" class="btn btn-sec btn-sm" onclick="ver('tablero');return false;">Ver tablero →</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Código / Entregable</th><th>Cliente</th><th>Plazo</th><th>Urgencia</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="code-tag">CT-2026-00014</div>
+                      <a href="#" onclick="ver('detalle');return false;"><strong>Informe técnico mensual #04</strong></a>
+                    </td>
+                    <td>Banco Andino</td>
+                    <td>25/11/2026</td>
+                    <td><span class="badge badge-err">URGENTE · Vencido</span></td>
+                    <td><span class="badge badge-info">En proceso</span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="code-tag">CT-2026-00021</div>
+                      <a href="#" onclick="ver('detalle');return false;"><strong>Acta de conformidad 08</strong></a>
+                    </td>
+                    <td>Financiera Sur</td>
+                    <td>26/11/2026</td>
+                    <td><span class="badge badge-crit">Crítico</span></td>
+                    <td><span class="badge badge-warn">Revisión senior</span></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="code-tag">CT-2026-00027</div>
+                      <a href="#" onclick="ver('detalle');return false;"><strong>Matriz de riesgos Q4</strong></a>
+                    </td>
+                    <td>Caja Metropolitana</td>
+                    <td>29/11/2026</td>
+                    <td><span class="badge badge-warn">Próximo</span></td>
+                    <td><span class="badge badge-neutral">Por hacer</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Col derecha: notificaciones -->
+          <div class="card">
+            <div class="card-title">
+              <span>Notificaciones recientes</span>
+              <span class="badge badge-sky">3 sin leer</span>
+            </div>
+            <div class="notif-item">
+              <span class="notif-dot"></span>
+              <div>
+                <strong>Lucía Paredes (junior2)</strong> registró corrección en <strong>CT-2026-00014</strong>.
+                <div style="color:var(--text-soft);font-size:.8rem;margin-top:.15rem">Hoy 11:40 · <a href="#" onclick="ver('detalle');return false;">Revisar</a></div>
+              </div>
+              <span class="badge badge-err" style="align-self:center">Urgente</span>
+            </div>
+            <div class="notif-item">
+              <span class="notif-dot"></span>
+              <div>
+                <strong>Acta pendiente</strong> de conformidad tras 6 días — entrega de Banco Andino.
+                <div style="color:var(--text-soft);font-size:.8rem;margin-top:.15rem">Hoy 09:05 · <a href="#">Ver entrega</a></div>
+              </div>
+              <span class="badge badge-warn" style="align-self:center">Acta</span>
+            </div>
+            <div class="notif-item">
+              <span class="notif-dot leida"></span>
+              <div>
+                Se generó la ficha recurrente <strong>TDR-FCS-LEV-002</strong> con 6 entregables.
+                <div style="color:var(--text-soft);font-size:.8rem;margin-top:.15rem">Ayer 17:20</div>
+              </div>
+              <span class="badge badge-neutral" style="align-self:center">Info</span>
+            </div>
+            <div style="margin-top:.7rem">
+              <a href="#" class="btn btn-sec btn-sm">Ver todas las notificaciones</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TABLERO KANBAN ==================== -->
+      <section id="vista-tablero" class="vista">
+        <div class="page-head">
+          <div>
+            <h1>Tablero de entregables</h1>
+            <p class="subtitle">Arrastra tarjetas entre columnas permitidas. Con teclado: abre la tarjeta y usa «Mover entregable».</p>
+          </div>
+          <button class="btn btn-primary">+ Nuevo entregable</button>
+        </div>
+
+        <!-- Filtros en fila horizontal -->
+        <div class="filter-bar">
+          <select aria-label="Cliente"><option>Todos los clientes</option><option>Banco Andino</option><option>Financiera Sur</option></select>
+          <select aria-label="Urgencia"><option>Todas las urgencias</option><option>Vencido</option><option>Crítico</option><option>Próximo</option></select>
+          <select aria-label="Responsable"><option>Todos los responsables</option><option>junior1</option><option>junior2</option></select>
+          <select aria-label="Línea de servicio"><option>Todas las líneas</option><option>BPO</option><option>Custodia</option></select>
+          <span class="badge badge-sky" style="margin-left:auto">2 filtros activos</span>
+          <button class="btn btn-sec btn-sm">Limpiar</button>
+        </div>
+
+        <!-- Kanban 5 columnas lado a lado -->
+        <div class="kanban">
+          <div class="kanban-col">
+            <div class="kanban-col-head"><span>Por hacer</span><span class="kanban-count">1</span></div>
+            <article class="k-card urg-proximo">
+              <div class="k-card-top"><span class="code-tag">CT-2026-00027</span><span class="badge badge-warn">Próximo</span></div>
+              <a href="#" class="k-card-title" onclick="ver('detalle');return false;">Matriz de riesgos Q4</a>
+              <div class="k-card-meta">Caja Metropolitana · 29/11</div>
+              <div class="k-card-tags"><span class="badge badge-neutral">junior1</span><span class="badge badge-neutral">Adj: 0</span></div>
+            </article>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-col-head"><span>En proceso</span><span class="kanban-count">2</span></div>
+            <article class="k-card urg-vencido">
+              <div class="k-card-top"><span class="code-tag">CT-2026-00014</span><span class="badge badge-err">Vencido</span></div>
+              <a href="#" class="k-card-title" onclick="ver('detalle');return false;">Informe técnico mensual #04</a>
+              <div class="k-card-meta">Banco Andino · 25/11 · junior2</div>
+              <div class="k-card-tags"><span class="badge badge-crit">Correcciones</span><span class="badge badge-ok">Adj: 2/2</span></div>
+            </article>
+            <article class="k-card urg-critico">
+              <div class="k-card-top"><span class="code-tag">CT-2026-00019</span><span class="badge badge-crit">Crítico</span></div>
+              <a href="#" class="k-card-title" onclick="ver('detalle');return false;">Informe de custodia mensual</a>
+              <div class="k-card-meta">Financiera Sur · 26/11 · junior2</div>
+              <div class="k-card-tags"><span class="badge badge-err">Falta Borrador</span></div>
+            </article>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-col-head"><span>Revisión senior</span><span class="kanban-count">1</span></div>
+            <article class="k-card urg-critico">
+              <div class="k-card-top"><span class="code-tag">CT-2026-00021</span><span class="badge badge-crit">Crítico</span></div>
+              <a href="#" class="k-card-title" onclick="ver('detalle');return false;">Acta de conformidad 08</a>
+              <div class="k-card-meta">Financiera Sur · 26/11 · junior1</div>
+              <div class="k-card-tags"><span class="badge badge-ok">Checklist TDR 4/4</span></div>
+            </article>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-col-head"><span>Aprobado</span><span class="kanban-count">1</span></div>
+            <article class="k-card">
+              <div class="k-card-top"><span class="code-tag">CT-2026-00011</span><span class="badge badge-ok">Normal</span></div>
+              <a href="#" class="k-card-title" onclick="ver('detalle');return false;">Reporte de digitalización</a>
+              <div class="k-card-meta">Banco Andino · Listo para cargo</div>
+            </article>
+          </div>
+
+          <div class="kanban-col">
+            <div class="kanban-col-head"><span>Entregado</span><span class="kanban-count">1</span></div>
+            <article class="k-card">
+              <div class="k-card-top"><span class="code-tag">CT-2026-00005</span><span class="badge badge-ok">Acta recibida</span></div>
+              <a href="#" class="k-card-title" onclick="ver('detalle');return false;">Informe mensual #03</a>
+              <div class="k-card-meta">Banco Andino · 15/11/2026</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== DETALLE — 2 columnas con pestañas + rail fijo ==================== -->
+      <section id="vista-detalle" class="vista">
+        <div class="tabs" aria-label="Subsecciones de Entregables" style="margin-bottom:.9rem">
+          <button class="tab-btn activo" type="button">Entregables</button>
+          <button class="tab-btn" type="button">Observaciones</button>
+          <button class="tab-btn" type="button">Entregas</button>
+          <button class="tab-btn" type="button">Tiempos</button>
+          <button class="tab-btn" type="button">Checklists</button>
+          <button class="tab-btn" type="button">Penalidades</button>
+        </div>
+
+        <div class="page-head">
+          <div>
+            <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;flex-wrap:wrap">
+              <span class="code-tag" style="font-size:.88rem">CT-2026-00014</span>
+              <span class="badge badge-err">URGENTE · Vencido</span>
+              <span class="badge badge-crit">En proceso · Con correcciones pendientes</span>
+            </div>
+            <h1 style="margin-bottom:0">Informe técnico mensual #04</h1>
+            <p class="subtitle" style="margin-top:.15rem">Banco Andino · CON-BAF-2026-01 · ID-TDR: TDR-BAF-04 · Línea: BPO</p>
+          </div>
+          <div style="display:flex;gap:.45rem;flex-wrap:wrap">
+            <button class="btn btn-sec" onclick="ver('tablero')">← Tablero</button>
+            <button class="btn btn-primary">Pasar a «Revisión senior»</button>
+          </div>
+        </div>
+
+        <div class="detail-layout">
+          <!-- Col izquierda: pestañas con contenido -->
+          <div class="card">
+            <div class="tabs" role="tablist">
+              <button class="tab-btn activo" onclick="tabD('adjuntos', this)">Adjuntos y versiones (2)</button>
+              <button class="tab-btn" onclick="tabD('obs', this)">Observaciones (1)</button>
+              <button class="tab-btn" onclick="tabD('checklist', this)">Checklists TDR / Calidad (3/4)</button>
+              <button class="tab-btn" onclick="tabD('tiempos', this)">Tiempo por etapa</button>
+              <button class="tab-btn" onclick="tabD('facturacion', this)">Facturación y PDF</button>
+            </div>
+
+            <!-- Tab: Adjuntos -->
+            <div id="tab-adjuntos">
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.85rem">
+                <span class="badge badge-ok">Borrador — cargado (v2 vigente)</span>
+                <span class="badge badge-ok">Anexo estadístico — cargado</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Archivo</th><th>Tipo</th><th>Versión</th><th>Subido por</th><th></th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>informe_octubre_baf_v2.pdf</strong></td>
+                      <td>Borrador</td>
+                      <td><span class="badge badge-sky">Vigente · v2</span></td>
+                      <td>junior2 · Hoy 11:25</td>
+                      <td><button class="btn btn-sec btn-sm">Descargar</button></td>
+                    </tr>
+                    <tr>
+                      <td>anexo_indicadores_oct.xlsx</td>
+                      <td>Anexo</td>
+                      <td><span class="badge badge-neutral">v1</span></td>
+                      <td>junior2 · Ayer 16:10</td>
+                      <td><button class="btn btn-sec btn-sm">Descargar</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="margin-top:.7rem">
+                <button class="btn btn-sec btn-sm">Subir nuevo adjunto</button>
+                <a href="#" style="margin-left:.6rem;font-size:.84rem">Ver versiones anteriores</a>
+              </div>
+            </div>
+
+            <!-- Tab: Observaciones -->
+            <div id="tab-obs" style="display:none">
+              <div style="padding:.8rem;border:1px solid var(--crit-bd);background:var(--crit-bg);border-radius:8px;margin-bottom:.6rem">
+                <div style="display:flex;justify-content:space-between;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap">
+                  <strong>#1 · Dato faltante — Periodo reportado</strong>
+                  <span class="badge badge-warn">En corrección</span>
+                </div>
+                <p style="margin:.15rem 0 .4rem;font-size:.88rem;color:var(--crit-fg)">Falta precisar el rango del 01/10 al 31/10 en el cuadro resumen de la página 3.</p>
+                <div style="font-size:.82rem;padding:.5rem;background:rgba(255,255,255,.6);border-radius:6px">
+                  <strong>Acción del junior:</strong> «Se actualizó la tabla con el rango correcto en la versión v2.»
+                  <br><span style="color:var(--text-soft)">junior2 · Hoy 11:35</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:.4rem">
+                <button class="btn btn-primary btn-sm">Confirmar resolución</button>
+                <button class="btn btn-sec btn-sm">Rechazar corrección</button>
+              </div>
+            </div>
+
+            <!-- Tab: Checklist TDR -->
+            <div id="tab-checklist" style="display:none">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                <div style="padding:.55rem .7rem;border:1px solid var(--ok-bd);background:var(--ok-bg);border-radius:6px">
+                  <span class="badge badge-ok">Cumple</span> Numeración y código verificados
+                </div>
+                <div style="padding:.55rem .7rem;border:1px solid var(--ok-bd);background:var(--ok-bg);border-radius:6px">
+                  <span class="badge badge-ok">Cumple</span> Cuadro de SLA firmado
+                </div>
+                <div style="padding:.55rem .7rem;border:1px solid var(--ok-bd);background:var(--ok-bg);border-radius:6px">
+                  <span class="badge badge-ok">Cumple</span> Periodo reportado visible
+                </div>
+                <div style="padding:.55rem .7rem;border:1px solid var(--warn-bd);background:var(--warn-bg);border-radius:6px">
+                  <span class="badge badge-warn">Pendiente</span> Formato de firmas digitales
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab: Tiempos -->
+            <div id="tab-tiempos" style="display:none">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:.8rem">
+                <div style="padding:.6rem;background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px;text-align:center">
+                  <div style="font-size:.78rem;color:var(--text-soft);font-weight:600">Recopilación</div>
+                  <div style="font-size:1.3rem;font-weight:800">01:20</div>
+                </div>
+                <div style="padding:.6rem;background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px;text-align:center">
+                  <div style="font-size:.78rem;color:var(--text-soft);font-weight:600">Consolidación</div>
+                  <div style="font-size:1.3rem;font-weight:800">02:20</div>
+                </div>
+                <div style="padding:.6rem;background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px;text-align:center">
+                  <div style="font-size:.78rem;color:var(--text-soft);font-weight:600">Revisión</div>
+                  <div style="font-size:1.3rem;font-weight:800;color:var(--text-soft)">—</div>
+                </div>
+              </div>
+              <p style="font-size:.88rem;margin:0 0 .5rem">Total acumulado: <strong>03 h 40 min</strong></p>
+              <button class="btn btn-accent btn-sm">▶ Iniciar cronómetro en Revisión</button>
+            </div>
+
+            <!-- Tab: Facturación y extracción PDF -->
+            <div id="tab-facturacion" style="display:none">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+                <div style="padding:.75rem;background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px">
+                  <div style="font-size:.78rem;color:var(--text-soft);font-weight:700">FACTURACIÓN</div>
+                  <p style="margin:.25rem 0 0;font-size:.88rem">Estado: <span class="badge badge-warn">Pendiente de entrega</span></p>
+                </div>
+                <div style="padding:.75rem;background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px">
+                  <div style="font-size:.78rem;color:var(--text-soft);font-weight:700">EXTRACCIÓN AUTOMÁTICA PDF</div>
+                  <p style="margin:.25rem 0 0;font-size:.88rem">Datos extraídos del borrador v2 listos para validar.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col derecha: rail fijo con resumen + acciones -->
+          <aside class="sticky-rail">
+            <div class="card">
+              <div class="card-title">Ficha resumen</div>
+              <div class="meta-grid">
+                <div class="meta-item"><small>Plazo límite</small><strong>25/11/2026</strong></div>
+                <div class="meta-item"><small>Recepción</small><strong>10/11/2026</strong></div>
+                <div class="meta-item"><small>Junior</small><strong>Lucía Paredes</strong></div>
+                <div class="meta-item"><small>Senior</small><strong>Carlos Mendoza</strong></div>
+                <div class="meta-item"><small>Plantilla</small><strong>Informe técnico</strong></div>
+                <div class="meta-item"><small>N.º correlativo</small><strong>#04</strong></div>
+                <div class="meta-item"><small>ID-TDR</small><strong>TDR-BAF-04</strong></div>
+                <div class="meta-item"><small>Prioridad</small><strong style="color:var(--err-fg)">Alta (Alerta)</strong></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Acciones rápidas</div>
+              <div style="display:flex;flex-direction:column;gap:.45rem">
+                <button class="btn btn-primary" style="width:100%">Pasar a «Revisión senior»</button>
+                <button class="btn btn-sec" style="width:100%">Devolver con observación</button>
+                <button class="btn btn-sec" style="width:100%">Agregar responsable de apoyo</button>
+                <button class="btn btn-sec" style="width:100%">Marcar como entregado</button>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.2rem">
+                  <button class="btn btn-sec btn-sm">Exportar PDF</button>
+                  <button class="btn btn-sec btn-sm">Exportar Excel</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Historial reciente</div>
+              <div style="font-size:.84rem;display:flex;flex-direction:column;gap:.4rem">
+                <div><span class="badge badge-sky" style="font-size:.68rem">Hoy 11:35</span> junior2 registró acción correctiva</div>
+                <div><span class="badge badge-neutral" style="font-size:.68rem">Hoy 11:25</span> junior2 subió Borrador v2</div>
+                <div><span class="badge badge-neutral" style="font-size:.68rem">22/11</span> senior1 devolvió con observación</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ==================== LOGIN ==================== -->
+      <section id="vista-login" class="vista">
+        <div class="login-shell">
+          <div class="login-card">
+            <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+              <div class="brand-mark">CT</div>
+              <div>
+                <h1 style="margin:0;font-size:1.25rem;color:var(--certicom-primary)">CertiTrack 360</h1>
+                <div style="font-size:.82rem;color:var(--text-soft)">Seguimiento de entregables documentales</div>
+              </div>
+            </div>
+            <div class="field"><label for="u1">Usuario</label><input id="u1" type="text" value="senior1"></div>
+            <div class="field"><label for="p1">Contraseña</label><input id="p1" type="password" value="••••••••"></div>
+            <button type="button" class="btn btn-primary" style="width:100%;margin-top:.3rem" onclick="ver('inicio')">Ingresar a la plataforma</button>
+            <p style="text-align:center;font-size:.8rem;color:var(--text-soft);margin:.8rem 0 0">Plataforma local · Datos protegidos</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+function ver(id, btn) {
+  document.querySelectorAll('.vista').forEach(function(v) { v.classList.remove('activa'); });
+  document.getElementById('vista-' + id).classList.add('activa');
+  if (btn) {
+    document.querySelectorAll('.demo-switcher button').forEach(function(b) { b.classList.remove('activo'); });
+    btn.classList.add('activo');
+  }
+  /* Actualiza sidebar */
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('activo'); });
+}
+function tabD(id, btn) {
+  ['adjuntos','obs','checklist','tiempos','facturacion'].forEach(function(t) {
+    document.getElementById('tab-' + t).style.display = (t === id) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('activo'); });
+  btn.classList.add('activo');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propuesta 2: Estudio Bento · CertiTrack 360</title>
+  <link rel="stylesheet" href="propuesta-2-bento.css">
+  <style>
+    .vista { display: none; }
+    .vista.activa { display: block; }
+    .demo-bar {
+      background: #18181b; color: #f4f4f5; padding: .42rem 1.25rem;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; font-size: .82rem;
+    }
+    .demo-switcher { display: flex; gap: .35rem; flex-wrap: wrap; }
+    .demo-switcher button {
+      background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2);
+      padding: .22rem .65rem; border-radius: 999px; cursor: pointer; font: inherit; font-size: .8rem;
+    }
+    .demo-switcher button.activo { background: #0f766e; border-color: #14b8a6; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <span><strong>Propuesta 2 · Estudio Bento</strong> (Topbar minimalista + Tarjetas Bento · Verde Petróleo)</span>
+  <div class="demo-switcher">
+    <button type="button" class="activo" onclick="ver('inicio', this)">Inicio</button>
+    <button type="button" onclick="ver('tablero', this)">Tablero Kanban</button>
+    <button type="button" onclick="ver('detalle', this)">Detalle de entregable</button>
+    <button type="button" onclick="ver('login', this)">Login</button>
+  </div>
+  <a href="index.html" style="color:#5eead4">← Volver al comparador</a>
+</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#" class="brand" onclick="ver('inicio');return false;"><span class="brand-dot"></span> CertiTrack 360</a>
+    <nav class="nav-pills" aria-label="Principal">
+      <button class="nav-pill activo" onclick="ver('inicio')">Inicio</button>
+      <button class="nav-pill" onclick="ver('tablero')">Tablero</button>
+      <button class="nav-pill" onclick="ver('detalle')">Entregables</button>
+      <button class="nav-pill" type="button">Calendario</button>
+      <button class="nav-pill" type="button">Repositorio</button>
+      <button class="nav-pill" type="button">Indicadores</button>
+      <button class="nav-pill" type="button">Asistente</button>
+      <button class="nav-pill" type="button">Consolidado</button>
+    </nav>
+    <div class="topbar-tools">
+      <div class="search-pill"><input type="search" placeholder="Buscar en CertiTrack…"></div>
+      <a href="#" class="bell-btn">Avisos <span class="bell-count">3</span></a>
+      <button type="button" class="btn btn-soft btn-sm" onclick="ver('login')">Carlos M. · Senior</button>
+    </div>
+  </div>
+</header>
+
+<div class="urgent-ribbon" role="alert">
+  <div class="urgent-ribbon-inner">
+    <span class="urgent-pill">URGENTE</span>
+    <span><strong>Banco Andino</strong> · Adenda contractual solicitada por Gerencia Legal · Plazo 25/11/2026 17:00 · <a href="#" style="color:#fff;text-decoration:underline" onclick="ver('detalle');return false;">CT-2026-00014</a></span>
+    <div style="margin-left:auto;display:flex;gap:.4rem">
+      <button class="btn btn-light btn-sm">Confirmar lectura</button>
+      <button class="btn btn-soft btn-sm">Aceptar caso</button>
+    </div>
+  </div>
+</div>
+
+<main class="container">
+  <!-- ==================== INICIO BENTO ==================== -->
+  <section id="vista-inicio" class="vista activa">
+    <div class="hero-row">
+      <div>
+        <h1>Buenos días, Carlos</h1>
+        <p class="hero-sub">Panorama ordenado de entregas, vencimientos y avisos de tus contratos.</p>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-soft" onclick="ver('tablero')">Abrir tablero</button>
+        <button class="btn btn-teal">+ Nuevo entregable</button>
+      </div>
+    </div>
+
+    <div class="bento">
+      <div class="card card-accent bento-3">
+        <div class="stat-label">Entregables activos</div>
+        <div class="stat-num">18</div>
+        <div class="muted">En 4 contratos vigentes</div>
+      </div>
+      <div class="card bento-3">
+        <div class="stat-label">Vencidos</div>
+        <div class="stat-num" style="color:var(--err-fg)">2</div>
+        <div class="muted">Priorizar hoy</div>
+      </div>
+      <div class="card bento-3">
+        <div class="stat-label">Vencen en 5 días</div>
+        <div class="stat-num" style="color:var(--crit-fg)">5</div>
+        <div class="muted">2 en umbral crítico</div>
+      </div>
+      <div class="card bento-3">
+        <div class="stat-label">En revisión senior</div>
+        <div class="stat-num" style="color:var(--teal)">4</div>
+        <div class="muted">Listos para validar</div>
+      </div>
+
+      <div class="card bento-8">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem">
+          <h2 style="margin:0;font-size:1.05rem">Próximos plazos</h2>
+          <a href="#" class="btn btn-soft btn-sm" onclick="ver('tablero');return false;">Ver todo</a>
+        </div>
+        <ul class="clean-list">
+          <li>
+            <div>
+              <span class="muted">CT-2026-00014 · Banco Andino</span><br>
+              <a href="#" onclick="ver('detalle');return false;"><strong>Informe técnico mensual #04</strong></a>
+            </div>
+            <div style="text-align:right">
+              <span class="pill pill-err">URGENTE · Vencido</span>
+              <div class="muted" style="margin-top:.2rem">25/11/2026</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="muted">CT-2026-00021 · Financiera Sur</span><br>
+              <a href="#" onclick="ver('detalle');return false;"><strong>Acta de conformidad 08</strong></a>
+            </div>
+            <div style="text-align:right">
+              <span class="pill pill-crit">Crítico</span>
+              <div class="muted" style="margin-top:.2rem">26/11/2026</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="muted">CT-2026-00027 · Caja Metropolitana</span><br>
+              <a href="#" onclick="ver('detalle');return false;"><strong>Matriz de riesgos Q4</strong></a>
+            </div>
+            <div style="text-align:right">
+              <span class="pill pill-warn">Próximo</span>
+              <div class="muted" style="margin-top:.2rem">29/11/2026</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card bento-4">
+        <h2 style="margin:0 0 .65rem;font-size:1.05rem">Avisos recientes</h2>
+        <ul class="clean-list">
+          <li>
+            <div>
+              <span class="pill pill-teal">Sin leer</span>
+              <div style="margin-top:.25rem;font-size:.9rem"><strong>junior2</strong> subió la versión v2 de CT-2026-00014.</div>
+              <div class="muted">Hoy 11:40</div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <span class="pill pill-warn">Acta pendiente</span>
+              <div style="margin-top:.25rem;font-size:.9rem">Entrega de Banco Andino cumple 6 días sin acta.</div>
+              <div class="muted">Hoy 09:05</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TABLERO BENTO ==================== -->
+  <section id="vista-tablero" class="vista">
+    <div class="hero-row">
+      <div>
+        <h1>Tablero Kanban</h1>
+        <p class="hero-sub">Vista limpia con prioridad visible en el borde superior de cada tarjeta.</p>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <span class="pill pill-teal">Cliente: Todos</span>
+        <span class="pill pill-neutral">Urgencia: Todas</span>
+        <button class="btn btn-teal">+ Nuevo entregable</button>
+      </div>
+    </div>
+
+    <div class="kanban-wrap">
+      <div class="k-col">
+        <div class="k-col-head"><span>Por hacer</span><span class="pill pill-neutral">1</span></div>
+        <article class="k-item urg-proximo">
+          <div style="display:flex;justify-content:space-between"><span class="muted">CT-2026-00027</span><span class="pill pill-warn">Próximo</span></div>
+          <a href="#" class="k-item-title" onclick="ver('detalle');return false;">Matriz de riesgos Q4</a>
+          <div class="muted">Caja Metropolitana · Plazo 29/11</div>
+        </article>
+      </div>
+      <div class="k-col">
+        <div class="k-col-head"><span>En proceso</span><span class="pill pill-neutral">2</span></div>
+        <article class="k-item urg-vencido">
+          <div style="display:flex;justify-content:space-between"><span class="muted">CT-2026-00014</span><span class="pill pill-err">Vencido</span></div>
+          <a href="#" class="k-item-title" onclick="ver('detalle');return false;">Informe técnico mensual #04</a>
+          <div class="muted">Banco Andino · junior2</div>
+          <div style="margin-top:.45rem;display:flex;gap:.3rem;flex-wrap:wrap">
+            <span class="pill pill-crit">Correcciones</span><span class="pill pill-ok">2/2 adjuntos</span>
+          </div>
+        </article>
+        <article class="k-item urg-critico">
+          <div style="display:flex;justify-content:space-between"><span class="muted">CT-2026-00019</span><span class="pill pill-crit">Crítico</span></div>
+          <a href="#" class="k-item-title" onclick="ver('detalle');return false;">Informe de custodia mensual</a>
+          <div class="muted">Financiera Sur · junior2</div>
+          <div style="margin-top:.45rem"><span class="pill pill-err">Falta Borrador</span></div>
+        </article>
+      </div>
+      <div class="k-col">
+        <div class="k-col-head"><span>Revisión senior</span><span class="pill pill-neutral">1</span></div>
+        <article class="k-item urg-critico">
+          <div style="display:flex;justify-content:space-between"><span class="muted">CT-2026-00021</span><span class="pill pill-crit">Crítico</span></div>
+          <a href="#" class="k-item-title" onclick="ver('detalle');return false;">Acta de conformidad 08</a>
+          <div class="muted">Financiera Sur · Plazo 26/11</div>
+        </article>
+      </div>
+      <div class="k-col">
+        <div class="k-col-head"><span>Aprobado</span><span class="pill pill-neutral">1</span></div>
+        <article class="k-item">
+          <div style="display:flex;justify-content:space-between"><span class="muted">CT-2026-00011</span><span class="pill pill-ok">Aprobado</span></div>
+          <a href="#" class="k-item-title" onclick="ver('detalle');return false;">Reporte de digitalización</a>
+          <div class="muted">Banco Andino · Listo para entregar</div>
+        </article>
+      </div>
+      <div class="k-col">
+        <div class="k-col-head"><span>Entregado</span><span class="pill pill-neutral">1</span></div>
+        <article class="k-item">
+          <div style="display:flex;justify-content:space-between"><span class="muted">CT-2026-00005</span><span class="pill pill-ok">Acta recibida</span></div>
+          <a href="#" class="k-item-title" onclick="ver('detalle');return false;">Informe mensual #03</a>
+          <div class="muted">Banco Andino · 15/11/2026</div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== DETALLE BENTO ==================== -->
+  <section id="vista-detalle" class="vista">
+    <div class="hero-row">
+      <div>
+        <div style="display:flex;gap:.45rem;align-items:center;margin-bottom:.25rem">
+          <span class="pill pill-neutral">CT-2026-00014</span>
+          <span class="pill pill-err">URGENTE · Vencido</span>
+          <span class="pill pill-crit">Con correcciones pendientes</span>
+        </div>
+        <h1>Informe técnico mensual #04</h1>
+        <p class="hero-sub">Banco Andino · CON-BAF-2026-01 · Línea BPO</p>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-soft" onclick="ver('tablero')">← Tablero</button>
+        <button class="btn btn-teal">Pasar a «Revisión senior»</button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="card">
+        <div class="detail-tabs">
+          <button class="detail-tab activo" type="button">Adjuntos (2)</button>
+          <button class="detail-tab" type="button">Observaciones (1)</button>
+          <button class="detail-tab" type="button">Checklist TDR</button>
+          <button class="detail-tab" type="button">Tiempos</button>
+        </div>
+        <ul class="clean-list">
+          <li>
+            <div>
+              <strong>informe_octubre_baf_v2.pdf</strong>
+              <div class="muted">Borrador · Subido por Lucía Paredes hoy 11:25</div>
+            </div>
+            <div style="display:flex;gap:.4rem;align-items:center">
+              <span class="pill pill-teal">Vigente · v2</span>
+              <button class="btn btn-soft btn-sm">Descargar</button>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>anexo_indicadores_oct.xlsx</strong>
+              <div class="muted">Anexo · Subido ayer 16:10</div>
+            </div>
+            <button class="btn btn-soft btn-sm">Descargar</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:0 0 .8rem;font-size:1.05rem">Datos y responsables</h2>
+        <ul class="clean-list">
+          <li><span class="muted">Plazo límite</span><strong>25/11/2026</strong></li>
+          <li><span class="muted">ID-TDR</span><strong>TDR-BAF-04</strong></li>
+          <li><span class="muted">Elaboración</span><strong>Lucía Paredes (Junior)</strong></li>
+          <li><span class="muted">Revisión</span><strong>Carlos Mendoza (Senior)</strong></li>
+        </ul>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.5rem">
+          <button class="btn btn-teal">Pasar a «Revisión senior»</button>
+          <button class="btn btn-soft">Devolver con observación</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LOGIN SPLIT ==================== -->
+  <section id="vista-login" class="vista">
+    <div class="login-split">
+      <div class="login-brand-side">
+        <div>
+          <span class="pill" style="background:rgba(255,255,255,.16);color:#fff">Área de Proyectos</span>
+          <h1 style="margin:1rem 0 .4rem;font-size:1.75rem">CertiTrack 360</h1>
+          <p style="margin:0;color:#ccfbf1">Control claro de entregables documentales, observaciones, entregas con cargo y vencimientos.</p>
+        </div>
+        <div style="font-size:.82rem;color:#99f6e4">Plataforma local · Datos protegidos</div>
+      </div>
+      <div class="login-form-side">
+        <h2 style="margin:0 0 .25rem">Iniciar sesión</h2>
+        <p class="muted" style="margin:0 0 1.25rem">Ingresa con tu cuenta asignada.</p>
+        <div class="field"><label for="u2">Usuario</label><input id="u2" type="text" value="senior1"></div>
+        <div class="field"><label for="p2">Contraseña</label><input id="p2" type="password" value="••••••••"></div>
+        <button type="button" class="btn btn-teal" style="width:100%;justify-content:center" onclick="ver('inicio')">Entrar</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+function ver(id, btn) {
+  document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+  document.getElementById('vista-' + id).classList.add('activa');
+  if (btn) {
+    document.querySelectorAll('.demo-switcher button').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+  }
+}
+</script>
+</body>
+</html>
