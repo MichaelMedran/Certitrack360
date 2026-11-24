@@ -12,7 +12,7 @@ class ChecklistsConfig(AppConfig):
         from apps.entregables import extensiones
         from apps.levantamiento.models import ItemFicha
 
-        from . import calidad, tdr
+        from . import tdr
 
         # Checklist por TDR (RF-44): aviso con confirmación al enviar a revisión, sección del detalle y generación
         # automática para los entregables que nacen de una ficha de levantamiento.
@@ -23,9 +23,6 @@ class ChecklistsConfig(AppConfig):
             _checklist_de_entregables_generados, sender=ItemFicha.entregables_generados.through,
             dispatch_uid="checklists.generar_desde_ficha",
         )
-        # Checklist de calidad (RF-45): condición para aprobar y sección del detalle.
-        extensiones.registrar_condicion(calidad.condicion)
-        extensiones.registrar_seccion(calidad.seccion)
 
 
 def _checklist_de_entregables_generados(sender, instance, action, reverse, pk_set, **kwargs):
