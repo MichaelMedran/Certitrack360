@@ -184,7 +184,7 @@ class GestionDeProcedimientosTests(Base):
 
     def test_junior_y_senior_reciben_403_en_procedimientos_pero_ven_pestana_en_repositorio(self):
         proc = Procedimiento.objects.create(
-            titulo="Guía rápida de CertiTrack 360",
+            titulo="Guía rápida de CertiTrack",
             contenido="Recorrido por inicio, tablero, calendario y buscador.",
             aprobado_por=self.gerente,
             vigente=True,

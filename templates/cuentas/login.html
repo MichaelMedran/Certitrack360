@@ -2,8 +2,8 @@
 {% block titulo %}Ingresar{% endblock %}
 {% block contenido %}
 <div class="login tarjeta">
-  <h1>CertiTrack 360</h1>
-  <p class="suave">Seguimiento de entregables de Proyectos.</p>
+  <div class="login-marca"><span class="marca-sello" aria-hidden="true">CT</span>
+    <div><h1>CertiTrack</h1><p class="suave">Seguimiento de entregables de Proyectos.</p></div></div>
   {% if bloqueado_hasta %}<div class="aviso aviso-error" role="alert">Demasiados intentos fallidos. Por seguridad, el ingreso de este usuario desde este equipo está bloqueado hasta las {{ bloqueado_hasta|time:"H:i" }}.</div>
   {% elif form.errors %}<div class="aviso aviso-error">Usuario o contraseña incorrectos. Inténtelo de nuevo.</div>{% endif %}
   <form method="post">{% csrf_token %}
@@ -12,5 +12,6 @@
     <input type="hidden" name="next" value="{{ next }}">
     <button class="boton">Ingresar</button>
   </form>
+  <p class="suave login-nota">Plataforma local · Datos protegidos</p>
 </div>
 {% endblock %}

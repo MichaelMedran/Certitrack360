@@ -15,7 +15,7 @@ COLORES = {
     urgencia.VENCIDO: "#991b1b",
     urgencia.CRITICO: "#c2410c",
     urgencia.PROXIMO: "#a16207",
-    urgencia.NORMAL: "#1e4e8c",
+    urgencia.NORMAL: "#1d4ed8",
 }
 COLOR_HECHO = "#4b5563"
 

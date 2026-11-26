@@ -1,8 +1,8 @@
-# CertiTrack 360 — SDD del Sprint 2
+# CertiTrack — SDD del Sprint 2
 
 | | |
 |---|---|
-| **Proyecto** | CertiTrack 360, plataforma de seguimiento de entregables del área de Proyectos de CERTICOM S.A.C. |
+| **Proyecto** | CertiTrack, plataforma de seguimiento de entregables del área de Proyectos de CERTICOM S.A.C. |
 | **Versión** | 2.0-borrador (Sprint 2) |
 | **Fecha** | 2026-11-02 |
 | **Estado** | Aprobado el 2026-11-02: decisiones resueltas (sección 15) y wireframes aprobados; listo para construir |
@@ -405,7 +405,7 @@ SDD v1.0 §2). Todos los materiales ya existen en otros módulos (repositorio, p
 
 | # | Semana | Actividad | Recurso | Responsable | Cómo se comprueba |
 |---|---|---|---|---|---|
-| 1 | 1 | Recorrer CertiTrack 360: inicio, tablero, calendario, avisos y buscador | Procedimiento «Guía rápida de CertiTrack 360» | Senior asignado | El ingresante la marca como completada |
+| 1 | 1 | Recorrer CertiTrack: inicio, tablero, calendario, avisos y buscador | Procedimiento «Guía rápida de CertiTrack» | Senior asignado | El ingresante la marca como completada |
 | 2 | 1 | Leer la política de confidencialidad y el uso de documentos anonimizados (NDA) | Procedimiento «Confidencialidad y datos de clientes» | Gerente | Marcada por el ingresante |
 | 3 | 1 | Conocer el flujo de un entregable: estados, Poka-Yoke, adjuntos requeridos y observaciones | Procedimiento «Flujo de un entregable» | Senior asignado | Marcada por el ingresante |
 | 4 | 1 | Revisar las fichas de levantamiento de los contratos asignados (requerimientos, frecuencia, penalidades) | Fichas de levantamiento de sus contratos | Senior asignado | Marcada por el ingresante |

@@ -58,6 +58,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='notificacion',
-            constraint=models.CheckConstraint(condition=models.Q(('enlace', ''), models.Q(('enlace__startswith', '/'), models.Q(('enlace__startswith', '//'), _negated=True)), _connector='OR'), name='enlace_es_ruta_interna', violation_error_message='El enlace del aviso debe ser una ruta interna de CertiTrack 360 que empiece con «/» (por ejemplo, /calendario/); no se admiten direcciones externas.'),
+            constraint=models.CheckConstraint(condition=models.Q(('enlace', ''), models.Q(('enlace__startswith', '/'), models.Q(('enlace__startswith', '//'), _negated=True)), _connector='OR'), name='enlace_es_ruta_interna', violation_error_message='El enlace del aviso debe ser una ruta interna de CertiTrack que empiece con «/» (por ejemplo, /calendario/); no se admiten direcciones externas.'),
         ),
     ]

@@ -1,52 +1,60 @@
 {% extends "base.html" %}
 {% block titulo %}Inicio{% endblock %}
 {% block contenido %}
-<h1>Hola, {{ user.first_name|default:user.username }}</h1>
-<p class="suave">
-  {% if user.es_junior %}Resumen de las tareas que tiene asignadas.
-  {% elif user.es_senior %}Resumen de los proyectos a su cargo.
-  {% else %}Resumen general de todos los proyectos.{% endif %}
-</p>
+<div class="cabecera">
+  <div>
+    <h1>Hola, {{ user.first_name|default:user.username }}</h1>
+    <p class="suave">
+      {% if user.es_junior %}Resumen de las tareas que tiene asignadas.
+      {% elif user.es_senior %}Resumen de los proyectos a su cargo.
+      {% else %}Resumen general de todos los proyectos.{% endif %}
+    </p>
+  </div>
+  <div class="acciones">
+    <a class="boton sec" href="{% url 'tablero' %}">Abrir tablero</a>
+    {% if user.es_gerente_o_admin %}<a class="boton sec" href="{% url 'consolidado' %}">Ver consolidado</a>{% endif %}
+    {% if user.puede_crear_entregables %}<a class="boton" href="{% url 'entregable_nuevo' %}">+ Nuevo entregable</a>{% endif %}
+  </div>
+</div>
+
 <div class="cuadricula">
-  <div class="tarjeta"><div class="cifra">{{ total_activos }}</div>Entregables activos</div>
-  <div class="tarjeta"><div class="cifra rojo">{{ vencidos }}</div>Vencidos</div>
-  <div class="tarjeta"><div class="cifra ambar">{{ por_vencer }}</div>Vencen en {{ dias_proximo }} días</div>
-  <div class="tarjeta"><div class="cifra">{{ en_verificacion }}</div>En {{ etiqueta_revision|lower }}</div>
+  <div class="tarjeta kpi kpi-cielo"><small>Sin contar los entregados</small><div class="cifra">{{ total_activos }}</div>Entregables activos</div>
+  <div class="tarjeta kpi kpi-rojo"><small>{% if vencidos %}Requieren atención inmediata{% else %}Ninguno fuera de plazo{% endif %}</small><div class="cifra rojo">{{ vencidos }}</div>Vencidos</div>
+  <div class="tarjeta kpi kpi-ocre"><small>Contando los que vencen hoy</small><div class="cifra ambar">{{ por_vencer }}</div>Vencen en {{ dias_proximo }} días</div>
+  <div class="tarjeta kpi"><small>Esperan la validación del senior</small><div class="cifra">{{ en_verificacion }}</div>En {{ etiqueta_revision|lower }}</div>
 </div>
 
 {% if mi_incorporacion %}
   {% include "equipo/_tarjeta_inicio.html" with inc=mi_incorporacion origen_inicio=True %}
 {% endif %}
 
-{% if user.es_gerente_o_admin %}
-<div class="tarjeta acciones" style="justify-content:space-between">
-  <span>Vista general de todos los proyectos:</span>
-  <a class="boton" href="{% url 'consolidado' %}">Ver consolidado</a>
+<div class="rejilla-2">
+  <section class="tarjeta" id="proximos-plazos" aria-labelledby="t-plazos">
+    <div class="tarjeta-titulo"><h2 id="t-plazos">Próximos plazos</h2><a class="boton sec chico" href="{% url 'entregables' %}">Ver entregables</a></div>
+    {% if proximos %}
+    <div class="tabla"><table>
+      <thead><tr><th>Entregable</th><th>Cliente</th><th>Plazo</th><th>Prioridad</th><th>Estado</th></tr></thead>
+      <tbody>{% for e in proximos %}
+      <tr><td><span class="codigo">{{ e.codigo }}</span><br><a href="{% url 'entregable_detalle' e.pk %}"><strong>{{ e.titulo }}</strong></a></td>
+      <td>{{ e.contrato.cliente }}<br><span class="suave">{{ e.contrato.numero_contrato }}</span></td>
+      <td>{{ e.plazo|date:"d/m/Y" }}</td><td>{% include "entregables/_prioridad.html" %}</td><td><span class="etiqueta estado">{{ e.get_estado_display }}</span></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<p>No tiene entregables pendientes.</p>{% endif %}
+  </section>
+
+  <section class="tarjeta" id="notificaciones-recientes" aria-labelledby="t-avisos">
+    <div class="tarjeta-titulo"><h2 id="t-avisos">Notificaciones recientes</h2>{% if no_leidas %}<span class="chip">{{ no_leidas }} por leer</span>{% endif %}</div>
+    {% if recientes %}
+    <ul class="notificaciones">
+      {% for n in recientes %}
+      <li{% if not n.leida %} class="nueva"{% endif %}><div>{% if not n.leida %}<span class="etiqueta sin-leer">Sin leer</span> {% endif %}{{ n.mensaje }}
+        {% with destino=n.destino %}{% if destino %}<a href="{{ destino }}">Ver</a>{% endif %}{% endwith %}
+        <div class="suave">{{ n.creada_en|date:"d/m/Y H:i" }}</div></div></li>
+      {% endfor %}
+    </ul>
+    <p><a class="boton sec chico" href="{% url 'notificaciones' %}">Ver todas</a></p>
+    {% else %}<p>No tiene notificaciones.</p>{% endif %}
+  </section>
 </div>
-{% endif %}
-
-<h2>Próximos plazos</h2>
-{% if proximos %}
-<div class="tabla"><table>
-  <thead><tr><th>Entregable</th><th>Cliente</th><th>Contrato</th><th>Plazo</th><th>Prioridad</th><th>Estado</th></tr></thead>
-  <tbody>{% for e in proximos %}
-  <tr><td><a href="{% url 'entregable_detalle' e.pk %}">{{ e.titulo }}</a></td><td>{{ e.contrato.cliente }}</td><td>{{ e.contrato.numero_contrato }}</td>
-  <td>{{ e.plazo|date:"d/m/Y" }}</td><td>{% include "entregables/_prioridad.html" %}</td><td>{{ e.get_estado_display }}</td></tr>
-  {% endfor %}</tbody>
-</table></div>
-{% else %}<p class="tarjeta">No tiene entregables pendientes.</p>{% endif %}
-
-<h2>Notificaciones recientes</h2>
-{% if recientes %}
-<ul class="tarjeta" style="list-style:none;margin:0 0 1rem;padding:.6rem 1rem">
-  {% for n in recientes %}
-  <li style="margin:.35rem 0">{% if not n.leida %}<span class="etiqueta" style="background:#dbeafe">Sin leer</span> {% endif %}{{ n.mensaje }}
-    {% with destino=n.destino %}{% if destino %}<a href="{{ destino }}">Ver</a>{% endif %}{% endwith %}
-    <span class="suave">· {{ n.creada_en|date:"d/m/Y H:i" }}</span></li>
-  {% endfor %}
-</ul>
-<p><a class="boton sec" href="{% url 'notificaciones' %}">Ver todas</a></p>
-{% else %}<p class="tarjeta">No tiene notificaciones.</p>{% endif %}
-
-<div class="acciones"><a class="boton" href="{% url 'tablero' %}">Abrir tablero</a></div>
 {% endblock %}

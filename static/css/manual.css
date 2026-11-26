@@ -1,6 +1,6 @@
 /* Manual de uso ilustrado (enlace del pie de página). Sin recursos externos. */
-.manual{display:grid;grid-template-columns:230px minmax(0,1fr);gap:2rem;align-items:start}
-.manual-indice{position:sticky;top:1rem;background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;padding:.9rem 1rem;font-size:.92rem;max-height:calc(100vh - 2rem);overflow:auto}
+.manual{display:grid;grid-template-columns:210px minmax(0,1fr);gap:1.75rem;align-items:start}
+.manual-indice{position:sticky;top:calc(var(--alto-barra) + 1rem);background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;padding:.9rem 1rem;font-size:.92rem;max-height:calc(100vh - var(--alto-barra) - 2rem);overflow:auto}
 .manual-indice strong{display:block;margin-bottom:.4rem}
 .manual-indice ol{margin:0;padding-left:1.2rem}
 .manual-indice li{margin:.3rem 0}
@@ -11,7 +11,7 @@
 .manual-cuerpo h2{font-size:1.4rem;margin:0 0 .6rem;padding-bottom:.35rem;border-bottom:3px solid var(--primario)}
 .manual-cuerpo h3{font-size:1.1rem;margin:1.6rem 0 .5rem}
 .manual-cuerpo p{max-width:75ch}
-.manual-portada{background:var(--primario);color:#fff;border-radius:10px;padding:1.5rem 1.75rem;margin-bottom:1.5rem}
+.manual-portada{background:linear-gradient(135deg,var(--certicom-profundo),var(--certicom-indigo));border-top:4px solid var(--certicom-cielo);color:#fff;border-radius:10px;padding:1.5rem 1.75rem;margin-bottom:1.5rem}
 .manual-portada h1{margin:0 0 .4rem;font-size:1.8rem}
 .manual-portada p{margin:.2rem 0;max-width:70ch}
 .manual-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin:1rem 0}
@@ -21,10 +21,13 @@
 .manual-rol span{font-size:.9rem;color:var(--suave)}
 
 /* Capturas de pantalla */
-.captura{margin:1rem 0 .4rem;background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.08)}
+.captura{margin:1rem 0 .4rem;background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;overflow:hidden;box-shadow:var(--sombra)}
 .captura a{display:block;background:#eef2f6}
 .captura img{display:block;max-width:100%;height:auto;margin:0 auto}
 .captura.estrecha{max-width:420px}
+.capturas-celular{display:flex;flex-wrap:wrap;gap:1.25rem;align-items:flex-start}
+.capturas-celular .captura{width:300px}
+.manual-cuerpo th[scope=rowgroup]{background:#e0f2fe;color:#0c4a6e}
 .captura figcaption{padding:.5rem .8rem;font-size:.88rem;color:var(--suave);border-top:1px solid var(--borde)}
 .captura figcaption b{color:var(--texto)}
 .capturas-par{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:1.25rem;align-items:start}
@@ -48,7 +51,7 @@
 .diagrama{margin:1rem 0;background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;padding:1rem;overflow-x:auto}
 .diagrama svg{display:block;width:100%;min-width:640px;height:auto;font-family:"Segoe UI",system-ui,Arial,sans-serif}
 .diagrama figcaption{font-size:.88rem;color:var(--suave);margin-top:.5rem}
-.d-caja{fill:#fff;stroke:#1e4e8c;stroke-width:2}
+.d-caja{fill:#fff;stroke:#1d4ed8;stroke-width:2}
 .d-caja.fin{fill:#ecfdf3;stroke:#15803d}
 .d-caja.gris{fill:#f1f5f9;stroke:#94a3b8}
 .d-caja.alerta{fill:#fef2f2;stroke:#b91c1c}
@@ -56,8 +59,8 @@
 .d-rombo{fill:#fffbeb;stroke:#b45309;stroke-width:2}
 .d-titulo{font-weight:700;font-size:15px;fill:#1f2933;text-anchor:middle}
 .d-texto{font-size:12.5px;fill:#5b6b7a;text-anchor:middle}
-.d-quien{font-size:12px;font-weight:700;fill:#1e4e8c;text-anchor:middle}
-.d-flecha{stroke:#1e4e8c;stroke-width:2;fill:none}
+.d-quien{font-size:12px;font-weight:700;fill:#1d4ed8;text-anchor:middle}
+.d-flecha{stroke:#1d4ed8;stroke-width:2;fill:none}
 .d-flecha.vuelta{stroke:#b91c1c;stroke-dasharray:6 4}
 .d-nota{font-size:12px;fill:#b91c1c;font-weight:700;text-anchor:middle}
 .d-si{font-size:12px;fill:#15803d;font-weight:700;text-anchor:middle}
@@ -69,10 +72,11 @@
 @media(max-width:900px){
   .manual{grid-template-columns:1fr}
   .manual-indice{position:static;max-height:none}
+  .donde{white-space:normal}
   .capturas-par{grid-template-columns:1fr}
 }
 @media print{
-  .barra,.pie,.manual-indice,.franja-urgente,.volver-arriba{display:none}
+  .lateral,.barra,.manual-indice,.franja-urgente,.volver-arriba{display:none}
   .manual{display:block}
   .captura,.diagrama,.pasos>li{break-inside:avoid}
 }

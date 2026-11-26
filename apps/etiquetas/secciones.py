@@ -7,7 +7,7 @@ def seccion_detalle(usuario, entregable):
     puede_asignar = servicios.puede_asignar(usuario, entregable)
     propias = set(Etiqueta.objects.filter(entregables=entregable).values_list("pk", flat=True))
     return {
-        "orden": 10, "zona": "cabecera", "plantilla": "etiquetas/_seccion.html",
+        "orden": 10, "zona": "cabecera", "pestana": "datos", "plantilla": "etiquetas/_seccion.html",
         "contexto": {
             "etiquetas": servicios.etiquetas_de(entregable),
             "puede_asignar": puede_asignar,

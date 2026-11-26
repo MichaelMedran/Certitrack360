@@ -1,6 +1,6 @@
 """Generación de PDF con reportlab (SDD del Sprint 3, RF-47 y §7.8).
 
-Documento A4 estándar: encabezado «CertiTrack 360 · CERTICOM» en todas las páginas, título y subtítulo, tablas con ajuste de
+Documento A4 estándar: encabezado «CertiTrack · CERTICOM» en todas las páginas, título y subtítulo, tablas con ajuste de
 línea (los textos largos se parten en varias líneas dentro de su celda) y pie con un texto y el número de página.
 
 Las fuentes estándar de PDF (Helvetica) cubren las tildes y la «ñ». `documento_tabular` es reutilizable: el hito de reportes
@@ -15,7 +15,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-ENCABEZADO = "CertiTrack 360 · CERTICOM"
+ENCABEZADO = "CertiTrack · CERTICOM"
 AZUL = colors.HexColor("#1f3a5f")
 GRIS = colors.HexColor("#555555")
 LINEA = colors.HexColor("#c8cdd4")
@@ -141,7 +141,7 @@ def documento_tabular(titulo, subtitulo, secciones, pie=""):
     salida = BytesIO()
     documento = SimpleDocTemplate(
         salida, pagesize=A4, leftMargin=MARGEN_LATERAL, rightMargin=MARGEN_LATERAL, topMargin=22 * mm, bottomMargin=20 * mm,
-        title=str(titulo), author="CertiTrack 360 · CERTICOM",
+        title=str(titulo), author="CertiTrack · CERTICOM",
     )
     documento.build(elementos, onFirstPage=decorar, onLaterPages=decorar)
     return salida.getvalue()

@@ -71,7 +71,7 @@ class ConectorMeta:
     """API de WhatsApp Business en la nube (Meta). Envía una plantilla aprobada con el aviso como único parámetro.
 
     Meta solo permite iniciar una conversación con una plantilla aprobada; la plantilla debe tener un cuerpo con una
-    variable, por ejemplo: «CertiTrack 360: {{1}}».
+    variable, por ejemplo: «CertiTrack: {{1}}».
     """
 
     def enviar(self, numero, texto):

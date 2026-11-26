@@ -1,8 +1,8 @@
-# CertiTrack 360 — SDD del Sprint 3
+# CertiTrack — SDD del Sprint 3
 
 | | |
 |---|---|
-| **Proyecto** | CertiTrack 360, plataforma de seguimiento de entregables del área de Proyectos de CERTICOM S.A.C. |
+| **Proyecto** | CertiTrack, plataforma de seguimiento de entregables del área de Proyectos de CERTICOM S.A.C. |
 | **Versión** | 3.0 (Sprint 3) |
 | **Fecha** | 2026-11-10 |
 | **Estado** | En construcción. Las decisiones de la sección 15 se tomaron con el valor propuesto porque el equipo pidió ejecutar el sprint de inmediato; quedan **por ratificar** |

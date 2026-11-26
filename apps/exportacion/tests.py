@@ -172,7 +172,7 @@ class PdfTests(BaseExportacion):
         lector = PdfReader(BytesIO(cuerpo))
         self.assertGreaterEqual(len(lector.pages), 1)
         texto = texto_pdf(cuerpo)
-        for esperado in (self.e1.codigo, "CertiTrack 360 · CERTICOM", "Cliente Demo", "noviembre de 2026", "TDR-2026-007",
+        for esperado in (self.e1.codigo, "CertiTrack · CERTICOM", "Cliente Demo", "noviembre de 2026", "TDR-2026-007",
                          "Operación mensual del año niño", "Exportado por", "Página 1", "Código", "Fecha de recepción"):
             self.assertIn(esperado, texto)
 

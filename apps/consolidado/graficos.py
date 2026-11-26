@@ -9,7 +9,7 @@ de pantalla, y el valor de cada barra siempre aparece escrito (el color nunca es
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
-COLOR_BARRA = "#1e4e8c"  # azul oscuro: contraste 8,6:1 sobre blanco
+COLOR_BARRA = "#1d4ed8"  # azul de la paleta Certicom: contraste 6,7:1 sobre blanco
 COLOR_TEXTO = "#1f2937"  # contraste 14:1 sobre blanco
 COLOR_EJE = "#6b7280"
 COLOR_FONDO_BARRA = "#e5e7eb"

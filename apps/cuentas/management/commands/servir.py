@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     help = (
-        "Arranca CertiTrack 360 con el servidor de producción (waitress). Los archivos estáticos los sirve WhiteNoise, "
+        "Arranca CertiTrack con el servidor de producción (waitress). Los archivos estáticos los sirve WhiteNoise, "
         "así que no hace falta otro servidor web. Reemplaza a «runserver», que es solo para desarrollo (RF-51)."
     )
 
@@ -27,7 +27,7 @@ class Command(BaseCommand):
             call_command("collectstatic", interactive=False, verbosity=0)
         servidor = create_server(application, host=opts["host"], port=opts["puerto"], threads=opts["hilos"])
         self.stdout.write(self.style.SUCCESS(
-            f"CertiTrack 360 escuchando en http://{opts['host']}:{opts['puerto']}/ con {opts['hilos']} hilos. Ctrl+C para detener."))
+            f"CertiTrack escuchando en http://{opts['host']}:{opts['puerto']}/ con {opts['hilos']} hilos. Ctrl+C para detener."))
         try:
             servidor.run()
         except KeyboardInterrupt:

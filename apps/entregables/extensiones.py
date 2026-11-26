@@ -9,7 +9,8 @@ engancha aquí desde su `AppConfig.ready()`, sin editar la máquina de estados n
   después de guardar el cambio y su registro del historial (`opciones["cambio"]`).
 - `registrar_seccion(fn)`: `fn(usuario, entregable)` devuelve None o un dict con `plantilla` (ruta del parcial), `contexto`
   (lo recibe el parcial en la variable `s`), `orden` (entero) y `zona` («cabecera», debajo de las tarjetas de resumen, o
-  «cuerpo», antes del historial; por defecto «cuerpo»).
+  «cuerpo», antes del historial; por defecto «cuerpo»). `pestana` dice en qué pestaña del detalle se muestra («checklist»,
+  «facturacion», «entregas», «datos» o «urgencia»); sin ella, va a «Más».
 - `registrar_tarjeta(fn)`: `fn(entregables, usuario)` agrega atributos a las tarjetas del tablero y a las filas de la lista,
   con consultas por lote (nunca una por tarjeta).
 
@@ -82,6 +83,15 @@ def secciones(usuario, entregable):
             salida.setdefault(seccion.get("zona") or "cuerpo", []).append(seccion)
     for lista in salida.values():
         lista.sort(key=lambda s: s["orden"])
+    return salida
+
+
+def por_pestana(secciones_por_zona):
+    """Las mismas secciones, agrupadas por la pestaña del detalle donde se muestran (primero las de «cabecera»)."""
+    salida = {}
+    for zona in secciones_por_zona.values():
+        for seccion in zona:
+            salida.setdefault(seccion.get("pestana") or "otros", []).append(seccion)
     return salida
 
 

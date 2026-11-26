@@ -187,12 +187,12 @@ class FuncionesSvgTests(FiltrosBase):
 
     def test_las_barras_son_proporcionales(self):
         svg = graficos.barras_horizontales("t", [("a", 10, "10"), ("b", 5, "5")])
-        anchos = [float(x) for x in re.findall(r'width="([\d.]+)" height="20" rx="3" fill="#1e4e8c"', svg)]
+        anchos = [float(x) for x in re.findall(r'width="([\d.]+)" height="20" rx="3" fill="#1d4ed8"', svg)]
         self.assertAlmostEqual(anchos[0], 2 * anchos[1], places=0)
 
     def test_cero_no_dibuja_barra_pero_si_el_valor_escrito(self):
         svg = graficos.barras_horizontales("t", [("a", 0, "0"), ("b", 2, "2")])
-        self.assertEqual(svg.count('fill="#1e4e8c"/>'), 1)
+        self.assertEqual(svg.count('fill="#1d4ed8"/>'), 1)
         self.assertIn(">0</text>", svg)
 
     def test_las_etiquetas_largas_se_acortan_pero_van_completas_en_el_titulo(self):

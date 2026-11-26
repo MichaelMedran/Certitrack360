@@ -1,4 +1,4 @@
-"""Configuración de CertiTrack 360. Todo se lee de variables de entorno (ver .env.example y SDD §18.2)."""
+"""Configuración de CertiTrack. Todo se lee de variables de entorno (ver .env.example y SDD §18.2)."""
 import os
 import re
 import sys

@@ -20,7 +20,7 @@
 .etq-nueva label:first-of-type{margin-left:0}
 
 /* Prioridad (RF-42): el nombre del nivel siempre va en texto; el color solo lo refuerza. */
-.prioridad{display:inline-block;font-size:.75rem;font-weight:700;padding:.05rem .5rem;border-radius:4px;border:1px solid;margin-right:.25rem}
+.prioridad{display:inline-block;font-size:.75rem;font-weight:700;padding:.08rem .52rem;border-radius:999px;border:1px solid;white-space:nowrap}
 .prioridad-alta{background:#fee2e2;color:#7f1d1d;border-color:#b91c1c}
 .prioridad-media{background:#fef3c7;color:#78350f;border-color:#d97706}
 .prioridad-baja{background:#dcfce7;color:#14532d;border-color:#16a34a}

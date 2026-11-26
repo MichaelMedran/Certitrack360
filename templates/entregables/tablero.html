@@ -2,10 +2,12 @@
 {% load static %}
 {% block titulo %}Tablero{% endblock %}
 {% block contenido %}
+<div class="cabecera"><div>
 <h1>Tablero</h1>
 <p class="suave">Arrastre una tarjeta a la columna siguiente: el sistema solo acepta los movimientos permitidos para su rol.
   Con el teclado, abra la tarjeta y use «Mover entregable». Soltar una tarjeta de «Aprobado» en «Entregado» abre el formulario de entrega
   (pide el cargo de recepción).</p>
+</div>{% if user.puede_crear_entregables %}<div class="acciones"><a class="boton" href="{% url 'entregable_nuevo' %}">+ Nuevo entregable</a></div>{% endif %}</div>
 
 {% include "entregables/_filtros.html" %}
 

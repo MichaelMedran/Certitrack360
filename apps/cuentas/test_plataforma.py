@@ -269,7 +269,7 @@ class ServidorDeProduccionTests(TestCase):
             cuerpo = r.read().decode()
             self.assertEqual(r.status, 200)
             self.assertIn("default-src 'self'", r.getheader("Content-Security-Policy"))
-            self.assertIn("CertiTrack 360", cuerpo)
+            self.assertIn("CertiTrack", cuerpo)
             conexion.request("GET", "/static/js/certitrack.js")  # WhiteNoise sirve los estáticos
             estatico = conexion.getresponse()
             estatico.read()

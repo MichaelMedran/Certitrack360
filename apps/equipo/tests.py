@@ -26,7 +26,7 @@ class Caso28IncorporacionTests(Base):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.proc_guia = Procedimiento.objects.create(
-            titulo="Guía rápida de CertiTrack 360",
+            titulo="Guía rápida de CertiTrack",
             contenido="Recorrido inicial por tablero, calendario, avisos y buscador.",
             aprobado_por=cls.gerente,
             vigente=True,
@@ -63,7 +63,7 @@ class Caso28IncorporacionTests(Base):
                 {
                     "semana": 1,
                     "orden": 1,
-                    "titulo": "Recorrer CertiTrack 360",
+                    "titulo": "Recorrer CertiTrack",
                     "procedimiento": self.proc_guia,
                     "rol_responsable": "Senior asignado",
                     "como_se_comprueba": "Marcada por el ingresante",

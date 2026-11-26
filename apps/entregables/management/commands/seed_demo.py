@@ -150,7 +150,7 @@ AVANCES_TDR = [0.34, 1.0, 0.5, 0.0, 0.67, 1.0]
 
 PROCEDIMIENTOS_DEMO = [
     (
-        "Guía rápida de CertiTrack 360",
+        "Guía rápida de CertiTrack",
         None,
         "Recorrido por las pantallas principales: Inicio muestra sus entregables activos, plazos próximos, avisos y su "
         "plan de incorporación; Tablero permite mover entregables según el flujo validado por el servidor; Calendario "

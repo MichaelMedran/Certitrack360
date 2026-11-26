@@ -106,7 +106,7 @@ class CodigoTests(Base):
         self.client.force_login(self.j1)
         detalle = self.client.get(reverse("entregable_detalle", args=[self.e1.pk])).content.decode()
         self.assertIn(f'<h1>E1 <span class="etiqueta codigo">{self.e1.codigo}</span></h1>', detalle)
-        self.assertIn(f"<title>{self.e1.codigo} · E1 · CertiTrack 360</title>", detalle)
+        self.assertIn(f"<title>{self.e1.codigo} · E1 · CertiTrack</title>", detalle)
         tablero = self.client.get(reverse("tablero")).content.decode()
         self.assertIn(f'<div class="codigo">{self.e1.codigo}</div>', tablero)
         lista = self.client.get(reverse("entregables")).content.decode()
@@ -306,8 +306,8 @@ class DetalleYListaConRecepcionTests(Base):
         Entregable.objects.filter(pk=self.e1.pk).update(id_tdr="TDR-CD-001", fecha_recepcion=datetime.date(2026, 10, 30))
         self.client.force_login(self.j1)
         r = self.client.get(reverse("entregable_detalle", args=[self.e1.pk]))
-        for texto in ("ID-TDR · Línea", "ID-TDR: TDR-CD-001", "Línea: Custodia", "Recepción · Plazo", "Recepción: 30/10/2026",
-                      f"Plazo: <strong>{self.e1.plazo:%d/%m/%Y}</strong>"):
+        for texto in ("ID-TDR: TDR-CD-001", "Línea: Custodia", "<dt>Recepción</dt><dd>30/10/2026</dd>",
+                      f"<dt>Plazo</dt><dd>{self.e1.plazo:%d/%m/%Y}</dd>"):
             self.assertContains(r, texto)
 
     def test_sin_id_tdr_ni_linea_lo_dice_en_texto(self):

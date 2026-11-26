@@ -219,7 +219,7 @@ def seccion(usuario, entregable):
     if not datos["total"] and not puede:
         return None
     return {
-        "plantilla": "checklists/_tdr.html", "orden": 20,
+        "plantilla": "checklists/_tdr.html", "orden": 20, "pestana": "checklist",
         "contexto": {
             **datos, "puede": puede, "tipos": T.choices, "estados": ItemChecklistTDR.Estado.choices,
             "hay_ficha": puede and ficha_para(entregable) is not None,

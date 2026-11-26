@@ -1,4 +1,4 @@
-<details class="filtros">
+<details class="filtros" open data-filtros-plegables>
   <summary>Filtros <span class="chip" id="resumen-filtros">{{ n_filtros }} activo{{ n_filtros|pluralize }}</span></summary>
   <form method="get" action="{{ request.path }}" data-filtros
         hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true" hx-trigger="change, submit">
@@ -33,10 +33,10 @@
       <div><label for="f-orden">Ordenar por</label>
         <select id="f-orden" name="orden">
           {% for valor, etiqueta in opciones.ordenes %}<option value="{{ valor }}"{% if orden == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
-    </div>
-    <div class="acciones">
-      <button class="boton">Aplicar</button>
-      <a class="boton sec" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true">Limpiar</a>
+      <div class="acciones">
+        <button class="boton">Aplicar</button>
+        <a class="boton sec" href="{{ request.path }}" hx-get="{{ request.path }}" hx-target="#resultados" hx-push-url="true">Limpiar</a>
+      </div>
     </div>
   </form>
 </details>

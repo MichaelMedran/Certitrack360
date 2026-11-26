@@ -1,25 +1,21 @@
 {% extends "base.html" %}
+{% load static %}
 {% block titulo %}{{ e.codigo }} · {{ e.titulo }}{% endblock %}
 {% block contenido %}
-<h1>{{ e.titulo }} <span class="etiqueta codigo">{{ e.codigo }}</span></h1>
-<div class="cuadricula">
-  <div class="tarjeta"><div class="suave">Cliente / contrato</div>{{ e.contrato.cliente }}<br>{{ e.contrato.numero_contrato }}</div>
-  <div class="tarjeta"><div class="suave">ID-TDR · Línea</div>ID-TDR: {{ e.id_tdr|default:"sin registrar" }}<br>
-    Línea: {{ e.contrato.linea_servicio.nombre|default:"sin asignar" }}<br>
-    <span title="Número de este entregable entre los de su tipo en el contrato">{{ e.plantilla.nombre }} n.º {{ e.numero_correlativo }}</span></div>
-  <div class="tarjeta"><div class="suave">Recepción · Plazo</div>Recepción: {{ e.fecha_recepcion|date:"d/m/Y"|default:"sin registrar" }}<br>
-    Plazo: <strong>{{ e.plazo|date:"d/m/Y" }}</strong></div>
-  <div class="tarjeta"><div class="suave">Estado</div><strong>{{ e.get_estado_display }}</strong>
-    {% if con_correcciones %}<br><span class="etiqueta subestado">{{ etiqueta_subestado }}</span>{% endif %}</div>
-  <div class="tarjeta"><div class="suave">Urgencia</div>
-    {% if e.estado == 'HECHO' %}<strong>No aplica</strong> <span class="suave">(entregado)</span>
-    {% else %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}</div>
-  <div class="tarjeta"><div class="suave">Prioridad</div>{% include "entregables/_prioridad.html" %}
-    {% if e.alerta_urgente %}<br><span class="suave">Por alerta urgente abierta</span>{% endif %}</div>
-  <div class="tarjeta"><div class="suave">Responsables</div>Junior: {{ e.junior_asignado.nombre }}<br>Senior: {{ e.senior_revisor.nombre }}</div>
+<div class="cabecera">
+  <div>
+    <div class="cabecera-datos">
+      {% if e.estado != 'HECHO' %}<span class="urgencia urgencia-{{ e.urgencia|lower }}">{{ e.urgencia_etiqueta }}</span>{% endif %}
+      <span class="etiqueta estado">{{ e.get_estado_display }}</span>
+      {% if con_correcciones %}<span class="etiqueta subestado">{{ etiqueta_subestado }}</span>{% endif %}
+      {% if e.alerta_urgente %}<a class="etiqueta marca-urgente" href="#urgencia">URGENTE · Ver la alerta</a>{% endif %}
+    </div>
+    <h1>{{ e.titulo }} <span class="etiqueta codigo">{{ e.codigo }}</span></h1>
+    <p class="suave">{{ e.contrato.cliente }} · {{ e.contrato.numero_contrato }} · ID-TDR: {{ e.id_tdr|default:"sin registrar" }} · Línea: {{ e.contrato.linea_servicio.nombre|default:"sin asignar" }}</p>
+    {% for sec in paneles.datos %}{% if sec.contexto.etiquetas %}<div class="etiquetas-chips" aria-label="Etiquetas">{% for t in sec.contexto.etiquetas %}<span class="etq {{ t.clase_css }}">{{ t.nombre }}</span>{% endfor %}</div>{% endif %}{% endfor %}
+  </div>
+  <div class="acciones"><a class="boton sec" href="{% url 'tablero' %}">← Tablero</a></div>
 </div>
-
-{% for sec in secciones.cabecera %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
 
 {% if advertencia %}
 <div class="aviso aviso-warning" role="alert">
@@ -34,164 +30,23 @@
 </div>
 {% endif %}
 
-{% if siguientes %}
-<div class="tarjeta">
-  <h2 style="margin-top:0">Mover entregable</h2>
-  {% for destino, etiqueta in siguientes %}
-    {% if destino == 'VERIFICACION_SENIOR' and falta_para_verificar %}
-    <div class="aviso aviso-warning" role="status">{{ falta_para_verificar }}</div>
-    {% endif %}
-    {% if destino == 'LISTO_PARA_ENTREGA' and falta_para_aprobar %}
-    <div class="aviso aviso-warning" role="status">{{ falta_para_aprobar }}</div>
-    {% endif %}
-    {% if e.estado == 'VERIFICACION_SENIOR' and destino == 'EN_PROCESO' %}
-    <form method="post" action="{% url 'entregable_estado' e.pk %}" style="margin-bottom:1rem">{% csrf_token %}
-      <input type="hidden" name="estado" value="{{ destino }}">
-      <strong>Devolver a «{{ etiqueta }}» (requiere una observación)</strong>
-      <p><label for="{{ form_devolver.tipo_error.id_for_label }}">Tipo de error</label>{{ form_devolver.tipo_error }}</p>
-      <p><label for="{{ form_devolver.descripcion.id_for_label }}">Descripción</label>{{ form_devolver.descripcion }}</p>
-      <button class="boton peligro">Devolver</button>
-    </form>
-    {% elif destino == 'HECHO' %}
-    <a class="boton" href="{% url 'entregable_entregar' e.pk %}">Marcar como entregado</a>
-    <span class="suave">Pide el cargo de recepción, la fecha y el medio de entrega.</span>
-    {% else %}
-    <form class="en-linea" method="post" action="{% url 'entregable_estado' e.pk %}">{% csrf_token %}
-      <input type="hidden" name="estado" value="{{ destino }}"><button class="boton">Pasar a «{{ etiqueta }}»</button>
-    </form>
-    {% endif %}
-  {% endfor %}
-</div>
-{% endif %}
-
-<h2 id="responsables">Responsables</h2>
-<div class="tarjeta">
-  <div class="tabla"><table>
-    <thead><tr><th>Persona</th><th>Función</th><th>Fecha límite</th><th>Desde</th><th><span class="sr-only">Acciones</span></th></tr></thead>
-    <tbody>
-      <tr>
-        <td>{{ e.junior_asignado.nombre }}</td>
-        <td>Junior principal (elaboración)</td>
-        <td>{{ e.plazo|date:"d/m/Y" }}</td>
-        <td>{{ e.fecha_recepcion|date:"d/m/Y"|default:"—" }}</td>
-        <td>{% if puede_gestionar_responsables %}<span class="suave">Principal</span>{% endif %}</td>
-      </tr>
-      <tr>
-        <td>{{ e.senior_revisor.nombre }}</td>
-        <td>Senior revisor</td>
-        <td>—</td>
-        <td>{{ e.fecha_recepcion|date:"d/m/Y"|default:"—" }}</td>
-        <td>{% if puede_gestionar_responsables %}<span class="suave">Principal</span>{% endif %}</td>
-      </tr>
-      {% for ap in apoyos_activos %}
-      <tr>
-        <td>{{ ap.usuario.nombre }}</td>
-        <td>Apoyo ({{ ap.get_funcion_display|lower }})</td>
-        <td>{{ ap.fecha_limite|date:"d/m/Y"|default:"—" }}</td>
-        <td>{{ ap.asignado_en|date:"d/m/Y" }}</td>
-        <td>
-          {% if puede_gestionar_responsables %}
-          <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="en-linea">{% csrf_token %}
-            <input type="hidden" name="accion" value="quitar_apoyo">
-            <input type="hidden" name="apoyo_id" value="{{ ap.pk }}">
-            <button class="boton sec chico">Quitar<span class="sr-only"> a {{ ap.usuario.nombre }}</span></button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table></div>
-
-  {% if conflicto_responsables %}
-  <div class="aviso aviso-warning" role="alert">
-    <strong>Antes de confirmar:</strong>
-    <ul>
-      {% for c in conflicto_responsables.conflictos %}<li>{{ c }}</li>{% endfor %}
-    </ul>
-    <form method="post" action="{% url 'entregable_responsables' e.pk %}" style="margin-top:.5rem">{% csrf_token %}
-      <input type="hidden" name="accion" value="{{ conflicto_responsables.accion }}">
-      {% if conflicto_responsables.rol %}<input type="hidden" name="rol" value="{{ conflicto_responsables.rol }}">{% endif %}
-      <input type="hidden" name="usuario" value="{{ conflicto_responsables.usuario }}">
-      {% if conflicto_responsables.motivo %}<input type="hidden" name="motivo" value="{{ conflicto_responsables.motivo }}">{% endif %}
-      {% if conflicto_responsables.funcion %}<input type="hidden" name="funcion" value="{{ conflicto_responsables.funcion }}">{% endif %}
-      {% if conflicto_responsables.fecha_limite %}<input type="hidden" name="fecha_limite" value="{{ conflicto_responsables.fecha_limite }}">{% endif %}
-      <input type="hidden" name="confirmar" value="1">
-      <div class="acciones">
-        <button class="boton">Confirmar de todos modos</button>
-        <a class="boton sec" href="{% url 'entregable_detalle' e.pk %}#responsables">Cancelar</a>
-      </div>
-    </form>
-  </div>
-  {% endif %}
-
-  {% if puede_gestionar_responsables %}
-  <details style="margin-bottom:.6rem"{% if conflicto_responsables.accion == 'reasignar' %} open{% endif %}>
-    <summary><strong>Reasignar responsable principal</strong></summary>
-    <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="caja-gris">{% csrf_token %}
-      <input type="hidden" name="accion" value="reasignar">
-      <div class="filtros-grid">
-        <div>
-          <label for="resp-rol">Función principal</label>
-          <select id="resp-rol" name="rol">
-            <option value="junior"{% if conflicto_responsables.rol != 'senior' %} selected{% endif %}>Junior principal (elaboración)</option>
-            <option value="senior"{% if conflicto_responsables.rol == 'senior' %} selected{% endif %}>Senior revisor</option>
-          </select>
-        </div>
-        <div>
-          <label for="resp-usuario">Nuevo responsable</label>
-          <select id="resp-usuario" name="usuario" required>
-            <option value="">— Elija la persona —</option>
-            {% for u in colaboradores_apoyo %}
-            <option data-rol="{{ u.rol }}" value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <label for="resp-motivo">Motivo (opcional)</label>
-          <input id="resp-motivo" name="motivo" type="text" maxlength="200" placeholder="Motivo de la reasignación…">
-        </div>
-      </div>
-      <button class="boton">Reasignar</button>
-    </form>
-  </details>
-
-  <details{% if conflicto_responsables.accion == 'sumar_apoyo' %} open{% endif %}>
-    <summary><strong>+ Sumar responsable de apoyo</strong></summary>
-    <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="caja-gris">{% csrf_token %}
-      <input type="hidden" name="accion" value="sumar_apoyo">
-      <div class="filtros-grid">
-        <div>
-          <label for="apoyo-usuario">Persona</label>
-          <select id="apoyo-usuario" name="usuario" required>
-            <option value="">— Elija la persona —</option>
-            {% for u in colaboradores_apoyo %}
-            <option data-rol="{{ u.rol }}" value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <label for="apoyo-funcion">Función</label>
-          <select id="apoyo-funcion" name="funcion">
-            {% for valor, etiqueta in funciones_apoyo %}
-            <option value="{{ valor }}">{{ etiqueta }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <label for="apoyo-fecha-limite">Fecha límite (opcional)</label>
-          <input id="apoyo-fecha-limite" name="fecha_limite" type="date">
-        </div>
-      </div>
-      <button class="boton">Sumar responsable de apoyo</button>
-    </form>
-  </details>
-  {% endif %}
+<div class="detalle">
+<div class="detalle-cuerpo tarjeta" data-paneles>
+{# Cada pestaña es un enlace a su sección: sin JavaScript se ven todas, una debajo de otra. #}
+<div class="paneles-menu" aria-label="Secciones del entregable">
+  <a id="tab-adjuntos" href="#panel-adjuntos">Adjuntos y versiones{% if grupos_adjuntos %} ({{ grupos_adjuntos|length }}){% endif %}</a>
+  <a id="tab-observaciones" href="#panel-observaciones">Observaciones{% if observaciones %} ({{ observaciones|length }}){% endif %}</a>
+  {% if paneles.checklist %}<a id="tab-checklist" href="#panel-checklist">Checklist TDR{% with s=paneles.checklist.0.contexto %}{% if s.total %} ({{ s.cumplidos }}/{{ s.total }}){% endif %}{% endwith %}</a>{% endif %}
+  <a id="tab-tiempo" href="#panel-tiempo">Tiempo por etapa</a>
+  {% if paneles.facturacion %}<a id="tab-facturacion" href="#panel-facturacion">Facturación y PDF</a>{% endif %}
+  <a id="tab-entregas" href="#panel-entregas">Entregas y acta</a>
+  <a id="tab-datos" href="#panel-datos">Datos y responsables</a>
+  {% if paneles.urgencia %}<a id="tab-urgencia" href="#panel-urgencia">Urgencia</a>{% endif %}
+  {% if paneles.otros %}<a id="tab-otros" href="#panel-otros">Más</a>{% endif %}
+  <a id="tab-historial" href="#panel-historial">Historial</a>
 </div>
 
-<h2>Datos del entregable ({{ e.plantilla.nombre }})</h2>
-<div class="tabla"><table>{% for etiqueta, valor in e.datos_etiquetados %}<tr><th style="width:30%">{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table></div>
-
+<section class="panel inicial" id="panel-adjuntos" aria-labelledby="tab-adjuntos">
 <h2 id="adjuntos">Adjuntos y versiones</h2>
 <div class="tarjeta">
   {% if requeridos %}
@@ -238,7 +93,9 @@
   <p class="suave">Ya no puede subir adjuntos: solo se suben mientras el entregable está en {{ estados_de_subida }}.</p>
   {% endif %}
 </div>
+</section>
 
+<section class="panel" id="panel-observaciones" aria-labelledby="tab-observaciones">
 <h2 id="observaciones">Observaciones</h2>
 {% for o in observaciones %}
 <div class="tarjeta observacion" style="margin-bottom:.6rem">
@@ -291,7 +148,7 @@
 {% if es_senior and not admite_observaciones %}
 <p class="suave">En «{{ e.get_estado_display }}» no se registran observaciones nuevas: no se aprueba ni se entrega con observaciones abiertas.</p>
 {% elif es_senior %}
-<form method="post" action="{% url 'observacion_nueva' e.pk %}" class="tarjeta">{% csrf_token %}
+<form method="post" action="{% url 'observacion_nueva' e.pk %}" class="tarjeta" id="registrar-observaciones">{% csrf_token %}
   <h2 style="margin-top:0">Registrar observaciones <span class="suave">(senior, gerente y admin)</span></h2>
   {% if e.estado == 'VERIFICACION_SENIOR' %}<p class="suave">El entregable está en «Revisión senior»: al registrar, vuelve a «En proceso» con «{{ etiqueta_subestado }}».</p>{% endif %}
   <div id="filas-observacion">
@@ -320,7 +177,13 @@
   </div>
 </form>
 {% endif %}
+</section>
 
+{% if paneles.checklist %}<section class="panel" id="panel-checklist" aria-labelledby="tab-checklist">
+{% for sec in paneles.checklist %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+</section>{% endif %}
+
+<section class="panel" id="panel-tiempo" aria-labelledby="tab-tiempo">
 <h2 id="tiempo">Tiempo por etapa</h2>
 <div class="tarjeta">
   {% if puede_registrar_tiempo %}
@@ -423,7 +286,13 @@
   </details>
   {% endif %}
 </div>
+</section>
 
+{% if paneles.facturacion %}<section class="panel" id="panel-facturacion" aria-labelledby="tab-facturacion">
+{% for sec in paneles.facturacion %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+</section>{% endif %}
+
+<section class="panel" id="panel-entregas" aria-labelledby="tab-entregas">
 <h2 id="entregas">Entregas y acta de conformidad</h2>
 <div class="tarjeta">
   {% if entregas %}
@@ -473,11 +342,225 @@
   {% endif %}
 </div>
 
-{% for sec in secciones.cuerpo %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+{% for sec in paneles.entregas %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+</section>
 
-<h2>Historial</h2>
+<section class="panel" id="panel-datos" aria-labelledby="tab-datos">
+<h2>Datos del entregable ({{ e.plantilla.nombre }})</h2>
+<div class="tabla"><table>{% for etiqueta, valor in e.datos_etiquetados %}<tr><th style="width:30%">{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table></div>
+
+<h2 id="responsables">Responsables</h2>
+<div class="tarjeta">
+  <div class="tabla"><table>
+    <thead><tr><th>Persona</th><th>Función</th><th>Fecha límite</th><th>Desde</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+    <tbody>
+      <tr>
+        <td>{{ e.junior_asignado.nombre }}</td>
+        <td>Junior principal (elaboración)</td>
+        <td>{{ e.plazo|date:"d/m/Y" }}</td>
+        <td>{{ e.fecha_recepcion|date:"d/m/Y"|default:"—" }}</td>
+        <td>{% if puede_gestionar_responsables %}<span class="suave">Principal</span>{% endif %}</td>
+      </tr>
+      <tr>
+        <td>{{ e.senior_revisor.nombre }}</td>
+        <td>Senior revisor</td>
+        <td>—</td>
+        <td>{{ e.fecha_recepcion|date:"d/m/Y"|default:"—" }}</td>
+        <td>{% if puede_gestionar_responsables %}<span class="suave">Principal</span>{% endif %}</td>
+      </tr>
+      {% for ap in apoyos_activos %}
+      <tr>
+        <td>{{ ap.usuario.nombre }}</td>
+        <td>Apoyo ({{ ap.get_funcion_display|lower }})</td>
+        <td>{{ ap.fecha_limite|date:"d/m/Y"|default:"—" }}</td>
+        <td>{{ ap.asignado_en|date:"d/m/Y" }}</td>
+        <td>
+          {% if puede_gestionar_responsables %}
+          <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="en-linea">{% csrf_token %}
+            <input type="hidden" name="accion" value="quitar_apoyo">
+            <input type="hidden" name="apoyo_id" value="{{ ap.pk }}">
+            <button class="boton sec chico">Quitar<span class="sr-only"> a {{ ap.usuario.nombre }}</span></button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+
+  {% if conflicto_responsables %}
+  <div class="aviso aviso-warning" role="alert" data-abrir-panel>
+    <strong>Antes de confirmar:</strong>
+    <ul>
+      {% for c in conflicto_responsables.conflictos %}<li>{{ c }}</li>{% endfor %}
+    </ul>
+    <form method="post" action="{% url 'entregable_responsables' e.pk %}" style="margin-top:.5rem">{% csrf_token %}
+      <input type="hidden" name="accion" value="{{ conflicto_responsables.accion }}">
+      {% if conflicto_responsables.rol %}<input type="hidden" name="rol" value="{{ conflicto_responsables.rol }}">{% endif %}
+      <input type="hidden" name="usuario" value="{{ conflicto_responsables.usuario }}">
+      {% if conflicto_responsables.motivo %}<input type="hidden" name="motivo" value="{{ conflicto_responsables.motivo }}">{% endif %}
+      {% if conflicto_responsables.funcion %}<input type="hidden" name="funcion" value="{{ conflicto_responsables.funcion }}">{% endif %}
+      {% if conflicto_responsables.fecha_limite %}<input type="hidden" name="fecha_limite" value="{{ conflicto_responsables.fecha_limite }}">{% endif %}
+      <input type="hidden" name="confirmar" value="1">
+      <div class="acciones">
+        <button class="boton">Confirmar de todos modos</button>
+        <a class="boton sec" href="{% url 'entregable_detalle' e.pk %}#responsables">Cancelar</a>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if puede_gestionar_responsables %}
+  <details style="margin-bottom:.6rem"{% if conflicto_responsables.accion == 'reasignar' %} open{% endif %}>
+    <summary><strong>Reasignar responsable principal</strong></summary>
+    <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="caja-gris">{% csrf_token %}
+      <input type="hidden" name="accion" value="reasignar">
+      <div class="filtros-grid">
+        <div>
+          <label for="resp-rol">Función principal</label>
+          <select id="resp-rol" name="rol">
+            <option value="junior"{% if conflicto_responsables.rol != 'senior' %} selected{% endif %}>Junior principal (elaboración)</option>
+            <option value="senior"{% if conflicto_responsables.rol == 'senior' %} selected{% endif %}>Senior revisor</option>
+          </select>
+        </div>
+        <div>
+          <label for="resp-usuario">Nuevo responsable</label>
+          <select id="resp-usuario" name="usuario" required>
+            <option value="">— Elija la persona —</option>
+            {% for u in colaboradores_apoyo %}
+            <option data-rol="{{ u.rol }}" value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="resp-motivo">Motivo (opcional)</label>
+          <input id="resp-motivo" name="motivo" type="text" maxlength="200" placeholder="Motivo de la reasignación…">
+        </div>
+      </div>
+      <button class="boton">Reasignar</button>
+    </form>
+  </details>
+
+  <details{% if conflicto_responsables.accion == 'sumar_apoyo' %} open{% endif %}>
+    <summary><strong>+ Sumar responsable de apoyo</strong></summary>
+    <form method="post" action="{% url 'entregable_responsables' e.pk %}" class="caja-gris">{% csrf_token %}
+      <input type="hidden" name="accion" value="sumar_apoyo">
+      <div class="filtros-grid">
+        <div>
+          <label for="apoyo-usuario">Persona</label>
+          <select id="apoyo-usuario" name="usuario" required>
+            <option value="">— Elija la persona —</option>
+            {% for u in colaboradores_apoyo %}
+            <option data-rol="{{ u.rol }}" value="{{ u.pk }}">{{ u.nombre }} ({{ u.get_rol_display }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="apoyo-funcion">Función</label>
+          <select id="apoyo-funcion" name="funcion">
+            {% for valor, etiqueta in funciones_apoyo %}
+            <option value="{{ valor }}">{{ etiqueta }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="apoyo-fecha-limite">Fecha límite (opcional)</label>
+          <input id="apoyo-fecha-limite" name="fecha_limite" type="date">
+        </div>
+      </div>
+      <button class="boton">Sumar responsable de apoyo</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
+{% for sec in paneles.datos %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+</section>
+
+{% if paneles.urgencia %}<section class="panel" id="panel-urgencia" aria-labelledby="tab-urgencia">
+{% for sec in paneles.urgencia %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+</section>{% endif %}
+
+{% if paneles.otros %}<section class="panel" id="panel-otros" aria-labelledby="tab-otros">
+{% for sec in paneles.otros %}{% include sec.plantilla with s=sec.contexto %}{% endfor %}
+</section>{% endif %}
+
+<section class="panel" id="panel-historial" aria-labelledby="tab-historial">
+<h2 id="historial">Historial</h2>
 <div class="tabla"><table>
   <thead><tr><th>Fecha</th><th>Evento</th><th>Usuario</th></tr></thead>
   <tbody>{% for h in historial %}<tr><td>{{ h.fecha|date:"d/m/Y H:i" }}</td><td>{{ h.descripcion }}</td><td>{{ h.usuario.nombre }}</td></tr>{% endfor %}</tbody>
 </table></div>
+</section>
+
+</div>
+
+<aside class="detalle-lateral" aria-label="Resumen y acciones">
+<div class="tarjeta" id="resumen">
+  <h2>Ficha resumen</h2>
+  <dl class="ficha-resumen">
+    <div><dt>Plazo</dt><dd>{{ e.plazo|date:"d/m/Y" }}</dd></div>
+    <div><dt>Recepción</dt><dd>{{ e.fecha_recepcion|date:"d/m/Y"|default:"sin registrar" }}</dd></div>
+    <div><dt>Junior</dt><dd>{{ e.junior_asignado.nombre }}</dd></div>
+    <div><dt>Senior</dt><dd>{{ e.senior_revisor.nombre }}</dd></div>
+    <div><dt>Plantilla</dt><dd><span title="Número de este entregable entre los de su tipo en el contrato">{{ e.plantilla.nombre }} n.º {{ e.numero_correlativo }}</span></dd></div>
+    <div><dt>ID-TDR</dt><dd>{{ e.id_tdr|default:"sin registrar" }}</dd></div>
+    <div><dt>Estado</dt><dd><strong>{{ e.get_estado_display }}</strong></dd></div>
+    {% if e.estado == 'HECHO' %}<div><dt>Urgencia</dt><dd>No aplica <span class="suave">(entregado)</span></dd></div>{% endif %}
+    <div><dt>Prioridad</dt><dd>{% include "entregables/_prioridad.html" %}{% if e.alerta_urgente %}<br><span class="suave">Por alerta urgente abierta</span>{% endif %}</dd></div>
+  </dl>
+</div>
+
+{% if siguientes %}
+<div class="tarjeta" id="mover">
+  <h2>Mover entregable</h2>
+  {% for destino, etiqueta in siguientes %}
+    {% if destino == 'VERIFICACION_SENIOR' and falta_para_verificar %}
+    <div class="aviso aviso-warning" role="status">{{ falta_para_verificar }}</div>
+    {% endif %}
+    {% if destino == 'LISTO_PARA_ENTREGA' and falta_para_aprobar %}
+    <div class="aviso aviso-warning" role="status">{{ falta_para_aprobar }}</div>
+    {% endif %}
+    {% if e.estado == 'VERIFICACION_SENIOR' and destino == 'EN_PROCESO' %}
+    <form method="post" action="{% url 'entregable_estado' e.pk %}" style="margin-bottom:1rem">{% csrf_token %}
+      <input type="hidden" name="estado" value="{{ destino }}">
+      <strong>Devolver a «{{ etiqueta }}» (requiere una observación)</strong>
+      <p><label for="{{ form_devolver.tipo_error.id_for_label }}">Tipo de error</label>{{ form_devolver.tipo_error }}</p>
+      <p><label for="{{ form_devolver.descripcion.id_for_label }}">Descripción</label>{{ form_devolver.descripcion }}</p>
+      <button class="boton peligro">Devolver</button>
+    </form>
+    {% elif destino == 'HECHO' %}
+    <a class="boton" href="{% url 'entregable_entregar' e.pk %}">Marcar como entregado</a>
+    <span class="suave">Pide el cargo de recepción, la fecha y el medio de entrega.</span>
+    {% else %}
+    <form class="en-linea" method="post" action="{% url 'entregable_estado' e.pk %}">{% csrf_token %}
+      <input type="hidden" name="estado" value="{{ destino }}"><button class="boton">Pasar a «{{ etiqueta }}»</button>
+    </form>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="tarjeta">
+  <h2>Acciones rápidas</h2>
+  <div class="atajos">
+    {% if puede_subir %}<a class="boton sec" href="#adjuntos">Subir un adjunto</a>{% endif %}
+    {% if es_senior and admite_observaciones %}<a class="boton sec" href="#registrar-observaciones">Registrar observaciones</a>{% endif %}
+    {% if puede_registrar_tiempo %}<a class="boton sec" href="#tiempo">Registrar tiempo</a>{% endif %}
+    {% if puede_gestionar_responsables %}<a class="boton sec" href="#responsables">Agregar responsable de apoyo</a>{% endif %}
+    {% if paneles.facturacion %}<a class="boton sec" href="#panel-facturacion">Facturación y exportar</a>{% endif %}
+    <a class="boton sec" href="#panel-datos">Ver datos y etiquetas</a>
+  </div>
+</div>
+
+<div class="tarjeta" id="historial-reciente">
+  <h2>Historial reciente</h2>
+  <ul class="historial-corto">
+    {% for h in historial|slice:":4" %}<li><span class="etiqueta">{{ h.fecha|date:"d/m H:i" }}</span> {{ h.usuario.nombre }}: {{ h.descripcion|truncatechars:90 }}</li>{% empty %}<li class="suave">Sin movimientos.</li>{% endfor %}
+  </ul>
+  <a class="boton sec chico" href="#historial">Ver historial completo</a>
+</div>
+</aside>
+</div>
 {% endblock %}
+{% block scripts %}<script defer src="{% static 'js/detalle.js' %}"></script>{% endblock %}

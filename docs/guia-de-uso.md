@@ -1,4 +1,4 @@
-# CertiTrack 360 — Guía de uso y verificación contra las entrevistas
+# CertiTrack — Guía de uso y verificación contra las entrevistas
 
 Estado al 2026-11-12, rama `sprint-3` (Sprints 1, 2 y 3 completos, 1270 pruebas en verde).
 
@@ -14,7 +14,7 @@ Las entrevistas se citan solo por rol (junior, senior), sin nombres de personas.
 
 ## 1. Cómo funciona
 
-CertiTrack 360 es una plataforma web interna para el área de Proyectos. Sigue cada **entregable** (reporte, informe, acta) de un **contrato** de un **cliente**, desde que se registra hasta que el cliente firma el acta.
+CertiTrack es una plataforma web interna para el área de Proyectos. Sigue cada **entregable** (reporte, informe, acta) de un **contrato** de un **cliente**, desde que se registra hasta que el cliente firma el acta.
 
 ### El recorrido de un entregable
 
@@ -155,7 +155,7 @@ Pantallas que no están en la barra de todos los roles:
 Viene apagado. Para encenderlo hace falta una cuenta de WhatsApp Business con la API en la nube de Meta:
 
 1. En Meta, crear la aplicación de WhatsApp Business, anotar el identificador del número y generar un token permanente.
-2. Crear y hacer aprobar una plantilla de mensaje con una variable en el cuerpo, por ejemplo «CertiTrack 360: {{1}}».
+2. Crear y hacer aprobar una plantilla de mensaje con una variable en el cuerpo, por ejemplo «CertiTrack: {{1}}».
 3. En el archivo `.env` del servidor definir `WHATSAPP_CONECTOR=apps.alertas.whatsapp.ConectorMeta`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` y `WHATSAPP_PLANTILLA` (ver `.env.example`). Opcional: `WHATSAPP_TIPOS` para limitar qué avisos salen y `SITIO_URL` para que el mensaje lleve la dirección del aviso.
 4. Reiniciar la web y el programador. El servidor necesita salida a internet hacia `graph.facebook.com`.
 5. Registrar el celular de cada persona en **Gestión › Personal**.

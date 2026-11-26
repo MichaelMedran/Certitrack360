@@ -111,7 +111,7 @@ def seccion_penalidades(usuario, entregable):
     if not penalidades and not puede and not atraso:
         return None
     return {
-        "plantilla": "cumplimiento/_penalidades.html", "orden": 60,
+        "plantilla": "cumplimiento/_penalidades.html", "orden": 60, "pestana": "entregas",
         "contexto": {
             "penalidades": penalidades, "puede": puede, "atraso": atraso,
             "total": sum((p.monto for p in penalidades if p.monto is not None), Decimal("0")),
@@ -221,7 +221,7 @@ def seccion_vigencias(usuario, entregable):
     if not documentos and not puede:
         return None
     return {
-        "plantilla": "cumplimiento/_vigencias.html", "orden": 25,
+        "plantilla": "cumplimiento/_vigencias.html", "orden": 25, "pestana": "datos",
         "contexto": {"documentos": documentos, "puede": puede, "cliente": cliente,
                      "hay_vencidos": any(d.estado == VENCIDO for d in documentos)},
     }

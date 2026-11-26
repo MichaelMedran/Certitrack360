@@ -18,7 +18,7 @@ Ningún componente se conecta a internet para funcionar (RNF-15 y RNF-16).
 ## 2. Instalación
 
 ```powershell
-git clone <repositorio> certitrack360 ; cd certitrack360
+git clone <repositorio> certitrack ; cd certitrack
 python -m venv .venv
 .\.venv\Scripts\pip install -r requirements.txt      # Linux: .venv/bin/pip
 copy .env.example .env                               # Linux: cp .env.example .env
@@ -55,7 +55,7 @@ Se detiene con Ctrl+C. **No cargue `seed_demo` en producción**: son datos simul
 ## 3. Que arranque solo
 
 - **Windows:** cree una tarea programada («Al iniciar el sistema», con una cuenta de servicio sin privilegios) que ejecute
-  `C:\certitrack360\.venv\Scripts\python.exe manage.py servir` con carpeta de inicio `C:\certitrack360`; otra igual con `manage.py programador`.
+  `C:\certitrack\.venv\Scripts\python.exe manage.py servir` con carpeta de inicio `C:\certitrack`; otra igual con `manage.py programador`.
   También sirve NSSM u otro administrador de servicios.
 - **Linux:** dos unidades de systemd (`certitrack-web.service` con `ExecStart=.../python manage.py servir` y `certitrack-programador.service` con
   `manage.py programador`), con `Restart=always` y `WorkingDirectory` en la carpeta de la aplicación.

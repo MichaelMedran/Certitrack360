@@ -200,7 +200,7 @@ def seccion(usuario, entregable):
     items = items_aplicables(entregable) if en_revision else []
     vigente = revision_vigente(entregable) if en_revision else None
     return {
-        "plantilla": "checklists/_calidad.html", "orden": 30,
+        "plantilla": "checklists/_calidad.html", "orden": 30, "pestana": "checklist",
         "contexto": {
             "en_revision": en_revision, "items": items, "revisiones": revisiones, "vigente": vigente,
             "puede_revisar": en_revision and bool(items) and puede_revisar(usuario, entregable),

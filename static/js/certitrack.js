@@ -1,4 +1,4 @@
-/* CertiTrack 360 — comportamiento compartido. Todo funciona sin conexión a internet. */
+/* CertiTrack — comportamiento compartido. Todo funciona sin conexión a internet. */
 (function () {
   "use strict";
 
@@ -43,6 +43,31 @@
   }
   document.addEventListener("htmx:afterSettle", sincronizarFiltros);
   document.addEventListener("htmx:historyRestore", sincronizarFiltros);
+
+  // Los filtros del tablero y de la lista están a la vista; en pantallas angostas empiezan plegados para no tapar el contenido.
+  if (window.matchMedia("(max-width: 980px)").matches) {
+    document.querySelectorAll("[data-filtros-plegables]").forEach(function (panel) { panel.open = false; });
+  }
+
+  // Menú lateral en pantallas angostas: se abre con «Menú» y se cierra con Escape o al tocar fuera.
+  const menu = document.getElementById("menu-lateral");
+  const botonMenu = document.querySelector("[data-menu]");
+  const telon = document.querySelector("[data-cerrar-menu]");
+  function mostrarMenu(abrir) {
+    menu.classList.toggle("abierto", abrir);
+    botonMenu.setAttribute("aria-expanded", abrir ? "true" : "false");
+    telon.hidden = !abrir;
+    if (abrir) menu.querySelector("a").focus();
+  }
+  if (menu && botonMenu && telon) {
+    botonMenu.addEventListener("click", function () { mostrarMenu(!menu.classList.contains("abierto")); });
+    telon.addEventListener("click", function () { mostrarMenu(false); });
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key !== "Escape" || !menu.classList.contains("abierto")) return;
+      mostrarMenu(false);
+      botonMenu.focus();
+    });
+  }
 
   // Formularios que piden confirmación antes de enviarse: <form data-confirmar="¿Seguro?">
   document.addEventListener("submit", function (evento) {

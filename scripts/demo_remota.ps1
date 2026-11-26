@@ -1,4 +1,4 @@
-# CertiTrack 360 - demostracion remota temporal.
+# CertiTrack - demostracion remota temporal.
 #
 # Levanta la aplicacion en este equipo con una base de datos de demostracion separada y la publica en internet
 # con un tunel rapido de Cloudflare (HTTPS, sin cuenta ni abrir puertos del router). La direccion cambia en
@@ -88,7 +88,7 @@ try {
 
     Write-Host ""
     Write-Host "==================================================================" -ForegroundColor Green
-    Write-Host " CertiTrack 360 disponible en:  $url" -ForegroundColor Green
+    Write-Host " CertiTrack disponible en:  $url" -ForegroundColor Green
     Write-Host " Clave (todos los usuarios):    $Clave" -ForegroundColor Green
     Write-Host " Usuarios: gerente_demo, senior1, senior2, junior1, junior2, junior3, admin_demo"
     Write-Host " (la direccion puede tardar unos segundos en responder la primera vez)"

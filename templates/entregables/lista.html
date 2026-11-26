@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block titulo %}Entregables{% endblock %}
 {% block contenido %}
-<h1>Entregables</h1>
+<div class="cabecera"><div><h1>Entregables</h1></div>
+{% if user.puede_crear_entregables %}<div class="acciones"><a class="boton" href="{% url 'entregable_nuevo' %}">Nuevo entregable</a></div>{% endif %}</div>
 {% include "entregables/_pestanas.html" with pestana="entregables" %}
-{% if user.puede_crear_entregables %}<div class="acciones"><a class="boton" href="{% url 'entregable_nuevo' %}">Nuevo entregable</a></div>{% endif %}
 
 {% include "entregables/_filtros.html" %}
 

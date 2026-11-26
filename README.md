@@ -1,4 +1,4 @@
-# CertiTrack 360 (prototipo MVP)
+# CertiTrack (prototipo MVP)
 
 Plataforma web local para el seguimiento de los entregables documentales del área de Proyectos. Todo corre en el servidor
 local: sin APIs externas, sin CDNs, sin telemetría. **Solo se usan datos simulados.**

@@ -284,6 +284,51 @@ class PlantillaBaseTests(Base):
         barra = self.client.get(reverse("inicio")).content.decode().split("</header>")[0]
         self.assertNotIn(enlace, barra)
 
+    def test_el_menu_lateral_agrupa_las_secciones_por_area_segun_el_rol(self):
+        for usuario, gerencia in ((self.j1, False), (self.s1, False), (self.gerente, True), (self.admin, True)):
+            with self.subTest(usuario=usuario.username):
+                self.client.force_login(usuario)
+                menu = self.client.get(reverse("inicio")).content.decode().split("<aside")[1].split("</aside>")[0]
+                self.assertIn("Operación diaria", menu)
+                self.assertIn("Conocimiento y control", menu)
+                self.assertEqual("Gerencia y administración" in menu, gerencia)
+                self.assertEqual(f'href="{reverse("reportes")}"' in menu, gerencia)
+
+    def test_checklists_y_reportes_se_marcan_en_el_menu_sin_duplicar_la_seccion(self):
+        self.client.force_login(self.gerente)
+        for nombre, esperado in (("checklists", "Checklists"), ("entregables", "Entregables"),
+                                 ("consolidado", "Consolidado"), ("reportes", "Reportes")):
+            with self.subTest(pantalla=nombre):
+                menu = self.client.get(reverse(nombre)).content.decode().split("<aside")[1].split("</aside>")[0]
+                self.assertEqual(re.findall(r'aria-current="page">([^<]+)</a>', menu), [esperado])
+
+    def test_los_iconos_del_menu_existen(self):
+        css = open(finders.find("css/certitrack.css"), encoding="utf-8").read()
+        iconos = re.findall(r'url\("\.\./(iconos/[a-z]+\.svg)"\)', css)
+        self.assertGreaterEqual(len(iconos), 14)
+        for ruta in iconos:
+            with self.subTest(ruta=ruta):
+                self.assertIsNotNone(finders.find(ruta), ruta)
+
+    def test_el_detalle_reparte_sus_secciones_en_pestanas(self):
+        for usuario in (self.j1, self.s1, self.gerente):
+            with self.subTest(usuario=usuario.username):
+                self.client.force_login(usuario)
+                html = self.client.get(reverse("entregable_detalle", args=[self.e1.pk])).content.decode()
+                menu = html.split('<div class="paneles-menu"')[1].split("</div>")[0]
+                enlaces = re.findall(r'id="tab-([a-z]+)" href="#panel-([a-z]+)"', menu)
+                paneles = re.findall(r'<section class="panel[^"]*" id="panel-([a-z]+)" aria-labelledby="tab-([a-z]+)">', html)
+                self.assertEqual(enlaces, paneles)  # cada pestaña con su panel, en el mismo orden
+                for nombre in ("adjuntos", "observaciones", "checklist", "tiempo", "facturacion", "entregas", "datos",
+                               "historial"):
+                    self.assertIn((nombre, nombre), enlaces)
+                self.assertEqual(("urgencia", "urgencia") in enlaces, 'id="urgencia"' in html)
+                self.assertNotIn(("otros", "otros"), enlaces)  # todo módulo dice en qué pestaña va
+                for ancla in ("adjuntos", "observaciones", "tiempo", "entregas", "responsables", "factura", "exportar",
+                              "extraer-datos", "checklist-tdr", "etiquetas", "vigencias", "penalidades"):
+                    panel = html.split(f'id="{ancla}"')[0].rsplit('<section class="panel', 1)
+                    self.assertEqual(len(panel), 2, ancla)  # los enlaces con ancla caen dentro de una pestaña
+
     def test_es_un_documento_en_espanol_con_salto_al_contenido(self):
         for nombre, html in self.paginas():
             with self.subTest(pantalla=nombre):
@@ -305,7 +350,7 @@ class PlantillaBaseTests(Base):
 
     def test_los_archivos_estaticos_que_se_cargan_existen(self):
         for ruta in ("css/certitrack.css", "js/htmx.min.js", "js/certitrack.js", "js/tablero.js", "js/plantilla.js",
-                     "js/Sortable.min.js"):
+                     "js/Sortable.min.js", "js/detalle.js"):
             with self.subTest(ruta=ruta):
                 self.assertIsNotNone(finders.find(ruta), ruta)
 

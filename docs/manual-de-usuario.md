@@ -1,8 +1,8 @@
-# CertiTrack 360 — Manual de uso diario
+# CertiTrack — Manual de uso diario
 
 Este manual es para quien usa la plataforma todos los días: junior, senior y gerente del área de Proyectos. Explica dónde está cada cosa, para qué sirve y qué hacer en cada momento de la jornada.
 
-La versión ilustrada, con capturas de pantalla anotadas y diagramas de flujo, está dentro de la propia plataforma: enlace **Manual de uso** del pie de página (`/manual/`).
+La versión ilustrada, con capturas de pantalla anotadas y diagramas de flujo, está dentro de la propia plataforma: enlace **Manual de uso** al pie del menú (`/manual/`).
 
 Para instalar o configurar el servidor, ver [`despliegue.md`](despliegue.md). Para el detalle de qué pidió el cliente y cómo se cubre, ver [`guia-de-uso.md`](guia-de-uso.md).
 
@@ -10,7 +10,7 @@ Para instalar o configurar el servidor, ver [`despliegue.md`](despliegue.md). Pa
 
 ## 1. La idea en un minuto
 
-CertiTrack 360 sigue cada **entregable** (un reporte, un informe, un acta) desde que se registra hasta que el cliente firma el acta de conformidad. Todo entregable pertenece a un **contrato** de un **cliente** y pasa siempre por los mismos cinco estados:
+CertiTrack sigue cada **entregable** (un reporte, un informe, un acta) desde que se registra hasta que el cliente firma el acta de conformidad. Todo entregable pertenece a un **contrato** de un **cliente** y pasa siempre por los mismos cinco estados:
 
 | Estado | Qué significa | Quién lo mueve al siguiente |
 |---|---|---|
@@ -35,9 +35,9 @@ La plataforma no deja avanzar si falta algo obligatorio, y siempre dice qué fal
 
 ## 2. Dónde está cada cosa
 
-La barra superior está en todas las pantallas.
+El **menú** está a la izquierda en todas las pantallas, agrupado en tres áreas: *Operación diaria* (Inicio, Tablero, Entregables, Calendario y Fichas), *Conocimiento y control* (Repositorio, Indicadores, Asistente y Checklists) y *Gerencia y administración* (solo gerente y admin). Arriba están el buscador, los avisos y su usuario. En el celular, el menú se abre con el botón **Menú**.
 
-| En la barra | Para qué sirve | Úselo cuando… |
+| En la pantalla | Para qué sirve | Úselo cuando… |
 |---|---|---|
 | **Inicio** | Resumen personal: saludo, próximos a vencer, vencidos y avisos recientes | Empieza el día |
 | **Tablero** | Sus entregables como tarjetas, en cinco columnas (una por estado), ordenadas por prioridad | Quiere ver en qué está cada cosa y mover un entregable de estado |
@@ -47,10 +47,12 @@ La barra superior está en todas las pantallas.
 | **Indicadores** | Cinco cifras del desempeño: a tiempo, con reproceso, tiempo promedio, observaciones e información automatizada | Quiere saber cómo va el área (o usted) |
 | **Asistente** | Responde preguntas en lenguaje natural citando procedimientos y casos anteriores | Tiene un caso atípico y no sabe cómo resolverlo |
 | **Fichas** (junior y senior) | Fichas de levantamiento: de aquí sale el calendario de entregas de un contrato | Llega un contrato nuevo o cambia un TDR |
-| **Consolidado** (gerente) | Totales del área, carga por persona, gráficos y reportes de avance | Hace seguimiento o prepara un informe para la jefatura |
-| **Gestión** (gerente) | Clientes, contratos, plantillas, fichas, personal, líneas de servicio, etiquetas, checklist de calidad y certificados | Da de alta un cliente o cambia la configuración |
-| **Buscar** (caja a la derecha) | Busca por código, título, ID-TDR, contrato, cliente y dentro del texto de los archivos | Recuerda un dato pero no dónde está |
-| **Avisos** (a la derecha) | Todas sus notificaciones; el número indica las que no ha leído | Ve el número en rojo |
+| **Checklists** | El avance del checklist por TDR de cada entregable | Quiere saber qué requisitos faltan |
+| **Consolidado** (gerente) | Totales del área, carga por persona y gráficos | Hace seguimiento |
+| **Reportes** (gerente) | Reportes de avance en PDF, a pedido o automáticos | Prepara un informe para la jefatura |
+| **Gestión** (gerente) | Clientes, contratos, plantillas, fichas, personal, líneas de servicio, etiquetas y certificados | Da de alta un cliente o cambia la configuración |
+| **Buscar** (caja de arriba) | Busca por código, título, ID-TDR, contrato, cliente y dentro del texto de los archivos | Recuerda un dato pero no dónde está |
+| **Avisos** (arriba a la derecha) | Todas sus notificaciones; el número indica las que no ha leído | Ve un número junto a «Avisos» |
 
 ### Las pestañas de «Entregables»
 
@@ -65,29 +67,21 @@ La barra superior está en todas las pantallas.
 
 ### La pantalla de un entregable
 
-Al abrir un entregable (desde el Tablero, la lista, el Calendario o un aviso) se ve todo lo suyo en una sola página. Arriba, las tarjetas con cliente, contrato, plazo, estado, urgencia, prioridad, responsables y el número de reporte. Debajo, las secciones:
+Al abrir un entregable (desde el Tablero, la lista, el Calendario o un aviso) se ve todo lo suyo en una sola página. Arriba, la urgencia, el estado, el título, el código, el cliente y las etiquetas. A la derecha, la **Ficha resumen** (plazo, recepción, responsables, número de reporte, estado y prioridad), **Mover entregable**, **Acciones rápidas** y el **Historial reciente**. A la izquierda, las pestañas:
 
-| Sección | Qué se hace ahí | Quién |
+| Pestaña | Qué se hace ahí | Quién |
 |---|---|---|
-| **Alerta urgente** | Activar una urgencia, confirmar que se leyó, aceptar el caso | Senior y gerente la activan; los avisados responden |
-| **Mover entregable** | Pasar al siguiente estado o devolverlo | Según el estado |
-| **Datos del entregable** | Los campos de la plantilla del cliente | Junior los completa |
-| **Extraer datos de un documento** | Subir un PDF o imagen para que la plataforma proponga los valores | Junior y senior |
-| **Checklist por TDR** | Marcar cada requisito del TDR con su sustento; muestra el % cumplido | Junior |
-| **Certificados y documentos con vigencia** | Ver si algún certificado del cliente está vencido o por vencer | Todos lo ven |
 | **Adjuntos y versiones** | Subir archivos; cada subida es una versión nueva y las anteriores se conservan | Junior y senior |
-| **Factura** | Escribir el número de factura y verificarlo | Junior verifica; senior justifica si sale observada |
-| **Tiempo por etapa** | Cronómetro de Recopilación, Consolidación y Revisión | Junior |
-| **Checklist de calidad** | Marcar cada ítem Conforme o No conforme | Senior |
 | **Observaciones** | Registrar lo que hay que corregir y la corrección hecha | Senior observa; junior corrige |
-| **Responsables** | Sumar a alguien de apoyo o reasignar | Senior y gerente |
-| **Etiquetas** | Clasificar el entregable | Senior |
-| **Exportar** | Generar el PDF o el Excel con el formato del cliente | Senior |
-| **Entregas y acta de conformidad** | Registrar la entrega y subir el acta firmada | Senior |
-| **Penalidades** | Registrar la penalidad que aplicó el cliente; avisa si hay atraso | Senior y gerente |
+| **Checklist TDR** | Marcar cada requisito del TDR con su sustento; muestra el % cumplido | Junior |
+| **Tiempo por etapa** | Cronómetro de Recopilación, Consolidación y Revisión | Junior |
+| **Facturación y PDF** | Verificar la **factura**, **extraer datos** de un documento y **exportar** el PDF o el Excel | Junior verifica; senior justifica y exporta |
+| **Entregas y acta** | Registrar la entrega, subir el acta firmada y anotar **penalidades** | Senior y gerente |
+| **Datos y responsables** | Los **datos** de la plantilla, los **responsables** (apoyo o reasignación), las **etiquetas** y los **certificados** del cliente | Todos lo ven; senior y gerente cambian responsables |
+| **Urgencia** | Activar una alerta urgente, confirmar que se leyó, aceptar el caso | Senior y gerente la activan; los avisados responden |
 | **Historial** | Todo lo que pasó con el entregable, con fecha y autor | Todos lo ven |
 
-No todas las secciones aparecen siempre: cada una se muestra cuando aplica al estado del entregable y a su rol.
+No todo aparece siempre: cada pestaña y cada botón se muestran cuando aplican al estado del entregable y a su rol. Al guardar algo, la página vuelve a la misma pestaña.
 
 ---
 
@@ -101,19 +95,19 @@ No todas las secciones aparecen siempre: cada una se muestra cuando aplica al es
 
 ### Elaborar un entregable
 
-1. Abra la tarjeta y pase el entregable a **En proceso** (sección «Mover entregable»).
+1. Abra la tarjeta y pase el entregable a **En proceso** («Mover entregable», a la derecha).
 2. En **Tiempo por etapa**, pulse **▶ Iniciar** en la etapa en la que está. Pause cuando lo interrumpan y finalice la etapa al terminarla.
-3. Complete los **Datos del entregable**. Si tiene el TDR o un documento con los datos, use **Extraer datos de un documento**: la plataforma propone los valores y usted confirma.
+3. Complete los **Datos del entregable**. Si tiene el TDR o un documento con los datos, use **Facturación y PDF › Extraer datos de un documento**: la plataforma propone los valores y usted confirma.
 4. Suba sus archivos en **Adjuntos y versiones**, eligiendo el tipo de cada uno. Si corrige un archivo, súbalo otra vez con el mismo tipo: queda como versión nueva.
-5. Marque el **Checklist por TDR** conforme cumple cada requisito.
-6. Mire **Certificados y documentos con vigencia**: si alguno está vencido, no lo incluya en el entregable y avise al senior.
-7. En **Factura**, escriba el número y pulse **Verificar**.
+5. Marque el **Checklist TDR** conforme cumple cada requisito.
+6. Mire los certificados en **Datos y responsables**: si alguno está vencido, no lo incluya en el entregable y avise al senior.
+7. En **Facturación y PDF › Factura**, escriba el número y pulse **Verificar**.
 8. Pase el entregable a **Revisión senior**. Si falta un adjunto obligatorio, la plataforma lo dice y no deja avanzar. Si el checklist tiene pendientes o hay un certificado vencido, pide confirmar antes de enviar.
 
 ### Cuando el senior devuelve el entregable
 
 1. Recibirá un aviso de tipo «Observación» y el entregable volverá a **En proceso**.
-2. Ábralo y lea la sección **Observaciones**: cada una dice qué corregir.
+2. Ábralo y lea la pestaña **Observaciones**: cada una dice qué corregir.
 3. Corrija, suba la versión nueva y registre en cada observación qué hizo (**Enviar corrección**).
 4. Vuelva a pasarlo a **Revisión senior**.
 
@@ -143,17 +137,16 @@ No todas las secciones aparecen siempre: cada una se muestra cuando aplica al es
 ### Revisar un entregable
 
 1. Ábralo desde la columna «Revisión senior».
-2. Revise los archivos en **Adjuntos y versiones** y el **Checklist por TDR**.
-3. Complete el **Checklist de calidad**, marcando cada ítem Conforme o No conforme.
-4. Si todo está bien, páselo a **Aprobado**. La plataforma exige la revisión de calidad conforme y la factura sin observación (o justificada).
-5. Si hay algo que corregir, pulse **Devolver**, registre las observaciones con su tipo de error y el junior recibirá el aviso. Use **+ Otra observación** para registrar varias a la vez.
+2. Revise los archivos en **Adjuntos y versiones** y el **Checklist TDR**.
+3. Si todo está bien, páselo a **Aprobado**. La plataforma exige que no queden observaciones abiertas y que la factura, si se ingresó, esté correcta o justificada.
+4. Si hay algo que corregir, pulse **Devolver**, registre las observaciones con su tipo de error y el junior recibirá el aviso. Use **+ Otra observación** para registrar varias a la vez.
 
 ### Entregar al cliente
 
-1. En **Exportar**, genere el PDF o el Excel. Queda guardado como versión nueva.
+1. En **Facturación y PDF › Exportar**, genere el PDF o el Excel. Queda guardado como versión nueva.
 2. Pulse **Marcar como entregado**, indique el medio (correo, mesa de partes, FileDoc o presencial), la fecha y adjunte el cargo de recepción.
-3. Cuando llegue el acta firmada, súbala en **Entregas y acta de conformidad** como Recibida u Observada. Si pasan 5 días sin acta, la plataforma se lo recuerda.
-4. Si el cliente aplicó una penalidad, regístrela en la sección **Penalidades**.
+3. Cuando llegue el acta firmada, súbala en **Entregas y acta** como Recibida u Observada. Si pasan 5 días sin acta, la plataforma se lo recuerda.
+4. Si el cliente aplicó una penalidad, regístrela en la misma pestaña, sección **Penalidades**.
 
 ### Registrar un entregable suelto
 
@@ -164,15 +157,15 @@ No todas las secciones aparecen siempre: cada una se muestra cuando aplica al es
 
 ### Atender una urgencia fuera de horario
 
-1. Abra el entregable, sección **Alerta urgente**, y pulse **Activar y avisar**.
+1. Abra el entregable, pestaña **Urgencia**, y pulse **Activar y avisar**.
 2. La persona de guardia y los responsables ven la franja roja en todas sus pantallas (y reciben el WhatsApp, si está activado).
 3. Cada avisado pulsa **Confirmar lectura**; quien lo toma pulsa **Aceptar el caso** y la alerta se cierra.
 
 ### Otras tareas del senior
 
 - **Confirmar fichas**: un aviso de tipo «Ficha» lo lleva a la ficha que redactó el junior; revísela y confírmela.
-- **Certificados del cliente**: desde la sección del entregable, **Registrar o renovar documentos**. Registre cada certificado con su fecha de vencimiento; la plataforma avisa 30 días antes y el día en que vence.
-- **Sumar apoyo o reasignar**: sección **Responsables** del entregable.
+- **Certificados del cliente**: en **Datos y responsables** del entregable, **Registrar o renovar documentos**. Registre cada certificado con su fecha de vencimiento; la plataforma avisa 30 días antes y el día en que vence.
+- **Sumar apoyo o reasignar**: pestaña **Datos y responsables** del entregable.
 
 ---
 
@@ -181,13 +174,13 @@ No todas las secciones aparecen siempre: cada una se muestra cuando aplica al es
 | Para… | Vaya a… |
 |---|---|
 | Ver cómo va toda el área | **Consolidado**: totales, vencidos, próximos a vencer, carga por persona y gráficos con filtros |
-| Tener un informe para la jefatura | **Consolidado › Reportes › Generar reporte** (PDF). También se genera solo con la periodicidad configurada |
+| Tener un informe para la jefatura | **Reportes › Generar reporte** (PDF). También se genera solo con la periodicidad configurada |
 | Medir el desempeño | **Indicadores**, con filtros por fechas, cliente, tipo de entregable y responsable |
 | Saber cuánto se pagó en penalidades | **Entregables › Penalidades** |
 | Revisar la carga y las ausencias | **Gestión › Personal**: activos, vencimientos en 7 días, ausencias y sobrecarga |
 | Definir quién está de guardia | **Gestión › Personal**, columna «De guardia» |
 | Registrar el celular de alguien para WhatsApp | **Gestión › Personal**, abra al colaborador y complete «Celular para avisos por WhatsApp» |
-| Dar de alta un cliente | **Gestión › Clientes**, luego **Contratos**, **Plantillas** y **Checklist de calidad** |
+| Dar de alta un cliente | **Gestión › Clientes**, luego **Contratos** y **Plantillas** |
 | Registrar certificados de un cliente | **Gestión › Certificados** |
 | Acompañar a alguien nuevo | **Gestión › Personal**, planes de incorporación |
 
@@ -226,10 +219,10 @@ Pulse **Ver** en un aviso para ir directo a lo que hay que atender.
 | Saber quién movió un entregable y cuándo | Entregable › **Historial** |
 | Ver todas las fechas del mes | **Calendario**, vista de mes, con filtro por cliente |
 | Conseguir el formato de un cliente | **Repositorio**, filtrando por cliente |
-| Entregar con el formato del cliente | Entregable › **Exportar** › Excel |
-| Saber si un certificado del cliente está vigente | Entregable › **Certificados y documentos con vigencia** |
-| Saber qué número de reporte toca | Está en la tarjeta «ID-TDR · Línea» del entregable; sale solo |
-| Pedir ayuda con la carga | Avise a su senior: él suma a alguien de apoyo en **Responsables** |
+| Entregar con el formato del cliente | Entregable › **Facturación y PDF** › Exportar a Excel |
+| Saber si un certificado del cliente está vigente | Entregable › **Datos y responsables** › Certificados |
+| Saber qué número de reporte toca | Está en la «Ficha resumen» del entregable; sale solo |
+| Pedir ayuda con la carga | Avise a su senior: puede sumar a alguien de apoyo en **Datos y responsables** |
 | Registrar que estaré ausente | Lo registra el gerente en **Gestión › Personal** |
 
 ---

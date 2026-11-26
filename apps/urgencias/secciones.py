@@ -23,4 +23,4 @@ def seccion_detalle(usuario, entregable):
         contexto.update(servicios.resumen(alerta))
         contexto["ya_leyo"] = alerta.lecturas.filter(usuario=usuario).exists()
         contexto["puede_responder"] = servicios.puede_responder(usuario, alerta)
-    return {"orden": 5, "zona": "cuerpo", "plantilla": "urgencias/_seccion.html", "contexto": contexto}
+    return {"orden": 5, "zona": "cuerpo", "pestana": "urgencia", "plantilla": "urgencias/_seccion.html", "contexto": contexto}

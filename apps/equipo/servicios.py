@@ -19,9 +19,9 @@ ACTIVIDADES_JUNIOR = [
     (
         1,
         1,
-        "Recorrer CertiTrack 360: inicio, tablero, calendario, avisos y buscador",
-        "proc:Guía rápida de CertiTrack 360",
-        "Guía rápida de CertiTrack 360",
+        "Recorrer CertiTrack: inicio, tablero, calendario, avisos y buscador",
+        "proc:Guía rápida de CertiTrack",
+        "Guía rápida de CertiTrack",
         "Senior asignado",
         "El ingresante la marca como completada",
     ),

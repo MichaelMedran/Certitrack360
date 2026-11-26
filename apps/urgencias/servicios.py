@@ -143,7 +143,7 @@ def _enviar_correo(alerta, usuarios):
         send_mail(
             f"URGENTE: {alerta.entregable.contrato.cliente.nombre} · {alerta.entregable.codigo}",
             texto_aviso(alerta) + "\n\nEntregable: " + alerta.entregable.titulo
-            + "\nIngrese a CertiTrack 360 para confirmar la lectura o aceptar el caso.",
+            + "\nIngrese a CertiTrack para confirmar la lectura o aceptar el caso.",
             None, direcciones, fail_silently=False,
         )
     except Exception:  # noqa: BLE001 - cualquier fallo de red o de configuración: la alerta ya quedó registrada

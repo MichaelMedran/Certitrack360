@@ -1,4 +1,4 @@
-# CertiTrack 360 — todo corre en la red local (SDD §18). Uso:
+# CertiTrack — todo corre en la red local (SDD §18). Uso:
 #   copy .env.example .env   (y cambie las claves)
 #   docker compose up --build
 #   docker compose exec web python manage.py seed_demo      (datos simulados)
@@ -19,7 +19,7 @@ services:
 
   web:
     build: .
-    image: certitrack360
+    image: certitrack
     env_file: .env
     environment:
       DATABASE_URL: postgres://certitrack:${POSTGRES_PASSWORD}@db:5432/certitrack
@@ -33,7 +33,7 @@ services:
       - media:/app/media   # archivos adjuntos: respaldar junto con la base de datos
 
   programador:  # alertas de vencimiento (cada hora) e indexación de lecciones (a diario)
-    image: certitrack360
+    image: certitrack
     env_file: .env
     environment:
       DATABASE_URL: postgres://certitrack:${POSTGRES_PASSWORD}@db:5432/certitrack

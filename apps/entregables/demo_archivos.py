@@ -39,5 +39,5 @@ AVISO = "Documento ficticio de demostracion. No contiene datos reales."
 def contenido_demo(extension, titulo, detalle):
     """Bytes de un archivo de demostración con la extensión pedida (pdf o txt)."""
     if extension == "pdf":
-        return pdf_minimo(titulo, [detalle, AVISO, "Generado por el comando seed_demo de CertiTrack 360."])
+        return pdf_minimo(titulo, [detalle, AVISO, "Generado por el comando seed_demo de CertiTrack."])
     return f"{titulo}\n{detalle}\n{AVISO}\n".encode("utf-8")

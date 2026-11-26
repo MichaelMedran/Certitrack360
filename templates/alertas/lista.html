@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% block titulo %}Notificaciones{% endblock %}
 {% block contenido %}
+<div class="cabecera"><div>
 <h1>Notificaciones</h1>
 <p class="suave">Avisos automáticos de asignaciones, observaciones, correcciones, entregables en revisión senior y vencimientos. No hay mensajes entre personas.</p>
+</div>
 {% if no_leidas %}
 <form method="post" action="{% url 'notificaciones_leidas' %}" class="acciones">{% csrf_token %}<button class="boton sec">Marcar todas como leídas</button></form>
 {% endif %}
+</div>
 {% for n in notificaciones %}
-<article class="tarjeta" style="margin-bottom:.5rem;{% if not n.leida %}border-left:5px solid var(--primario){% endif %}">
-  {% if not n.leida %}<span class="etiqueta" style="background:#dbeafe">Sin leer</span>{% else %}<span class="etiqueta">Leída</span>{% endif %}
+<article class="tarjeta aviso-fila{% if not n.leida %} nueva{% endif %}">
+  {% if not n.leida %}<span class="etiqueta sin-leer">Sin leer</span>{% else %}<span class="etiqueta">Leída</span>{% endif %}
   <span class="etiqueta">{{ n.get_tipo_display }}</span>
   {{ n.mensaje }}
   {% with destino=n.destino %}{% if destino %}<a href="{{ destino }}">Ver</a>{% endif %}{% endwith %}

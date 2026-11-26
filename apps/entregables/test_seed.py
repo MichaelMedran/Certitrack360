@@ -258,7 +258,7 @@ class SeedDemoTests(MediaTemporal, TestCase):
         # 5 procedimientos aprobados (incluidos los 3 citados en §7.12)
         self.assertEqual(Procedimiento.objects.filter(vigente=True).count(), 5)
         for titulo in (
-            "Guía rápida de CertiTrack 360",
+            "Guía rápida de CertiTrack",
             "Confidencialidad y datos de clientes",
             "Flujo de un entregable",
         ):

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}CertiTrack 360{% endblock %} · CertiTrack 360</title>
+  <title>{% block titulo %}CertiTrack{% endblock %} · CertiTrack</title>
   <link rel="stylesheet" href="{% static 'css/certitrack.css' %}">
   <link rel="stylesheet" href="{% static 'css/s3-prioridad.css' %}">
   <link rel="stylesheet" href="{% static 'css/s3-calidad.css' %}">
@@ -17,49 +17,69 @@
 <body{% if user.is_authenticated %} hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'{% endif %}>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
 {% if user.is_authenticated %}
-<header class="barra">
-  <a class="marca" href="{% url 'inicio' %}">CertiTrack 360</a>
+<div class="armazon">
+{# Menú lateral agrupado por área (propuesta UX «Ejecutivo Claro»). En pantallas angostas se abre con el botón «Menú». #}
+<aside class="lateral" id="menu-lateral">
+  <a class="marca" href="{% url 'inicio' %}"><span class="marca-sello" aria-hidden="true">CT</span><span>CertiTrack <small>Área de Proyectos</small></span></a>
+  {% with actual=request.resolver_match.url_name|default:"" %}
   <nav aria-label="Principal">
-    <a href="{% url 'inicio' %}"{% if seccion == 'inicio' %} aria-current="page"{% endif %}>Inicio</a>
-    <a href="{% url 'tablero' %}"{% if seccion == 'tablero' %} aria-current="page"{% endif %}>Tablero</a>
-    <a href="{% url 'calendario' %}"{% if seccion == 'calendario' %} aria-current="page"{% endif %}>Calendario</a>
-    <a href="{% url 'entregables' %}"{% if seccion == 'entregables' %} aria-current="page"{% endif %}>Entregables</a>
-    <a href="{% url 'repositorio' %}"{% if seccion == 'repositorio' %} aria-current="page"{% endif %}>Repositorio</a>
-    <a href="{% url 'indicadores' %}"{% if seccion == 'indicadores' %} aria-current="page"{% endif %}>Indicadores</a>
-    <a href="{% url 'asistente' %}"{% if seccion == 'asistente' %} aria-current="page"{% endif %}>Asistente</a>
+    <p class="nav-titulo" id="nav-operacion">Operación diaria</p>
+    <ul class="nav-lista" aria-labelledby="nav-operacion">
+      <li class="ico-inicio"><a href="{% url 'inicio' %}"{% if seccion == 'inicio' %} aria-current="page"{% endif %}>Inicio</a></li>
+      <li class="ico-tablero"><a href="{% url 'tablero' %}"{% if seccion == 'tablero' %} aria-current="page"{% endif %}>Tablero</a></li>
+      <li class="ico-entregables"><a href="{% url 'entregables' %}"{% if seccion == 'entregables' and actual != 'checklists' %} aria-current="page"{% endif %}>Entregables</a></li>
+      <li class="ico-calendario"><a href="{% url 'calendario' %}"{% if seccion == 'calendario' %} aria-current="page"{% endif %}>Calendario</a></li>
+      {# Junior y senior no ven «Gestión», pero sí redactan y confirman fichas de levantamiento. #}
+      {% if not user.es_gerente_o_admin %}<li class="ico-fichas"><a href="{% url 'fichas' %}"{% if entidad == 'fichas' %} aria-current="page"{% endif %}>Fichas</a></li>{% endif %}
+    </ul>
+    <p class="nav-titulo" id="nav-conocimiento">Conocimiento y control</p>
+    <ul class="nav-lista" aria-labelledby="nav-conocimiento">
+      <li class="ico-repositorio"><a href="{% url 'repositorio' %}"{% if seccion == 'repositorio' %} aria-current="page"{% endif %}>Repositorio</a></li>
+      <li class="ico-indicadores"><a href="{% url 'indicadores' %}"{% if seccion == 'indicadores' %} aria-current="page"{% endif %}>Indicadores</a></li>
+      <li class="ico-asistente"><a href="{% url 'asistente' %}"{% if seccion == 'asistente' %} aria-current="page"{% endif %}>Asistente</a></li>
+      <li class="ico-checklists"><a href="{% url 'checklists' %}"{% if actual == 'checklists' %} aria-current="page"{% endif %}>Checklists</a></li>
+    </ul>
     {% if user.es_gerente_o_admin %}
-    <a href="{% url 'consolidado' %}"{% if seccion == 'consolidado' %} aria-current="page"{% endif %}>Consolidado</a>
-    <a href="{% url 'gestion' %}"{% if seccion == 'gestion' %} aria-current="page"{% endif %}>Gestión</a>
-    {% else %}
-    {# Junior y senior no ven «Gestión», pero sí redactan y confirman fichas de levantamiento. #}
-    <a href="{% url 'fichas' %}"{% if entidad == 'fichas' %} aria-current="page"{% endif %}>Fichas</a>
+    <p class="nav-titulo" id="nav-gerencia">Gerencia y administración</p>
+    <ul class="nav-lista" aria-labelledby="nav-gerencia">
+      <li class="ico-consolidado"><a href="{% url 'consolidado' %}"{% if actual == 'consolidado' %} aria-current="page"{% endif %}>Consolidado</a></li>
+      <li class="ico-reportes"><a href="{% url 'reportes' %}"{% if seccion == 'consolidado' and actual != 'consolidado' %} aria-current="page"{% endif %}>Reportes</a></li>
+      <li class="ico-gestion"><a href="{% url 'gestion' %}"{% if seccion == 'gestion' %} aria-current="page"{% endif %}>Gestión</a></li>
+      {% if user.rol == 'ADMIN' %}<li class="ico-administracion"><a href="{% url 'admin:index' %}">Administración</a></li>{% endif %}
+    </ul>
     {% endif %}
-    {% if user.rol == 'ADMIN' %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
   </nav>
+  {% endwith %}
+  <footer class="pie">
+    <nav aria-label="Ayuda">
+      <a href="{% url 'manual' %}"{% if seccion == 'manual' %} aria-current="page"{% endif %}>Manual de uso</a>
+      <a href="{% url 'manual' %}#como-hago">¿Cómo hago para…?</a>
+    </nav>
+  </footer>
+</aside>
+<div class="telon" data-cerrar-menu hidden></div>
+<div class="principal">
+<header class="barra">
+  <button type="button" class="boton sec boton-menu" data-menu aria-controls="menu-lateral" aria-expanded="false">Menú</button>
+  <form method="get" action="{% url 'buscar' %}" class="buscador-barra" role="search">
+    <label for="q-barra" class="sr-only">Buscar</label>
+    <input id="q-barra" type="search" name="q" value="{{ q|default:'' }}" placeholder="Buscar código, cliente, TDR o contenido…" minlength="2">
+  </form>
   <div class="usuario">
-    <form method="get" action="{% url 'buscar' %}" class="buscador-barra" role="search">
-      <label for="q-barra" class="sr-only">Buscar</label>
-      <input id="q-barra" type="search" name="q" value="{{ q|default:'' }}" placeholder="Buscar…" minlength="2">
-    </form>
     <a href="{% url 'notificaciones' %}" class="campana"{% if seccion == 'avisos' %} aria-current="page"{% endif %} title="Notificaciones">Avisos{% if no_leidas %} <span class="insignia" aria-label="{{ no_leidas }} sin leer">{{ no_leidas }}</span>{% endif %}</a>
-    <span>{{ user.nombre }} · {{ user.get_rol_display }}</span>
-    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="enlace">Salir</button></form>
+    <span class="usuario-ficha"><span class="avatar" aria-hidden="true">{% if user.first_name %}{{ user.first_name|first }}{{ user.last_name|first }}{% else %}{{ user.username|first }}{% endif %}</span><span><strong>{{ user.nombre }}</strong> <span class="rol">· {{ user.get_rol_display }}</span></span></span>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="boton sec chico">Salir</button></form>
   </div>
 </header>
+{% include "urgencias/_franja.html" %}
 {% endif %}
-{% if user.is_authenticated %}{% include "urgencias/_franja.html" %}{% endif %}
 <main class="contenedor" id="contenido">
   {% for m in messages %}<div class="aviso aviso-{{ m.tags }}" role="{% if m.level >= 40 %}alert{% else %}status{% endif %}">{{ m }}</div>{% endfor %}
   {% block contenido %}{% endblock %}
 </main>
 {% if user.is_authenticated %}
-<footer class="pie">
-  <span>CertiTrack 360 · Área de Proyectos</span>
-  <nav aria-label="Ayuda">
-    <a href="{% url 'manual' %}"{% if seccion == 'manual' %} aria-current="page"{% endif %}>Manual de uso</a>
-    <a href="{% url 'manual' %}#como-hago">¿Cómo hago para…?</a>
-  </nav>
-</footer>
+</div>
+</div>
 {% endif %}
 {% block scripts %}{% endblock %}
 </body>

@@ -55,7 +55,7 @@ def generar_pdf(datos, datos_al, origen, generado_por=None):
     salida = io.BytesIO()
     doc = SimpleDocTemplate(
         salida, pagesize=landscape(A4), leftMargin=1.5 * cm, rightMargin=1.5 * cm, topMargin=1.5 * cm, bottomMargin=1.5 * cm,
-        title="Reporte de avance de entregables", author="CertiTrack 360",
+        title="Reporte de avance de entregables", author="CertiTrack",
     )
     historia = [
         Paragraph("Reporte de avance de entregables", s["titulo"]),

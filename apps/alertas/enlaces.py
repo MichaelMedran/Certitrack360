@@ -1,7 +1,7 @@
 """Enlaces de los avisos (SDD del Sprint 2, §6.1, hito S2-H2).
 
 Un aviso que no es de un entregable (por ejemplo, una ficha de levantamiento que espera confirmación) lleva a su pantalla
-con `Notificacion.enlace`. Ese enlace es siempre una ruta interna de CertiTrack 360 y nunca una dirección externa, para que
+con `Notificacion.enlace`. Ese enlace es siempre una ruta interna de CertiTrack y nunca una dirección externa, para que
 un aviso no pueda convertirse en una redirección abierta. Se comprueba al guardar, en la base de datos (lo esencial, con
 una restricción) y otra vez al mostrarlo.
 """
@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
 
 MENSAJE_ENLACE = (
-    "El enlace del aviso debe ser una ruta interna de CertiTrack 360 que empiece con «/» (por ejemplo, /calendario/); "
+    "El enlace del aviso debe ser una ruta interna de CertiTrack que empiece con «/» (por ejemplo, /calendario/); "
     "no se admiten direcciones externas."
 )
 

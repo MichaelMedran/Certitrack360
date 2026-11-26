@@ -1,4 +1,4 @@
-# CertiTrack 360 — Plan de implementación (prototipo MVP)
+# CertiTrack — Plan de implementación (prototipo MVP)
 
 > Documento para Claude Code. Léelo completo antes de escribir código. Trabaja por hitos (sección 12), uno a la vez, y no avances al siguiente hasta cumplir los criterios de aceptación del actual.
 
@@ -14,7 +14,7 @@ Consecuencias que la plataforma debe atacar:
 
 **Reto:** ¿cómo organizar la información y el seguimiento de los proyectos para reducir el retrabajo y agilizar las entregas?
 
-**Solución:** una sola aplicación web, CertiTrack 360, que centraliza el seguimiento de entregables, valida la información antes de que llegue al junior, muestra los plazos en un calendario con alertas y, en una segunda fase, ofrece un chatbot que consulta las lecciones aprendidas de proyectos anteriores.
+**Solución:** una sola aplicación web, CertiTrack, que centraliza el seguimiento de entregables, valida la información antes de que llegue al junior, muestra los plazos en un calendario con alertas y, en una segunda fase, ofrece un chatbot que consulta las lecciones aprendidas de proyectos anteriores.
 
 ## 2. Requisitos del cliente (no negociables)
 

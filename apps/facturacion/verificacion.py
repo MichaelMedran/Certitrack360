@@ -165,7 +165,7 @@ def seccion(usuario, entregable):
         return None
     ultima = verificaciones[0] if verificaciones else None
     return {
-        "plantilla": "facturacion/_factura.html", "orden": 40,
+        "plantilla": "facturacion/_factura.html", "orden": 40, "pestana": "facturacion",
         "contexto": {
             "verificaciones": verificaciones, "vigente": ultima, "puede": puede,
             "puede_justificar": puede_justificar(usuario, entregable) and ultima is not None

@@ -303,7 +303,7 @@ def _contexto_detalle(usuario, e):
 
     return {
         "e": e, "es_senior": es_senior, "siguientes": siguientes,
-        "secciones": extensiones.secciones(usuario, e),
+        "paneles": extensiones.por_pestana(extensiones.secciones(usuario, e)),
         "apoyos_activos": apoyos_activos,
         "puede_gestionar_responsables": puede_gestionar_resp,
         "juniors_disponibles": juniors_disponibles,

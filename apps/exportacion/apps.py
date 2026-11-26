@@ -17,6 +17,7 @@ class ExportacionConfig(AppConfig):
                 return None
             return {
                 "orden": 60,
+                "pestana": "facturacion",
                 "plantilla": "exportacion/_seccion.html",
                 "contexto": {
                     "faltantes": servicios.faltantes(entregable),
